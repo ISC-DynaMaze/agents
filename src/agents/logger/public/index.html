@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DynaMaze Dashboard</title>
+    <link rel="stylesheet" href="/static/index.css">
+    <script src="/static/index.js"></script>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <div class="cards">
+        <div id="sender" class="card">
+            <h2 class="title">Sender</h2>
+            <div class="content">
+                <div class="message">
+                    <label for="sender-message">Message</label>
+                    <textarea name="message" id="sender-message"></textarea>
+                </div>
+                <div class="recipient">
+                    <label for="sender-recipient">Recipient</label>
+                    <input name="recipient" id="sender-recipient" type="text" placeholder="agent@localhost"/>
+                </div>
+                <button id="sender-send">Send</button>
+            </div>
+        </div>
+        <div id="receiver" class="card">
+            <h2 class="title">Receiver</h2>
+            <div class="content">
+                <div class="messages"></div>
+            </div>
+        </div>
+        <div id="image" class="card">
+            <h2 class="title">Image</h2>
+            <div class="content">
+                <img id="image-display">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
