@@ -5,6 +5,20 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiofiles>=25.1.0",
     "pydantic>=2.13.3",
+    "slixmpp<=1.9.1",
     "spade>=3.3.3",
+]
+
+[project.optional-dependencies]
+camera = [
+    "opencv-python-headless>=4.13.0.92",
+]
+controller = []
+logger = []
+robot = [
+    "rpi-gpio>=0.7.1",
+    "rpi-ws281x>=5.0.0",
+    "spidev>=3.8",
 ]

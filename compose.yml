@@ -2,9 +2,14 @@ services:
   robot:
     profiles:
       - robot
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - loop-breakers/robot
+      args:
+        AGENT: robot
     container_name: robot-agent
-    command: [ "agents.robot" ]
     devices:
       - /dev/gpiomem:/dev/gpiomem
       - /dev/video0:/dev/video0
@@ -19,42 +24,57 @@ services:
       LOGGER_JID: "logger@$XMPP_HOST"
     volumes:
       - /run/udev:/run/udev:ro
-      - ./src:/app
+      - ./:/app
 
   controller:
     profiles:
       - robot
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - loop-breakers/controller
+      args:
+        AGENT: controller
     container_name: ctrl-agent
-    command: [ "agents.controller" ]
     environment:
       XMPP_JID: "alberto-ctrl@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
     volumes:
-      - ./src:/app
+      - ./:/app
 
   camera:
     profiles:
       - gateway
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - loop-breakers/camera
+      args:
+        AGENT: camera
     container_name: camera-agent
-    command: [ "agents.camera" ]
     environment:
       XMPP_JID: "camera@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
       CAMERA_WIDTH: 768
       CAMERA_HEIGHT: 432
     volumes:
-      - ./src:/app
+      - ./:/app
 
   logger:
     profiles:
       - logger
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - loop-breakers/logger
+      args:
+        AGENT: logger
     container_name: logger-agent
-    command: [ "agents.logger" ]
     environment:
       XMPP_JID: "logger@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
     volumes:
-      - ./src:/app
+      - ./:/app

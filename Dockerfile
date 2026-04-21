@@ -1,5 +1,8 @@
 FROM --platform=arm64 dtcooper/raspberrypi-os:python3.13
 
+ARG AGENT
+ENV AGENT=${AGENT}
+
 ENV PYTHONUNBUFFERED=1
 
 RUN apt update && \
@@ -18,13 +21,14 @@ RUN apt update && \
 RUN /usr/bin/python3 -m venv --system-site-packages /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . /app
-
 WORKDIR /app
 
-RUN pip install -e .
+# Install dependencies
+COPY pyproject.toml /app
+RUN pip install -e .[${AGENT}]
 
-ENTRYPOINT [ "python", "-m" ]
+# Install the project
+COPY . /app
+RUN pip install -e .[${AGENT}]
+
+CMD [ "/bin/bash", "start.sh" ]
