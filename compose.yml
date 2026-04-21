@@ -1,0 +1,58 @@
+services:
+  robot:
+    profiles:
+      - robot
+    build: .
+    container_name: robot-agent
+    command: [ "agents.robot" ]
+    devices:
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/video0:/dev/video0
+      - /dev/media0:/dev/media0
+      - /dev/dma_heap:/dev/dma_heap
+    privileged: true
+    cap_add:
+      - SYS_RAWIO
+    environment:
+      XMPP_JID: "alberto-robot@$XMPP_HOST"
+      XMPP_PASSWORD: $XMPP_PASSWORD
+      LOGGER_JID: "logger@$XMPP_HOST"
+    volumes:
+      - /run/udev:/run/udev:ro
+      - ./src:/app
+
+  controller:
+    profiles:
+      - robot
+    build: .
+    container_name: ctrl-agent
+    command: [ "agents.controller" ]
+    environment:
+      XMPP_JID: "alberto-ctrl@$XMPP_HOST"
+      XMPP_PASSWORD: $XMPP_PASSWORD
+    volumes:
+      - ./src:/app
+
+  camera:
+    profiles:
+      - gateway
+    build: .
+    container_name: camera-agent
+    command: [ "agents.camera" ]
+    environment:
+      XMPP_JID: "camera@$XMPP_HOST"
+      XMPP_PASSWORD: $XMPP_PASSWORD
+    volumes:
+      - ./src:/app
+
+  logger:
+    profiles:
+      - logger
+    build: .
+    container_name: logger-agent
+    command: [ "agents.logger" ]
+    environment:
+      XMPP_JID: "logger@$XMPP_HOST"
+      XMPP_PASSWORD: $XMPP_PASSWORD
+    volumes:
+      - ./src:/app
