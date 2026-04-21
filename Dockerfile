@@ -25,4 +25,6 @@ COPY ./src /app
 
 WORKDIR /app
 
+RUN pip install -e .
+
 ENTRYPOINT [ "python", "-m" ]
