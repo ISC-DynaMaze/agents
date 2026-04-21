@@ -1,6 +1,6 @@
 from spade.behaviour import Message, OneShotBehaviour
 
-from models.base import Base
+from common.models.base import Base
 
 
 class SenderBehaviour(OneShotBehaviour):

@@ -2,8 +2,8 @@ from typing import Annotated, Union
 
 from pydantic import Field, TypeAdapter
 
-from models.base import RequestBase
-from models.robot import RobotRequest, RobotResponse
+from common.models.base import RequestBase
+from common.models.robot import RobotRequest, RobotResponse
 
 
 class StopRequest(RequestBase):

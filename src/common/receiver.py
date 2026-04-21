@@ -3,8 +3,8 @@ import logging
 from pydantic import ValidationError
 from spade.behaviour import CyclicBehaviour
 
-from models.base import RequestBase, ResponseBase
-from models.common import ReqRes, ReqResAdapter, Request, Response
+from common.models.base import RequestBase, ResponseBase
+from common.models.common import ReqRes, ReqResAdapter, Request, Response
 
 
 class ReceiverBehaviour(CyclicBehaviour):
@@ -31,5 +31,5 @@ class ReceiverBehaviour(CyclicBehaviour):
     async def on_request(self, req: Request):
         pass
 
-    async def on_response(self, req: Response):
+    async def on_response(self, res: Response):
         pass

@@ -2,7 +2,7 @@ from typing import Annotated, Literal, Optional, Union
 
 from pydantic import Field
 
-from models.base import RequestBase, ResponseBase
+from common.models.base import RequestBase, ResponseBase
 
 
 class RobotRequestBase(RequestBase):
@@ -25,6 +25,7 @@ class CameraPhotoRequest(RobotRequestBase):
 
 class CameraPhotoResponse(RobotResponseBase):
     type: Literal["bot-cam-photo-res"] = "bot-cam-photo-res"  # type: ignore
+    img: str
 
 
 RobotRequest = Annotated[
