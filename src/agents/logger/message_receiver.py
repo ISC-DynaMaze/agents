@@ -15,15 +15,6 @@ if TYPE_CHECKING:
 class MessageReceiverBehaviour(BaseReceiverBehaviour):
     agent: LoggerAgent
 
-    async def run(self) -> None:
-        msg = await self.receive(timeout=9999)
-        if msg is not None and msg.body is not None:
-            try:
-                data = json.loads(msg.body)
-                await self.process_message(data)
-            except json.JSONDecodeError:
-                return
-
     async def on_response(self, res: Response):
         match res:
             case LogRequest(sender=sender, msg=msg, log_type=log_type):
