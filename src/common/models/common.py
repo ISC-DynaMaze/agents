@@ -1,4 +1,4 @@
-from typing import Annotated, Union
+from typing import Annotated, Literal, Union
 
 from pydantic import Field, TypeAdapter
 
@@ -8,7 +8,7 @@ from common.models.robot import RobotRequest, RobotResponse
 
 
 class StopRequest(RequestBase):
-    type = "stop"
+    type: Literal["stop"] = "stop"  # type: ignore
 
 
 Request = Annotated[

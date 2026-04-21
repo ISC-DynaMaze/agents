@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Annotated, Union
+from typing import Annotated, Literal, Union
 
 from pydantic import Field
 
@@ -14,6 +14,7 @@ class LogType(StrEnum):
 
 
 class LogRequest(RequestBase):
+    type: Literal["logger-log"] = "logger-log"  # type: ignore
     sender: str
     msg: str
     log_type: LogType = LogType.INFO
