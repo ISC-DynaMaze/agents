@@ -16,15 +16,17 @@ if TYPE_CHECKING:
 class CapturePhotoBehaviour(OneShotBehaviour):
     agent: CameraAgent
 
-    def __init__(self, requester_jid: str):
+    def __init__(self, requester_jid: str, width: int, height: int):
         super().__init__()
         self.requester_jid: str = requester_jid
+        self.width: int = width
+        self.height: int = height
 
     async def run(self):
         print("Capturing image...")
         camera = cv2.VideoCapture(0)
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, 768)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 432)
+        camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
         await asyncio.sleep(0.5)
 

@@ -8,7 +8,10 @@ async def main():
     sender_jid = os.environ.get("XMPP_JID", "camera@prosody")
     sender_password = os.environ.get("XMPP_PASSWORD", "top_secret")
 
-    sender = CameraAgent(sender_jid, sender_password)
+    width: int = int(os.environ.get("CAMERA_WIDTH", 768))
+    height: int = int(os.environ.get("CAMERA_HEIGHT", 432))
+
+    sender = CameraAgent(sender_jid, sender_password, width, height)
 
     await sender.start(auto_register=True)
 

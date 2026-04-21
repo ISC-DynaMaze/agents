@@ -17,5 +17,5 @@ class WaitForRequestBehaviour(CyclicBehaviour):
         if msg:
             print("Received camera image request.")
             requester_jid = str(msg.sender)
-            capture_behaviour = CapturePhotoBehaviour(requester_jid)
+            capture_behaviour = CapturePhotoBehaviour(requester_jid, self.agent.width, self.agent.height)
             self.agent.add_behaviour(capture_behaviour)

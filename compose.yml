@@ -42,6 +42,8 @@ services:
     environment:
       XMPP_JID: "camera@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
+      CAMERA_WIDTH: 768
+      CAMERA_HEIGHT: 432
     volumes:
       - ./src:/app
 
