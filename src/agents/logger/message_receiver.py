@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from common.models.common import Response
 from common.models.logger import LogRequest
 from common.models.robot import CameraPhotoResponse
-from common.receiver import ReceiverBehaviour
+from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
     from agents.logger.logger import LoggerAgent
 
 
-class MessageReceiverBehaviour(ReceiverBehaviour):
+class MessageReceiverBehaviour(BaseReceiverBehaviour):
     agent: LoggerAgent
 
     async def run(self) -> None:

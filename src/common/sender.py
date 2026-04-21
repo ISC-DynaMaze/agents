@@ -3,7 +3,7 @@ from spade.behaviour import Message, OneShotBehaviour
 from common.models.base import Base
 
 
-class SenderBehaviour(OneShotBehaviour):
+class BaseSenderBehaviour(OneShotBehaviour):
     def __init__(self, data: Base, to_jid: str):
         super().__init__()
         self.data: Base = data

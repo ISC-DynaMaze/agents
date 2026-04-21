@@ -7,10 +7,10 @@ from common.models.base import RequestBase, ResponseBase
 from common.models.common import ReqRes, ReqResAdapter, Request, Response
 
 
-class ReceiverBehaviour(CyclicBehaviour):
+class BaseReceiverBehaviour(CyclicBehaviour):
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("ReceiverBehaviour")
+        self.logger = logging.getLogger("BaseReceiverBehaviour")
 
     async def run(self):
         msg = await self.receive(timeout=9999)
