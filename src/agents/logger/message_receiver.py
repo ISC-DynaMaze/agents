@@ -3,13 +3,16 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Optional
 
-from spade.behaviour import CyclicBehaviour
+from common.models.common import Response
+from common.models.logger import LogRequest
+from common.models.robot import CameraPhotoResponse
+from common.receiver import ReceiverBehaviour
 
 if TYPE_CHECKING:
     from agents.logger.logger import LoggerAgent
 
 
-class MessageReceiverBehaviour(CyclicBehaviour):
+class MessageReceiverBehaviour(ReceiverBehaviour):
     agent: LoggerAgent
 
     async def run(self) -> None:
@@ -21,13 +24,18 @@ class MessageReceiverBehaviour(CyclicBehaviour):
             except json.JSONDecodeError:
                 return
 
-    async def process_message(self, msg: dict):
-        msg_type: Optional[str] = msg.get("type")
-        if msg_type is None:
-            return
-
-        await self.agent.send_ws({"type": "msg", "msg": msg})
-
-        match msg_type:
-            case "bot-img":
-                await self.agent.send_ws({"type": "bot-img", "img": msg["img"]})
+    async def on_response(self, res: Response):
+        match res:
+            case LogRequest(sender=sender, msg=msg, log_type=log_type):
+                await self.agent.send_ws({
+                    "type": "msg",
+                    "sender": sender,
+                    "msg": msg,
+                    "log_type": log_type
+                })
+            
+            case CameraPhotoResponse(img=img):
+                await self.agent.send_ws({
+                    "type": "bot-img",
+                    "bot-img": img
+                })
