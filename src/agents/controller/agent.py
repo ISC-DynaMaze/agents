@@ -3,7 +3,8 @@ from pathlib import Path
 
 from spade.agent import Agent
 
-from agents.controller.photo import ReceivePhotoBehaviour, RequestPhotoBehaviour
+from agents.controller.photo import RequestPhotoBehaviour
+from agents.controller.receiver import ReceiverBehaviour
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -25,10 +26,10 @@ class ControllerAgent(Agent):
         ask_photo = RequestPhotoBehaviour(self.camera_jid)
 
         # ReceivePhotoBehaviour will save the photo, run bot detection, build maze and send maze data to requester
-        receive_photo = ReceivePhotoBehaviour(
+        receive_photo = ReceiverBehaviour(
             save_dir=Path("photos"),
             maze_dir=Path("mazes"),
-            request_jid="receiver_agent@isc-coordinator.lan",
+            requester_jid="receiver_agent@isc-coordinator.lan",
         )
 
         self.add_behaviour(ask_photo)
