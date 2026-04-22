@@ -6,10 +6,12 @@ import aiofiles
 import cv2
 import numpy as np
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, Message, OneShotBehaviour
+from spade.behaviour import CyclicBehaviour, OneShotBehaviour
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
+from common.models.camera import CameraRequest
+from common.sender import BaseSenderBehaviour
 
 
 class RequestPhotoBehaviour(OneShotBehaviour):
@@ -20,12 +22,8 @@ class RequestPhotoBehaviour(OneShotBehaviour):
         self.camera_jid: str = camera_jid
 
     async def run(self):
-        msg = Message(to=self.camera_jid)
-        msg.set_metadata("performative", "request")
-        msg.body = "Requesting photo"
-
-        await self.send(msg)
-        print("Request for photo sent.")
+        req = CameraRequest()
+        self.agent.add_behaviour(BaseSenderBehaviour(req, self.camera_jid))
 
 
 class ReceivePhotoBehaviour(CyclicBehaviour):

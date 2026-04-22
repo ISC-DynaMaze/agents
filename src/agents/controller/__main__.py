@@ -18,6 +18,7 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
 async def main():
     xmpp_jid = os.environ.get("XMPP_JID", "alberto-ctrl@isc-coordinator.lan")
     xmpp_password = os.environ.get("XMPP_PASSWORD", "top_secret")
+    camera_jid = os.environ.get("CAMERA_JID", "camera@isc-coordinator.lan")
 
     logger.info("Starting AlphaBot XMPP Agent")
     logger.info(f"XMPP JID: {xmpp_jid}")
@@ -25,7 +26,10 @@ async def main():
 
     try:
         agent = ControllerAgent(
-            jid=xmpp_jid, password=xmpp_password, verify_security=False
+            camera_jid=camera_jid,
+            jid=xmpp_jid,
+            password=xmpp_password,
+            verify_security=False,
         )
 
         logger.info("Agent created, attempting to start...")

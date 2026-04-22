@@ -16,12 +16,13 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
 
 
 class ControllerAgent(Agent):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, camera_jid: str, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerAgent")
+        self.camera_jid: str = camera_jid
 
     async def setup(self):
-        ask_photo = RequestPhotoBehaviour("camera_agent@isc-coordinator.lan")
+        ask_photo = RequestPhotoBehaviour(self.camera_jid)
 
         # ReceivePhotoBehaviour will save the photo, run bot detection, build maze and send maze data to requester
         receive_photo = ReceivePhotoBehaviour(
