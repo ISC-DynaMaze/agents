@@ -23,12 +23,6 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
                     "msg": msg,
                     "log_type": log_type
                 })
-            
-            case StatusResponse(camera=cam_status):
-                await self.agent.send_ws({
-                    "type": "cam-status",
-                    "status": cam_status.dump_model()
-                })
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
@@ -36,4 +30,10 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
                 await self.agent.send_ws({
                     "type": "bot-img",
                     "img": img
+                })
+            
+            case StatusResponse(camera=cam_status):
+                await self.agent.send_ws({
+                    "type": "cam-status",
+                    "status": cam_status.model_dump()
                 })
