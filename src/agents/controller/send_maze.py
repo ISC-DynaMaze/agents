@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
-from spade.behaviour import Message, OneShotBehaviour
+from spade.behaviour import OneShotBehaviour
+
+from common.models.controller import MazeResponse
+from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -13,20 +15,14 @@ if TYPE_CHECKING:
 class SendMazeBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    def __init__(self, request_jid: str, maze):
+    def __init__(self, maze):
         super().__init__()
-        self.request_jid = request_jid
         self.maze = maze
 
     async def run(self) -> None:
-        data = {
-            "type": "maze-data",
-            "maze": self.maze.to_dict(),
-        }
+        res = MazeResponse(maze=self.maze.to_dict())
+        for requester in self.agent.maze_requesters:
+            self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
 
-        msg = Message(to=self.request_jid)
-        msg.set_metadata("performative", "inform")
-        msg.body = json.dumps(data)
-
-        await self.send(msg)
-        self.agent.logger.info(f"Maze data sent to {self.request_jid}")
+        self.agent.logger.info(f"Maze data sent to {self.agent.maze_requesters}")
+        self.agent.maze_requesters = []

@@ -17,10 +17,9 @@ if TYPE_CHECKING:
 class BuildMazeBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    def __init__(self, photo_path: Path, request_jid: str, output_dir: Path):
+    def __init__(self, photo_path: Path, output_dir: Path):
         super().__init__()
         self.photo_path = photo_path
-        self.request_jid = request_jid
         self.output_dir = output_dir
 
     async def run(self) -> None:
@@ -53,8 +52,5 @@ class BuildMazeBehaviour(OneShotBehaviour):
         self.agent.logger.info(f"Debug maze image saved at {maze_img_path}")
 
         # send maze to requester
-        send_maze = SendMazeBehaviour(
-            request_jid=self.request_jid,
-            maze=maze,
-        )
+        send_maze = SendMazeBehaviour(maze=maze)
         self.agent.add_behaviour(send_maze)

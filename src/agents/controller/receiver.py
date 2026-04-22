@@ -11,8 +11,10 @@ import numpy as np
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
+from agents.controller.photo import RequestPhotoBehaviour
 from common.models.camera import CameraResponse
-from common.models.common import Response
+from common.models.common import Request, Response
+from common.models.controller import MazeRequest
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -22,16 +24,23 @@ if TYPE_CHECKING:
 class ReceiverBehaviour(BaseReceiverBehaviour):
     agent: ControllerAgent
 
-    def __init__(self, save_dir: Path, maze_dir: Path, requester_jid: str):
+    def __init__(self, save_dir: Path, maze_dir: Path):
         super().__init__()
         self.save_dir: Path = save_dir
         self.maze_dir: Path = maze_dir
-        self.requester_jid: str = requester_jid
 
     async def on_start(self) -> None:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.maze_dir.mkdir(parents=True, exist_ok=True)
         return await super().on_start()
+
+    async def on_request(self, sender_jid: str, req: Request):
+        match req:
+            case MazeRequest():
+                if len(self.agent.maze_requesters) == 0:
+                    ask_photo = RequestPhotoBehaviour(self.agent.camera_jid)
+                    self.agent.add_behaviour(ask_photo)
+                self.agent.maze_requesters.append(sender_jid)
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
@@ -55,7 +64,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
                 build_maze = BuildMazeBehaviour(
                     photo_path=filepath,
-                    request_jid=self.requester_jid,
                     output_dir=self.maze_dir,
                 )
                 self.agent.add_behaviour(build_maze)

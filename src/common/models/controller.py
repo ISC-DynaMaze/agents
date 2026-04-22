@@ -19,6 +19,7 @@ class MazeRequest(ControllerRequestBase):
 
 class MazeResponse(ControllerResponseBase):
     type: Literal["ctrl-maze-res"] = "ctrl-maze-res"  # type: ignore
+    maze: dict
 
 
 ControllerRequest = Annotated[Union[MazeRequest,], Field(discriminator="type")]
