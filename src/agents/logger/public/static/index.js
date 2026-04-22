@@ -72,7 +72,7 @@ function initRobot() {
     document.getElementById("set-home").addEventListener("click", () => send({
         "type": "bot-pan-tilt-req",
         "pan": 0,
-        "tilt": 10,
+        "tilt": 0,
     }, Recipients.ROBOT))
     document.getElementById("set-pan").addEventListener("click", () => send({
         "type": "bot-pan-tilt-req",
