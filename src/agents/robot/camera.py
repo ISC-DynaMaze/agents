@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
-import json
 from typing import TYPE_CHECKING
 
 import aiofiles
-from spade.behaviour import Message, OneShotBehaviour
+from spade.behaviour import OneShotBehaviour
+
+from common.models.robot import CameraPhotoResponse
+from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -24,10 +26,6 @@ class CameraBehaviour(OneShotBehaviour):
         async with aiofiles.open(filename, "rb") as img_file:
             img_data = await img_file.read()
             encoded_img = base64.b64encode(img_data).decode("utf-8")
-        data = {"type": "bot-img", "img": encoded_img}
-        msg: Message = Message(
-            to=self.requester_jid,
-            body=json.dumps(data),
-            metadata={"performative": "inform"},
-        )
-        await self.send(msg)
+
+        res = CameraPhotoResponse(img=encoded_img)
+        self.agent.add_behaviour(BaseSenderBehaviour(res, self.requester_jid))

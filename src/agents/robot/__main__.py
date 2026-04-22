@@ -36,7 +36,6 @@ async def main():
         logger.info("Agent created, attempting to start...")
         await agent.start(auto_register=True)
         logger.info("Agent started successfully!")
-        agent.web.start(hostname="0.0.0.0", port=10000)
 
         try:
             while agent.is_alive():
