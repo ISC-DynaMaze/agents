@@ -16,9 +16,7 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
 
 
 async def main():
-    xmpp_domain = os.environ.get("XMPP_DOMAIN", "prosody")
-    xmpp_username = os.environ.get("XMPP_USERNAME", "alpha-pi-zero-agent")
-    xmpp_jid = f"{xmpp_username}@{xmpp_domain}"
+    xmpp_jid = os.environ.get("XMPP_JID", "alberto-ctrl@isc-coordinator.lan")
     xmpp_password = os.environ.get("XMPP_PASSWORD", "top_secret")
 
     logger.info("Starting AlphaBot XMPP Agent")
@@ -33,7 +31,6 @@ async def main():
         logger.info("Agent created, attempting to start...")
         await agent.start(auto_register=True)
         logger.info("Agent started successfully!")
-        agent.web.start(hostname="0.0.0.0", port=10000)
 
         try:
             while agent.is_alive():
