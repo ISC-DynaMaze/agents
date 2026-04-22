@@ -7,6 +7,7 @@ from spade.agent import Agent
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.receiver import ReceiverBehaviour
+from agents.robot.status import StatusBehaviour
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -46,6 +47,9 @@ class RobotAgent(Agent):
 
         receiver_behaviour = ReceiverBehaviour()
         self.add_behaviour(receiver_behaviour)
+
+        status_behaviour = StatusBehaviour(self.logger_jid, 1)
+        self.add_behaviour(status_behaviour)
 
     async def stop(self) -> None:
         self.cam.stop()

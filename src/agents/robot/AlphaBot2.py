@@ -1,3 +1,5 @@
+from typing import Optional
+
 import RPi.GPIO as GPIO
 from adafruit_servokit import ServoKit
 
@@ -129,3 +131,13 @@ class AlphaBot2(object):
 
     def disableCameraTilt(self):
         self.tilt_servo.angle = None
+
+    def getCameraPan(self) -> Optional[float]:
+        if self.pan_servo.angle is None:
+            return None
+        return self.pan_servo.angle - self.pan_servo.actuation_range / 2
+
+    def getCameraTilt(self) -> Optional[float]:
+        if self.tilt_servo.angle is None:
+            return None
+        return self.tilt_servo.angle - self.tilt_servo.actuation_range / 2
