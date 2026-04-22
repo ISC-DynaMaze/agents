@@ -15,7 +15,10 @@ dependencies = [
 camera = [
     "opencv-python-headless>=4.13.0.92",
 ]
-controller = []
+controller = [
+    "numpy>=2.4.4",
+    "opencv-python-headless>=4.13.0.92",
+]
 logger = []
 robot = [
     "rpi-gpio>=0.7.1",
