@@ -118,11 +118,11 @@ class AlphaBot2(object):
 
     def setCameraPan(self, angle: float):
         angle = min(self.MAX_PAN_ANGLE, max(self.MIN_PAN_ANGLE, angle))
-        self.pan_servo.angle = angle - self.MIN_PAN_ANGLE  # type: ignore
+        self.pan_servo.angle = angle + self.pan_servo.actuation_range / 2  # type: ignore
 
     def setCameraTilt(self, angle: float):
         angle = min(self.MAX_TILT_ANGLE, max(self.MIN_TILT_ANGLE, angle))
-        self.tilt_servo.angle = angle - self.MIN_TILT_ANGLE  # type: ignore
+        self.tilt_servo.angle = angle + self.tilt_servo.actuation_range / 2  # type: ignore
 
     def disableCameraPan(self):
         self.pan_servo.angle = None
