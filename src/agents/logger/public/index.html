@@ -8,7 +8,17 @@
     <script src="/static/index.js"></script>
 </head>
 <body>
+    <datalist id="recipients">
+        <option value="logger@isc-coordinator.lan">Logger</option>
+        <option value="alberto-robot@isc-coordinator.lan">Robot</option>
+        <option value="alberto-ctrl@isc-coordinator.lan">Controller</option>
+        <option value="camera@isc-coordinator.lan">Camera</option>
+    </datalist>
     <h1>Dashboard</h1>
+    <div id="host">
+        <input type="text" id="xmpp-host" value="isc-coordinator.lan">
+        <button id="set-xmpp-host">Set</button>
+    </div>
     <div class="cards">
         <div id="sender" class="card">
             <h2 class="title">Sender</h2>
@@ -19,7 +29,11 @@
                 </div>
                 <div class="recipient">
                     <label for="sender-recipient">Recipient</label>
-                    <input name="recipient" id="sender-recipient" type="text" placeholder="agent@localhost"/>
+                    <input name="recipient"
+                           id="sender-recipient"
+                           type="text"
+                           placeholder="agent@localhost"
+                           list="recipients"/>
                 </div>
                 <button id="sender-send">Send</button>
             </div>

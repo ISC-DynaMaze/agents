@@ -1,6 +1,15 @@
 /** @type {WebSocket} */
 var ws
 
+function setHost() {
+    const newHost = document.getElementById("xmpp-host").value
+    const recipients = document.getElementById("recipients")
+    Array.from(recipients.children).forEach(c => {
+        const [name, host] = c.value.split("@")
+        c.value = `${name}@${newHost}`
+    })
+}
+
 function onWsMessage(event) {
     const msg = JSON.parse(event.data)
     switch (msg.type) {
@@ -42,6 +51,8 @@ function sendMessage() {
 }
 
 window.addEventListener("load", () => {
+    document.getElementById("set-xmpp-host").addEventListener("click", setHost)
+
     ws = new WebSocket("/ws")
     ws.addEventListener("message", onWsMessage)
     initSender()
