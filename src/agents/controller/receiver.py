@@ -33,7 +33,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.maze_dir.mkdir(parents=True, exist_ok=True)
         return await super().on_start()
 
-    async def on_response(self, res: Response):
+    async def on_response(self, sender_jid: str, res: Response):
         match res:
             case CameraResponse(img=encoded_img):
                 print("Received photo message.")

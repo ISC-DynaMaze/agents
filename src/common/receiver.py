@@ -15,21 +15,21 @@ class BaseReceiverBehaviour(CyclicBehaviour):
     async def run(self):
         msg = await self.receive(timeout=9999)
         if msg is not None and msg.body is not None:
-            await self.process_message(msg.body)
+            await self.process_message(str(msg.sender), msg.body)
 
-    async def process_message(self, msg: str):
+    async def process_message(self, sender_jid: str, msg: str):
         try:
             req_res: ReqRes = ReqResAdapter.validate_json(msg)
             match req_res:
                 case RequestBase() as req:
-                    await self.on_request(req) # type: ignore
+                    await self.on_request(sender_jid, req)  # type: ignore
                 case ResponseBase() as res:
-                    await self.on_response(res) # type: ignore
+                    await self.on_response(sender_jid, res)  # type: ignore
         except ValidationError as e:
             self.logger.warning(f"Ignoring malformed request: {e}")
 
-    async def on_request(self, req: Request):
+    async def on_request(self, sender_jid: str, req: Request):
         pass
 
-    async def on_response(self, res: Response):
+    async def on_response(self, sender_jid: str, res: Response):
         pass
