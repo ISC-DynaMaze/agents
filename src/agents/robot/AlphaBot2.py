@@ -3,10 +3,10 @@ from adafruit_servokit import ServoKit
 
 
 class AlphaBot2(object):
-    MIN_PAN_ANGLE = -75
-    MAX_PAN_ANGLE = 75
-    MIN_TILT_ANGLE = -30
-    MAX_TILT_ANGLE = 30
+    MIN_PAN_ANGLE = -90
+    MAX_PAN_ANGLE = 90
+    MIN_TILT_ANGLE = 0
+    MAX_TILT_ANGLE = 45
 
     def __init__(self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19):
         self.AIN1 = ain1
@@ -39,10 +39,10 @@ class AlphaBot2(object):
         self.servos = ServoKit(channels=16)
         self.pan_servo = self.servos.servo[0]
         self.pan_servo.actuation_range = 180
-        self.pan_servo.set_pulse_width_range(600, 2600)
+        self.pan_servo.set_pulse_width_range(550, 2600)
         self.tilt_servo = self.servos.servo[1]
         self.tilt_servo.actuation_range = 180
-        self.tilt_servo.set_pulse_width_range(600, 2600)
+        self.tilt_servo.set_pulse_width_range(550, 2600)
 
     def forward(self):
         self.PWMA.ChangeDutyCycle(self.PA)
