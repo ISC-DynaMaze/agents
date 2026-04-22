@@ -1,7 +1,4 @@
-FROM --platform=arm64 dtcooper/raspberrypi-os:python3.13
-
-ARG AGENT
-ENV AGENT=${AGENT}
+FROM --platform=arm64 dtcooper/raspberrypi-os:python3.13 AS base
 
 ENV PYTHONUNBUFFERED=1
 
@@ -20,6 +17,10 @@ RUN apt update && \
 # with system python but not in system packages
 RUN /usr/bin/python3 -m venv --system-site-packages /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+
+FROM base
+ARG AGENT
+ENV AGENT=${AGENT}
 
 WORKDIR /app
 

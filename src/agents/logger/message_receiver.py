@@ -29,5 +29,5 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
             case CameraPhotoResponse(img=img):
                 await self.agent.send_ws({
                     "type": "bot-img",
-                    "bot-img": img
+                    "img": img
                 })
