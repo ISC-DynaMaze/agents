@@ -49,4 +49,7 @@ class RobotAgent(Agent):
 
     async def stop(self) -> None:
         self.cam.stop()
+        self.bot.disableCameraPan()
+        self.bot.disableCameraTilt()
+        self.bot.stop()
         return await super().stop()

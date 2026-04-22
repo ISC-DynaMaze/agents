@@ -1,7 +1,13 @@
 import RPi.GPIO as GPIO
+from adafruit_servokit import ServoKit
 
 
 class AlphaBot2(object):
+    MIN_PAN_ANGLE = -75
+    MAX_PAN_ANGLE = 75
+    MIN_TILT_ANGLE = -30
+    MAX_TILT_ANGLE = 30
+
     def __init__(self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19):
         self.AIN1 = ain1
         self.AIN2 = ain2
@@ -29,6 +35,8 @@ class AlphaBot2(object):
         self.PWMA.start(self.PA)
         self.PWMB.start(self.PB)
         self.stop()
+
+        self.servos = ServoKit(channels=16)
 
     def forward(self):
         self.PWMA.ChangeDutyCycle(self.PA)
@@ -101,3 +109,17 @@ class AlphaBot2(object):
 
     def getIRSensorLeft(self) -> bool:
         return GPIO.input(self.DL)
+
+    def setCameraPan(self, angle: float):
+        angle = min(self.MAX_PAN_ANGLE, max(self.MIN_PAN_ANGLE, angle))
+        self.servos.servo[0].angle = angle  # type: ignore
+
+    def setCameraTilt(self, angle: float):
+        angle = min(self.MAX_TILT_ANGLE, max(self.MIN_TILT_ANGLE, angle))
+        self.servos.servo[1].angle = angle  # type: ignore
+
+    def disableCameraPan(self):
+        self.servos.servo[0].angle = None
+
+    def disableCameraTilt(self):
+        self.servos.servo[1].angle = None
