@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING
+import datetime
+from typing import TYPE_CHECKING, Optional
 
-from spade.behaviour import PeriodicBehaviour
+from spade.behaviour import OneShotBehaviour, PeriodicBehaviour
 
 from common.models.robot import CameraStatus, StatusResponse
 from common.sender import BaseSenderBehaviour
@@ -14,9 +14,25 @@ if TYPE_CHECKING:
 
 class StatusBehaviour(PeriodicBehaviour):
     agent: RobotAgent
-    
-    def __init__(self, recipient_jid: str, period: float, start_at: datetime | None = None):
+
+    def __init__(
+        self,
+        recipient_jid: str,
+        period: float,
+        start_at: Optional[datetime.datetime] = None,
+    ):
         super().__init__(period, start_at)
+        self.recipient_jid: str = recipient_jid
+
+    async def run(self):
+        self.agent.add_behaviour(SendStatusBehaviour(self.recipient_jid))
+
+
+class SendStatusBehaviour(OneShotBehaviour):
+    agent: RobotAgent
+
+    def __init__(self, recipient_jid: str):
+        super().__init__()
         self.recipient_jid: str = recipient_jid
 
     async def run(self) -> None:

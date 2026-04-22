@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
+from agents.robot.status import SendStatusBehaviour
 from common.models.common import Request, StopRequest
 from common.models.robot import CameraPhotoRequest, PanTiltRequest
 from common.receiver import BaseReceiverBehaviour
@@ -29,3 +30,5 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
                 if tilt is not None:
                     self.agent.bot.setCameraTilt(tilt)
+
+                self.agent.add_behaviour(SendStatusBehaviour(self.agent.logger_jid))
