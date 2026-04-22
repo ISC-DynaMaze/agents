@@ -74,6 +74,19 @@ input, select, textarea {
     }
 }
 
+#robot {
+    .options {
+        display: flex;
+        flex-direction: column;
+        gap: .4em;
+
+        .row {
+            display: flex;
+            gap: .4em;
+        }
+    }
+}
+
 label {
     font-style: italic;
 }

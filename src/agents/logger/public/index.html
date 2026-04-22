@@ -50,6 +50,26 @@
                 <img id="image-display">
             </div>
         </div>
+        <div id="robot" class="card">
+            <h2 class="title">Robot</h2>
+            <div class="content">
+                <section>
+                    <h3>Camera</h3>
+                    <div class="options">
+                        <button id="take-pic">Take picture</button>
+                        <button id="set-home">Set to home</button>
+                        <div class="row">
+                            <input type="number" min="-75" max="75" id="cam-pan" value="0">
+                            <button id="set-pan">Set pan</button>
+                        </div>
+                        <div class="row">
+                            <input type="number" min="10" max="45" id="cam-tilt" value="0">
+                            <button id="set-tilt">Set tilt</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
 </body>
 </html>
