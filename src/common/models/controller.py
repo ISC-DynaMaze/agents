@@ -22,5 +22,19 @@ class MazeResponse(ControllerResponseBase):
     maze: dict
 
 
-ControllerRequest = Annotated[Union[MazeRequest,], Field(discriminator="type")]
-ControllerResponse = Annotated[Union[MazeResponse,], Field(discriminator="type")]
+class AngleRequest(ControllerRequestBase):
+    type: Literal["ctrl-angle-req"] = "ctrl-angle-req"  # type: ignore
+
+
+class AngleResponse(ControllerResponseBase):
+    type: Literal["ctrl-angle-res"] = "ctrl-angle-res"  # type: ignore
+    id: int
+    angle: float
+
+
+ControllerRequest = Annotated[
+    Union[MazeRequest, AngleRequest], Field(discriminator="type")
+]
+ControllerResponse = Annotated[
+    Union[MazeResponse, AngleResponse], Field(discriminator="type")
+]

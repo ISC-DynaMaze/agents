@@ -22,6 +22,8 @@ class ControllerAgent(Agent):
         self.camera_jid: str = camera_jid
 
         self.maze_requesters: list[str] = []
+        self.angle_requesters: list[str] = []
+        self.requesting_image: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(

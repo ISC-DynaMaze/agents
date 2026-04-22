@@ -1,15 +1,21 @@
-import json
+from __future__ import annotations
+
 import logging
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 import cv2
 import numpy as np
-from spade.agent import Agent
-from spade.behaviour import Message, OneShotBehaviour
+from spade.behaviour import OneShotBehaviour
+
+from common.models.controller import AngleResponse
+from common.sender import BaseSenderBehaviour
+
+if TYPE_CHECKING:
+    from agents.controller.agent import ControllerAgent
 
 
 class BotDetectionBehaviour(OneShotBehaviour):
-    agent: Agent
+    agent: ControllerAgent
 
     def __init__(self, img: np.ndarray):
         super().__init__()
@@ -30,6 +36,8 @@ class BotDetectionBehaviour(OneShotBehaviour):
             for bot_id, angle in bot_angles:
                 await self.send_angle_message(bot_id, angle)
 
+        self.agent.angle_requesters = []
+
     async def on_start(self) -> None:
         self.dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
         self.params = cv2.aruco.DetectorParameters()
@@ -47,10 +55,6 @@ class BotDetectionBehaviour(OneShotBehaviour):
         return angles
 
     async def send_angle_message(self, bot_id: int, angle: float):
-        data = {"action": "bot-rot", "id": bot_id, "angle": angle}
-        msg: Message = Message(
-            to=str(self.agent.jid),
-            metadata={"performative": "inform"},
-            body=json.dumps(data),
-        )
-        await self.send(msg)
+        res = AngleResponse(id=bot_id, angle=angle)
+        for requester in self.agent.angle_requesters:
+            self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
