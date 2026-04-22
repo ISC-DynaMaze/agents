@@ -28,4 +28,4 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.bot.setCameraPan(pan)
 
                 if tilt is not None:
-                    self.agent.bot.setCameraPan(tilt)
+                    self.agent.bot.setCameraTilt(tilt)

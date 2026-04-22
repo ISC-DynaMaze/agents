@@ -37,6 +37,8 @@ class AlphaBot2(object):
         self.stop()
 
         self.servos = ServoKit(channels=16)
+        self.pan_servo = self.servos.servo[0]
+        self.tilt_servo = self.servos.servo[1]
 
     def forward(self):
         self.PWMA.ChangeDutyCycle(self.PA)
@@ -112,14 +114,14 @@ class AlphaBot2(object):
 
     def setCameraPan(self, angle: float):
         angle = min(self.MAX_PAN_ANGLE, max(self.MIN_PAN_ANGLE, angle))
-        self.servos.servo[0].angle = angle  # type: ignore
+        self.pan_servo.angle = angle  # type: ignore
 
     def setCameraTilt(self, angle: float):
         angle = min(self.MAX_TILT_ANGLE, max(self.MIN_TILT_ANGLE, angle))
-        self.servos.servo[1].angle = angle  # type: ignore
+        self.tilt_servo.angle = angle  # type: ignore
 
     def disableCameraPan(self):
-        self.servos.servo[0].angle = None
+        self.pan_servo.angle = None
 
     def disableCameraTilt(self):
-        self.servos.servo[1].angle = None
+        self.tilt_servo.angle = None
