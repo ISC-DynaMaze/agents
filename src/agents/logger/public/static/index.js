@@ -27,6 +27,10 @@ function onWsMessage(event) {
         case "bot-img":
             displayImage(msg.img)
             break
+        case "cam-status":
+            document.getElementById("current-pan").innerText = msg.status.pan.toString()
+            document.getElementById("current-tilt").innerText = msg.status.tilt.toString()
+            break
     }
 }
 
@@ -76,11 +80,11 @@ function initRobot() {
     }, Recipients.ROBOT))
     document.getElementById("set-pan").addEventListener("click", () => send({
         "type": "bot-pan-tilt-req",
-        "pan": document.getElementById("cam-pan").value
+        "pan": document.getElementById("new-pan").value
     }, Recipients.ROBOT))
     document.getElementById("set-tilt").addEventListener("click", () => send({
         "type": "bot-pan-tilt-req",
-        "tilt": document.getElementById("cam-tilt").value
+        "tilt": document.getElementById("new-tilt").value
     }, Recipients.ROBOT))
 }
 
