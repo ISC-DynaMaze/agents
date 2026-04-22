@@ -1,5 +1,9 @@
+import os
+
 import cv2 as cv
 import numpy as np
+
+DEBUG = os.environ.get("MAZE_DEBUG", "0") != "0"
 
 # wall indices
 UP = 0
@@ -174,9 +178,10 @@ class Maze:
         corners, ids, rejected = detector.detectMarkers(image)
 
         if len(corners) > 0:
-            # img2 = image.copy()
-            # cv.aruco.drawDetectedMarkers(img2, corners, ids)
-            # cv.imshow("marker.png", img2)
+            # if DEBUG:
+            #     img2 = image.copy()
+            #     cv.aruco.drawDetectedMarkers(img2, corners, ids)
+            #     cv.imshow("marker.png", img2)
             print(f"Detected Aruco marker IDs: {ids.flatten()}")
         else:
             print("No Aruco markers detected")

@@ -1,7 +1,11 @@
+import os
+
 import cv2 as cv
 
 from agents.controller.walls.grid import Maze
 from agents.controller.walls.wall_detection import build_maze_from_path
+
+DEBUG = os.environ.get("MAZE_DEBUG", "0") != "0"
 
 
 def set_bot_cell(maze, row, col):
@@ -196,11 +200,12 @@ def test():
     else:
         maze_img_with_path = maze_img
 
-    cv.imshow("Maze Grid with Path", maze_img_with_path)
-    # cv.imshow("image", cv.imread(image_path))
-    cv.imshow("mask", result["mask"])
-    cv.waitKey(0)
-    cv.destroyAllWindows()
+    if DEBUG:
+        cv.imshow("Maze Grid with Path", maze_img_with_path)
+        # cv.imshow("image", cv.imread(image_path))
+        cv.imshow("mask", result["mask"])
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
 
 if __name__ == "__main__":

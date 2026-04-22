@@ -1,7 +1,11 @@
+import os
+
 import cv2 as cv
 import numpy as np
 
 from agents.controller.walls.grid import Maze
+
+DEBUG = os.environ.get("MAZE_DEBUG", "0") != "0"
 
 
 def get_image(image_path):
@@ -236,7 +240,8 @@ def build_maze_from_image(
     debug_img = image.copy()
     debug_img = draw_outer_rectangle(debug_img, rect)
     debug_img = draw_lines(debug_img, horizontal_lines, vertical_lines)
-    cv.imshow("outer rectangle", debug_img)
+    if DEBUG:
+        cv.imshow("outer rectangle", debug_img)
 
     return {
         "maze": maze,
