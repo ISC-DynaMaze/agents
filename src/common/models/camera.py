@@ -1,6 +1,10 @@
 from typing import Literal
 
-from common.models.base import ResponseBase
+from common.models.base import RequestBase, ResponseBase
+
+
+class CameraRequest(RequestBase):
+    type: Literal["cam-req"] = "cam-req"  # type: ignore
 
 
 class CameraResponse(ResponseBase):

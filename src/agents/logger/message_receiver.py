@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class MessageReceiverBehaviour(BaseReceiverBehaviour):
     agent: LoggerAgent
 
-    async def on_request(self, req: Request):
+    async def on_request(self, sender_jid: str, req: Request):
         match req:
             case LogRequest(sender=sender, msg=msg, log_type=log_type):
                 await self.agent.send_ws({
@@ -24,7 +24,7 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
                     "log_type": log_type
                 })
 
-    async def on_response(self, res: Response):
+    async def on_response(self, sender_jid: str, res: Response):
         match res:
             case CameraPhotoResponse(img=img):
                 await self.agent.send_ws({

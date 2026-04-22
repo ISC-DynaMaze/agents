@@ -3,7 +3,8 @@ from typing import Annotated, Literal, Union
 from pydantic import Field, TypeAdapter
 
 from common.models.base import RequestBase
-from common.models.camera import CameraResponse
+from common.models.camera import CameraRequest, CameraResponse
+from common.models.controller import ControllerRequest, ControllerResponse
 from common.models.logger import LoggerRequest
 from common.models.robot import RobotRequest, RobotResponse
 
@@ -17,10 +18,15 @@ Request = Annotated[
         StopRequest,
         RobotRequest,
         LoggerRequest,
+        CameraRequest,
+        ControllerRequest,
     ],
     Field(discriminator="type"),
 ]
-Response = Annotated[Union[RobotResponse, CameraResponse], Field(discriminator="type")]
+Response = Annotated[
+    Union[RobotResponse, CameraResponse, ControllerResponse],
+    Field(discriminator="type"),
+]
 ReqRes = Annotated[Union[Request, Response], Field(discriminator="type")]
 
 RequestAdapter = TypeAdapter(Request)
