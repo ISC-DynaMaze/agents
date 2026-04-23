@@ -43,6 +43,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             side_type: SideType = await self.look_and_analyse(
                 pan, tilt, expected_angle, side
             )
+            self.logger.info(f"Side {side} is {side_type}")
 
     async def look_and_analyse(
         self, pan: float, tilt: float, expected_angle: float, side: str
@@ -84,7 +85,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             SideType: the type of side
         """
 
-        is_wall = self.detect_plinth(img, side)
+        is_wall = self.detect_plinth(img, expected_angle, side)
         is_open = self.detect_opening(img, expected_angle, side)
         if is_open:
             return SideType.OPEN
@@ -92,11 +93,14 @@ class LookAroundBehaviour(OneShotBehaviour):
             return SideType.WALL
         return SideType.UNKNOWN
 
-    def detect_plinth(self, img: np.ndarray, side: str) -> bool:
+    def detect_plinth(self, img: np.ndarray, expected_angle: float, side: str) -> bool:
         """Detect whether there is a wall base on the given side
 
         Args:
             img (np.ndarray): view of the side
+            expected_angle (float):
+                expected angle of the opening / wall (degrees, 0 to 180).
+                The angle is given from the horizontal, with the Y axis going down
             side (str): name of the side, used to save debug images
 
         Returns:
@@ -118,14 +122,28 @@ class LookAroundBehaviour(OneShotBehaviour):
         )
 
         with_lines = img.copy()
+        count = 0
         if linesP is not None:
+            expected_vec = np.array(
+                [np.cos(np.radians(expected_angle)), np.sin(np.radians(expected_angle))]
+            )
             for i in range(0, len(linesP)):
-                l = linesP[i][0]
-                cv2.line(
-                    with_lines, (l[0], l[1]), (l[2], l[3]), (0, 0, 255), 3, cv2.LINE_AA
-                )
+                x1, y1, x2, y2 = linesP[i][0]
+                v = np.array([[x1, y1], [x2, y2]])
+                cv2.line(with_lines, v[0], v[1], (0, 255, 255), 2, cv2.LINE_AA)
+                vn = v / np.linalg.norm(v)
+                angle = np.acos(np.dot(expected_vec, vn))
+                angle2 = np.acos(np.dot(expected_vec, -vn))
+                if (
+                    abs(angle) > self.RECT_ANGLE_THRESH
+                    and abs(angle2) > self.RECT_ANGLE_THRESH
+                ):
+                    continue
+                cv2.line(with_lines, v[0], v[1], (0, 255, 0), 1, cv2.LINE_AA)
+                count += 1
+        self.logger.debug(f"Detected {count} base wall lines")
         cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
-        return False
+        return count > 0
 
     def detect_opening(self, img: np.ndarray, expected_angle: float, side: str) -> bool:
         """Detect whether there is an opening on the given side
@@ -196,5 +214,6 @@ class LookAroundBehaviour(OneShotBehaviour):
                 continue
             cv2.drawContours(with_cnts, [box], 0, (0, 255, 0), 2)  # type: ignore
             count += 1
+        self.logger.debug(f"Detected {count} opening rectangles")
         cv2.imwrite(self.IMG_DIR / f"{side}_rects.png", with_cnts)
         return count > 1
