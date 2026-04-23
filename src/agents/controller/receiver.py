@@ -25,14 +25,16 @@ if TYPE_CHECKING:
 class ReceiverBehaviour(BaseReceiverBehaviour):
     agent: ControllerAgent
 
-    def __init__(self, save_dir: Path, maze_dir: Path):
+    def __init__(self, save_dir: Path, maze_dir: Path, path_dir: Path):
         super().__init__()
         self.save_dir: Path = save_dir
         self.maze_dir: Path = maze_dir
+        self.path_dir: Path = path_dir
 
     async def on_start(self) -> None:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.maze_dir.mkdir(parents=True, exist_ok=True)
+        self.path_dir.mkdir(parents=True, exist_ok=True)
         return await super().on_start()
 
     async def request_photo(self):
@@ -56,7 +58,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 if not self.agent.maze:
                     self.agent.logger.error("Received path request but maze is not set")
                     return
-                find_path = FindPathBehaviour(maze=self.agent.maze)  # type: ignore
+                find_path = FindPathBehaviour(maze=self.agent.maze, output_dir=self.path_dir)  # type: ignore
                 self.agent.add_behaviour(find_path)
 
 
@@ -92,7 +94,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.add_behaviour(build_maze)
                 
                 if len(self.agent.path_requesters) != 0:
-                    find_path = FindPathBehaviour(maze=self.agent.maze)  # type: ignore
+                    find_path = FindPathBehaviour(maze=self.agent.maze, output_dir=self.path_dir)  # type: ignore
                     self.agent.add_behaviour(find_path)
 
             case PathResponse(path=path):
