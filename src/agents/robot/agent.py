@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+
 from picamera2 import Picamera2
 from spade.agent import Agent
 
