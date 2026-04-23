@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 from spade.behaviour import OneShotBehaviour
 
-from agents.controller.find_path import find_path
-from agents.controller.walls.grid import Maze
+from agents.controller.maze import find_path
+from agents.controller.maze.grid import Maze
 
 from common.models.controller import PathResponse
 from common.sender import BaseSenderBehaviour
@@ -32,6 +32,8 @@ class FindPathBehaviour(OneShotBehaviour):
             self.agent.logger.error("No path found from bot to target")
             return
         self.agent.logger.info(f"Path found: {path}")
+        print(f"Path found: {path}")
+        self.agent.current_path = path
 
         await self.send_path_message(path)
         

@@ -4,6 +4,7 @@ from pathlib import Path
 from spade.agent import Agent
 
 from agents.controller.receiver import ReceiverBehaviour
+from common.sender import BaseSenderBehaviour
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,6 +22,7 @@ class ControllerAgent(Agent):
         self.logger = logging.getLogger("ControllerAgent")
         self.camera_jid: str = camera_jid
         self.maze = None
+        self.current_path = None
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
@@ -33,3 +35,8 @@ class ControllerAgent(Agent):
             maze_dir=Path("mazes"),
         )
         self.add_behaviour(receiver_behaviour)
+        
+
+       
+
+        

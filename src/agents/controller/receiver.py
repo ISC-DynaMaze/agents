@@ -15,7 +15,7 @@ from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.find_path import FindPathBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
-from common.models.controller import AngleRequest, MazeRequest, PathRequest
+from common.models.controller import AngleRequest, MazeRequest, PathRequest, PathResponse
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -91,3 +91,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 if len(self.agent.path_requesters) != 0:
                     find_path = FindPathBehaviour(maze=self.agent.maze)  # type: ignore
                     self.agent.add_behaviour(find_path)
+
+            case PathResponse(path=path):
+                print("Received path response")
+                print(f"Path: {path}")
+                self.agent.current_path = path

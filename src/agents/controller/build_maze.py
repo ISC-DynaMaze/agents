@@ -7,7 +7,7 @@ import cv2
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.send_maze import SendMazeBehaviour
-from agents.controller.walls.wall_detection import build_maze_from_path
+from agents.controller.maze.wall_detection import build_maze_from_path
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
