@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,18 +10,13 @@ import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
+from common.models.robot import SideType
+
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
 
 
 DEBUG = os.environ.get("ROBOT_DEBUG", "0") != "0"
-
-
-class SideType(StrEnum):
-    OPEN = "open"
-    WALL = "wall"
-    OBSTACLE = "obstacle"
-    UNKNOWN = "unknown"
 
 
 class LookAroundBehaviour(OneShotBehaviour):

@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -63,6 +64,25 @@ class HonkRequest(RobotRequestBase):
     type: Literal["bot-honk"] = "bot-honk"  # type: ignore
 
 
+class LookAroundRequest(RobotRequestBase):
+    type: Literal["bot-look-around-req"] = "bot-look-around-req"  # type: ignore
+    camera: CameraStatus
+
+
+class SideType(StrEnum):
+    OPEN = "open"
+    WALL = "wall"
+    OBSTACLE = "obstacle"
+    UNKNOWN = "unknown"
+
+
+class LookAroundResponse(RobotResponseBase):
+    type: Literal["bot-look-around-res"] = "bot-look-around-res"  # type: ignore
+    left: SideType
+    right: SideType
+    front: SideType
+
+
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
@@ -71,11 +91,12 @@ RobotRequest = Annotated[
         HonkRequest,
         TurningRequest,
         TurningCalibrationRequest,
+        LookAroundRequest,
     ],
     Field(discriminator="type"),
 ]
 
 RobotResponse = Annotated[
-    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse],
+    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse, LookAroundResponse],
     Field(discriminator="type"),
 ]
