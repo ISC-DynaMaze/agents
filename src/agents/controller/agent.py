@@ -4,7 +4,6 @@ from pathlib import Path
 from spade.agent import Agent
 
 from agents.controller.receiver import ReceiverBehaviour
-from common.sender import BaseSenderBehaviour
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -37,8 +36,3 @@ class ControllerAgent(Agent):
             path_dir=Path("paths"),
         )
         self.add_behaviour(receiver_behaviour)
-        
-
-       
-
-        

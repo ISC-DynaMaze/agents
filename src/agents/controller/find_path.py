@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 import datetime
-import cv2
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import cv2
 from spade.behaviour import OneShotBehaviour
 
-from agents.controller.maze.find_path import find_path, draw_path
+from agents.controller.maze.find_path import draw_path, find_path
 from agents.controller.maze.grid import Maze
-
 from common.models.controller import PathResponse
 from common.sender import BaseSenderBehaviour
 
