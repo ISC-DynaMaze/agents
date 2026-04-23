@@ -12,7 +12,6 @@ from common.sender import BaseSenderBehaviour
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
 
-
 class CameraBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
