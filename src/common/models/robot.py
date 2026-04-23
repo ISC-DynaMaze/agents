@@ -74,7 +74,6 @@ class HonkRequest(RobotRequestBase):
 
 class LookAroundRequest(RobotRequestBase):
     type: Literal["bot-look-around-req"] = "bot-look-around-req"  # type: ignore
-    camera: CameraStatus
 
 
 class SideType(StrEnum):
