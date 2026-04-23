@@ -12,6 +12,13 @@ class RobotRequestBase(RequestBase):
 class RobotResponseBase(ResponseBase):
     pass
 
+class RobotMoveRequest(RobotRequestBase):
+    type: Literal["bot-move-req"] = "bot-move-req"  # type: ignore
+
+class RobotMoveResponse(RobotResponseBase):
+    type: Literal["bot-move-res"] = "bot-move-res"  # type: ignore
+    #directions: list[directions] 
+
 
 class PanTiltRequest(RobotRequestBase):
     type: Literal["bot-pan-tilt-req"] = "bot-pan-tilt-req"  # type: ignore
