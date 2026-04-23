@@ -22,6 +22,7 @@ services:
       XMPP_JID: "alberto-robot@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
       LOGGER_JID: "logger@$XMPP_HOST"
+      CONTROLLER_JID: "alberto-ctrl@$XMPP_HOST"
     volumes:
       - /run/udev:/run/udev:ro
       - ./:/app

@@ -20,6 +20,7 @@ async def main():
     xmpp_password = os.environ.get("XMPP_PASSWORD", "top_secret")
 
     logger_jid = os.environ.get("LOGGER_JID", "logger@isc-coordinator.lan")
+    controller_jid = os.environ.get("CONTROLLER_JID", "alberto-ctrl@isc-coordinator.lan")
 
     logger.info("Starting AlphaBot XMPP Agent")
     logger.info(f"XMPP JID: {xmpp_jid}")
@@ -28,6 +29,7 @@ async def main():
     try:
         agent = RobotAgent(
             logger_jid=logger_jid,
+            controller_jid=controller_jid,
             jid=xmpp_jid,
             password=xmpp_password,
             verify_security=False,
