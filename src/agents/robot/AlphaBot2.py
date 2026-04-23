@@ -19,8 +19,6 @@ class AlphaBot2(object):
         self.ENB = enb
         self.DR = dr
         self.DL = dl
-        self.PA = 50
-        self.PB = 50
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
@@ -47,44 +45,38 @@ class AlphaBot2(object):
         self.tilt_servo.set_pulse_width_range(550, 2600)
 
     def forward(self):
-        self.PWMA.ChangeDutyCycle(self.PA)
-        self.PWMB.ChangeDutyCycle(self.PB)
         GPIO.output(self.AIN1, GPIO.LOW)
         GPIO.output(self.AIN2, GPIO.HIGH)
         GPIO.output(self.BIN1, GPIO.LOW)
         GPIO.output(self.BIN2, GPIO.HIGH)
 
     def stop(self):
-        self.PWMA.ChangeDutyCycle(0)
-        self.PWMB.ChangeDutyCycle(0)
         GPIO.output(self.AIN1, GPIO.LOW)
         GPIO.output(self.AIN2, GPIO.LOW)
         GPIO.output(self.BIN1, GPIO.LOW)
         GPIO.output(self.BIN2, GPIO.LOW)
 
     def backward(self):
-        self.PWMA.ChangeDutyCycle(self.PA)
-        self.PWMB.ChangeDutyCycle(self.PB)
         GPIO.output(self.AIN1, GPIO.HIGH)
         GPIO.output(self.AIN2, GPIO.LOW)
         GPIO.output(self.BIN1, GPIO.HIGH)
         GPIO.output(self.BIN2, GPIO.LOW)
 
     def left(self):
-        self.PWMA.ChangeDutyCycle(30)
-        self.PWMB.ChangeDutyCycle(30)
         GPIO.output(self.AIN1, GPIO.HIGH)
         GPIO.output(self.AIN2, GPIO.LOW)
         GPIO.output(self.BIN1, GPIO.LOW)
         GPIO.output(self.BIN2, GPIO.HIGH)
 
     def right(self):
-        self.PWMA.ChangeDutyCycle(30)
-        self.PWMB.ChangeDutyCycle(30)
         GPIO.output(self.AIN1, GPIO.LOW)
         GPIO.output(self.AIN2, GPIO.HIGH)
         GPIO.output(self.BIN1, GPIO.HIGH)
         GPIO.output(self.BIN2, GPIO.LOW)
+
+    def setBothPWM(self, value):
+        self.setPWMA(value)
+        self.setPWMB(value)
 
     def setPWMA(self, value):
         self.PA = value
