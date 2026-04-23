@@ -59,4 +59,6 @@ class RobotAgent(Agent):
         self.bot.disableCameraPan()
         self.bot.disableCameraTilt()
         self.bot.stop()
+        self.bot.back_leds.setBrightness(0)
+        self.bot.back_leds.show()
         return await super().stop()

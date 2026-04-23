@@ -2,6 +2,7 @@ from typing import Optional
 
 import RPi.GPIO as GPIO
 from adafruit_servokit import ServoKit
+from rpi_ws281x import Adafruit_NeoPixel
 
 
 class AlphaBot2(object):
@@ -45,6 +46,17 @@ class AlphaBot2(object):
         self.tilt_servo = self.servos.servo[1]
         self.tilt_servo.actuation_range = 180
         self.tilt_servo.set_pulse_width_range(550, 2600)
+
+        self.back_leds = Adafruit_NeoPixel(
+            num=4,
+            pin=18,
+            freq_hz=800_000,
+            dma=5,
+            invert=False,
+            brightness=255,
+            channel=0,
+        )
+        self.back_leds.begin()
 
     def forward(self):
         GPIO.output(self.AIN1, GPIO.LOW)
