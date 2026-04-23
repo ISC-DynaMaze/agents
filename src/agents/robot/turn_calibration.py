@@ -1,15 +1,16 @@
-from common.models.common import ReqResAdapter
-from common.sender import BaseSenderBehaviour
-from spade.behaviour import OneShotBehaviour
-from agents.robot.AlphaBot2 import AlphaBot2
-from common.models.controller import AngleRequest, AngleResponse
-
-import logger
+import asyncio
 import datetime
 import json
-import asyncio
-import numpy as np
 from pathlib import Path
+
+import logger
+import numpy as np
+from spade.behaviour import OneShotBehaviour
+
+from agents.robot.AlphaBot2 import AlphaBot2
+from common.models.common import ReqResAdapter
+from common.models.controller import AngleRequest, AngleResponse
+from common.sender import BaseSenderBehaviour
 
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
@@ -69,7 +70,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
 
         msg = AngleRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(msg, "camera@isc-coordinator.lan"))
-        
+
         while True:
             reply = await self.receive(timeout=15)
             try:
