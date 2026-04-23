@@ -17,6 +17,8 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
     log = logging.getLogger(log_name)
     log.setLevel(logging.DEBUG)
     log.propagate = True
+
+
 class RobotAgent(Agent):
     bot: AlphaBot2
     cam: Picamera2
