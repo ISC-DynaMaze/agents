@@ -38,7 +38,7 @@ def trace_path(maze, dest_cell):
 
     path.reverse()
 
-    return path[::-1]  # Return reversed path
+    return path 
 
 
 # print path on console
