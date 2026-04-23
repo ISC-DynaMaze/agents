@@ -50,41 +50,39 @@ class AlphaBot2(object):
         GPIO.output(self.BIN1, GPIO.LOW)
         GPIO.output(self.BIN2, GPIO.HIGH)
 
-
     def stop(self):
         GPIO.output(self.AIN1, GPIO.LOW)
-        GPIO.output(self.AIN2,GPIO.LOW)
-        GPIO.output(self.BIN1,GPIO.LOW)
-        GPIO.output(self.BIN2,GPIO.LOW)
+        GPIO.output(self.AIN2, GPIO.LOW)
+        GPIO.output(self.BIN1, GPIO.LOW)
+        GPIO.output(self.BIN2, GPIO.LOW)
 
     def backward(self):
-        GPIO.output(self.AIN1,GPIO.HIGH)
-        GPIO.output(self.AIN2,GPIO.LOW)
-        GPIO.output(self.BIN1,GPIO.HIGH)
-        GPIO.output(self.BIN2,GPIO.LOW)
+        GPIO.output(self.AIN1, GPIO.HIGH)
+        GPIO.output(self.AIN2, GPIO.LOW)
+        GPIO.output(self.BIN1, GPIO.HIGH)
+        GPIO.output(self.BIN2, GPIO.LOW)
 
-        
     def left(self):
-        GPIO.output(self.AIN1,GPIO.HIGH)
-        GPIO.output(self.AIN2,GPIO.LOW)
-        GPIO.output(self.BIN1,GPIO.LOW)
-        GPIO.output(self.BIN2,GPIO.HIGH)
+        GPIO.output(self.AIN1, GPIO.HIGH)
+        GPIO.output(self.AIN2, GPIO.LOW)
+        GPIO.output(self.BIN1, GPIO.LOW)
+        GPIO.output(self.BIN2, GPIO.HIGH)
 
     def right(self):
-        GPIO.output(self.AIN1,GPIO.LOW)
-        GPIO.output(self.AIN2,GPIO.HIGH)
-        GPIO.output(self.BIN1,GPIO.HIGH)
-        GPIO.output(self.BIN2,GPIO.LOW)
-    
+        GPIO.output(self.AIN1, GPIO.LOW)
+        GPIO.output(self.AIN2, GPIO.HIGH)
+        GPIO.output(self.BIN1, GPIO.HIGH)
+        GPIO.output(self.BIN2, GPIO.LOW)
+
     def setBothPWM(self, value):
         self.setPWMA(value)
         self.setPWMB(value)
-        
-    def setPWMA(self,value):
+
+    def setPWMA(self, value):
         self.PA = value
         self.PWMA.ChangeDutyCycle(self.PA)
 
-    def setPWMB(self,value):
+    def setPWMB(self, value):
         self.PB = value
         self.PWMB.ChangeDutyCycle(self.PB)
 
