@@ -84,7 +84,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
 
     def detect_opening(self, img: np.ndarray, expected_angle: float, side: str):
-        expected_vec = np.ndarray([np.cos(expected_angle), np.sin(expected_angle)])
+        expected_vec = np.array([np.cos(expected_angle), np.sin(expected_angle)])
 
         blurred = cv2.GaussianBlur(img, (11, 11), 5)
         lab_img = cv2.cvtColor(blurred, cv2.COLOR_BGR2LAB)
