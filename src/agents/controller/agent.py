@@ -20,9 +20,11 @@ class ControllerAgent(Agent):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerAgent")
         self.camera_jid: str = camera_jid
+        self.maze = None
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
+        self.path_requesters: list[str] = []
         self.requesting_image: bool = False
 
     async def setup(self):
