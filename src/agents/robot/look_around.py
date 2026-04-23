@@ -129,8 +129,10 @@ class LookAroundBehaviour(OneShotBehaviour):
             )
             for i in range(0, len(linesP)):
                 x1, y1, x2, y2 = linesP[i][0]
-                v = np.array([[x1, y1], [x2, y2]])
-                cv2.line(with_lines, v[0], v[1], (0, 255, 255), 2, cv2.LINE_AA)
+                p1 = np.array([x1, y1])
+                p2 = np.array([x2, y2])
+                v = p2 - p1
+                cv2.line(with_lines, p1, p2, (0, 255, 255), 2, cv2.LINE_AA)  # type: ignore
                 vn = v / np.linalg.norm(v)
                 angle = np.acos(np.dot(expected_vec, vn))
                 angle2 = np.acos(np.dot(expected_vec, -vn))
@@ -139,7 +141,7 @@ class LookAroundBehaviour(OneShotBehaviour):
                     and abs(angle2) > self.RECT_ANGLE_THRESH
                 ):
                     continue
-                cv2.line(with_lines, v[0], v[1], (0, 255, 0), 1, cv2.LINE_AA)
+                cv2.line(with_lines, p1, p2, (0, 255, 0), 1, cv2.LINE_AA)  # type: ignore
                 count += 1
         self.logger.debug(f"Detected {count} base wall lines")
         cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
