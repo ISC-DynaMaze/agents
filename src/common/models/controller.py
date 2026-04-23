@@ -22,6 +22,15 @@ class MazeResponse(ControllerResponseBase):
     maze: dict
 
 
+class PathRequest(ControllerRequestBase):
+    type: Literal["ctrl-path-req"] = "ctrl-path-req"  # type: ignore
+
+
+class PathResponse(ControllerResponseBase):
+    type: Literal["ctrl-path-res"] = "ctrl-path-res"  # type: ignore
+    path: list[tuple[int, int]]
+
+
 class AngleRequest(ControllerRequestBase):
     type: Literal["ctrl-angle-req"] = "ctrl-angle-req"  # type: ignore
 
@@ -33,8 +42,8 @@ class AngleResponse(ControllerResponseBase):
 
 
 ControllerRequest = Annotated[
-    Union[MazeRequest, AngleRequest], Field(discriminator="type")
+    Union[MazeRequest, AngleRequest, PathRequest], Field(discriminator="type")
 ]
 ControllerResponse = Annotated[
-    Union[MazeResponse, AngleResponse], Field(discriminator="type")
+    Union[MazeResponse, AngleResponse, PathResponse], Field(discriminator="type")
 ]
