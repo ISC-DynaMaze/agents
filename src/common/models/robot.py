@@ -37,17 +37,29 @@ class StatusResponse(RobotResponseBase):
     type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
     camera: CameraStatus
 
+
 class TurnCalibrationRequest(RobotRequestBase):
     type : Literal["bot-calib-turn-req"] = "bot-calib-turn-req"
 
+
 class TurnCalibrationResponse(RobotResponseBase):
     type : Literal["bot-calib-turn-res"] = "bot-calib-turn-res"
+
+
+class ForwardCalibrationRequest(RobotRequestBase):
+    type : Literal["bot-calib-fw-req"] = "bot-calib-fw-req"
+
+
+class ForwardCalibrationResponse(RobotResponseBase):
+    type : Literal["bot-calib-fw-res"] = "bot-calib-fw-res"
+
 
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
         CameraPhotoRequest,
         TurnCalibrationRequest,
+        ForwardCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
@@ -56,6 +68,7 @@ RobotResponse = Annotated[
     Union[
         CameraPhotoResponse,
         StatusResponse,
-        TurnCalibrationResponse
+        TurnCalibrationResponse,
+        ForwardCalibrationResponse,
     ], Field(discriminator="type")
 ]

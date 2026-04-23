@@ -83,5 +83,7 @@ services:
     environment:
       XMPP_JID: "logger@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
+    ports:
+      - 10000:10000
     volumes:
       - ./:/app

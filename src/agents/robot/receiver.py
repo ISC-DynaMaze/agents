@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
 from agents.robot.status import SendStatusBehaviour
+from agents.robot.turn_calibration import AngleCalibrationBehaviour
+from agents.robot.forward_calibration import ForwardCalibrationBehaviour
 from common.models.common import Request, StopRequest
-from common.models.robot import CameraPhotoRequest, PanTiltRequest
+from common.models.robot import CameraPhotoRequest, PanTiltRequest, TurnCalibrationRequest, ForwardCalibrationRequest
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -32,3 +34,12 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.bot.setCameraTilt(tilt)
 
                 self.agent.add_behaviour(SendStatusBehaviour(self.agent.logger_jid))
+            case TurnCalibrationRequest():
+                turn_calibration_behaviour = AngleCalibrationBehaviour(10)
+                self.agent.add_behaviour(turn_calibration_behaviour)
+
+            case ForwardCalibrationRequest():
+                fw_calibration_behaviour = ForwardCalibrationBehaviour()
+                self.agent.add_behaviour (fw_calibration_behaviour)
+
+            
