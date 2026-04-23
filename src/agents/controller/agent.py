@@ -22,6 +22,7 @@ class ControllerAgent(Agent):
         self.logger = logging.getLogger("ControllerAgent")
         self.camera_jid: str = camera_jid
         self.maze = None
+        self.grid_img = None
         self.current_path = None
 
         self.maze_requesters: list[str] = []
@@ -33,6 +34,7 @@ class ControllerAgent(Agent):
         receiver_behaviour = ReceiverBehaviour(
             save_dir=Path("photos"),
             maze_dir=Path("mazes"),
+            path_dir=Path("paths"),
         )
         self.add_behaviour(receiver_behaviour)
         

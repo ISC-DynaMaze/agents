@@ -42,10 +42,11 @@ class BuildMazeBehaviour(OneShotBehaviour):
             return
 
         maze = result["maze"]
+        grid_img = result["grid_img"]
+        self.agent.grid_img = grid_img
         self.agent.maze = maze
 
         # debug image
-        grid_img = result["grid_img"]
         maze_img_path = self.output_dir / f"maze_{self.photo_path.stem}.jpg"
         cv2.imwrite(str(maze_img_path), grid_img)
 
