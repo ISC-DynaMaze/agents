@@ -9,6 +9,17 @@ body {
     padding: 1em;
 }
 
+input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+#host {
+    display: flex;
+    gap: 1em;
+    padding: .4em .8em;
+}
+
 .cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -59,6 +70,19 @@ body {
             &:nth-child(even) {
                 background-color: rgb(238, 238, 238);
             }
+        }
+    }
+}
+
+#robot {
+    .options {
+        display: flex;
+        flex-direction: column;
+        gap: .4em;
+
+        .row {
+            display: flex;
+            gap: .4em;
         }
     }
 }

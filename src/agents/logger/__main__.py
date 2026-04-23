@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 import spade
 
@@ -15,8 +16,10 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
 
 
 async def main():
-    agent = LoggerAgent("logger@isc-coordinator.lan", "plsnohack")
-    await agent.start()
+    xmpp_jid = os.environ.get("XMPP_JID", "logger@isc-coordinator.lan")
+    xmpp_password = os.environ.get("XMPP_PASSWORD", "plsnohack")
+    agent = LoggerAgent(xmpp_jid, xmpp_password)
+    await agent.start(auto_register=True)
     print("Agent started")
 
     try:

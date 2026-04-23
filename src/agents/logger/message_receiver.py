@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from common.models.common import Request, Response
 from common.models.logger import LogRequest
-from common.models.robot import CameraPhotoResponse
+from common.models.robot import CameraPhotoResponse, StatusResponse
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -30,4 +30,10 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
                 await self.agent.send_ws({
                     "type": "bot-img",
                     "img": img
+                })
+            
+            case StatusResponse(camera=cam_status):
+                await self.agent.send_ws({
+                    "type": "cam-status",
+                    "status": cam_status.model_dump()
                 })

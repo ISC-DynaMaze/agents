@@ -1,6 +1,6 @@
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from common.models.base import RequestBase, ResponseBase
 
@@ -28,6 +28,16 @@ class CameraPhotoResponse(RobotResponseBase):
     img: str
 
 
+class CameraStatus(BaseModel):
+    pan: Optional[float] = None
+    tilt: Optional[float] = None
+
+
+class StatusResponse(RobotResponseBase):
+    type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
+    camera: CameraStatus
+
+
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
@@ -36,4 +46,6 @@ RobotRequest = Annotated[
     Field(discriminator="type"),
 ]
 
-RobotResponse = Annotated[Union[CameraPhotoResponse,], Field(discriminator="type")]
+RobotResponse = Annotated[
+    Union[CameraPhotoResponse, StatusResponse], Field(discriminator="type")
+]
