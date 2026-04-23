@@ -2,10 +2,10 @@ import os
 
 import cv2 as cv
 
-from agents.controller.walls.grid import Maze
-from agents.controller.walls.wall_detection import build_maze_from_path
+from agents.controller.maze.grid import Maze
+from agents.controller.maze.wall_detection import build_maze_from_path
 
-DEBUG = os.environ.get("MAZE_DEBUG", "0") != "0"
+DEBUG = os.environ.get("MAZE_DEBUG", "1") != "0"
 
 
 def set_bot_cell(maze, row, col):
@@ -172,8 +172,8 @@ def find_path(maze: Maze):
 
 def test():
     # ---- testing
-    image_path = "images/maze_obj.png"
-    image_path = "images/maze_aruco1.png"
+    #image_path = "images/maze_obj.png"
+    image_path = "images/src_img/maze_aruco1.png"
 
     result = build_maze_from_path(
         image_path=image_path,
@@ -201,11 +201,9 @@ def test():
         maze_img_with_path = maze_img
 
     if DEBUG:
-        cv.imshow("Maze Grid with Path", maze_img_with_path)
+        cv.imwrite("images/paths/maze_with_path.png", maze_img_with_path)
         # cv.imshow("image", cv.imread(image_path))
-        cv.imshow("mask", result["mask"])
-        cv.waitKey(0)
-        cv.destroyAllWindows()
+        #cv.imshow("mask", result["mask"])
 
 
 if __name__ == "__main__":

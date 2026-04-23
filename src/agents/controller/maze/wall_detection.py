@@ -3,7 +3,7 @@ import os
 import cv2 as cv
 import numpy as np
 
-from agents.controller.walls.grid import Maze
+from agents.controller.maze.grid import Maze
 
 DEBUG = os.environ.get("MAZE_DEBUG", "0") != "0"
 
