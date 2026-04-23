@@ -11,6 +11,7 @@ async def main():
             "jid": ("XMPP_JID", "alberto-robot@isc-coordinator.lan"),
             "password": ("XMPP_PASSWORD", "top_secret"),
             "logger_jid": ("LOGGER_JID", "logger@isc-coordinator.lan"),
+            "controller_jid": ("CONTROLLER_JID", "alberto-ctrl@isc-coordinator.lan"),
         },
         debug_loggers=["spade", "aioxmpp", "xmpp"],
     )
