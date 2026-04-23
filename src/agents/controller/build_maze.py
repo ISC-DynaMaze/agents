@@ -7,7 +7,7 @@ import cv2
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.send_maze import SendMazeBehaviour
-from agents.controller.walls.wall_detection import build_maze_from_path
+from agents.controller.maze.wall_detection import build_maze_from_path
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -42,9 +42,11 @@ class BuildMazeBehaviour(OneShotBehaviour):
             return
 
         maze = result["maze"]
+        grid_img = result["grid_img"]
+        self.agent.grid_img = grid_img
+        self.agent.maze = maze
 
         # debug image
-        grid_img = result["grid_img"]
         maze_img_path = self.output_dir / f"maze_{self.photo_path.stem}.jpg"
         cv2.imwrite(str(maze_img_path), grid_img)
 

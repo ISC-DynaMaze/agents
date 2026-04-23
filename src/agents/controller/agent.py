@@ -20,14 +20,19 @@ class ControllerAgent(Agent):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerAgent")
         self.camera_jid: str = camera_jid
+        self.maze = None
+        self.grid_img = None
+        self.current_path = None
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
+        self.path_requesters: list[str] = []
         self.requesting_image: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(
             save_dir=Path("photos"),
             maze_dir=Path("mazes"),
+            path_dir=Path("paths"),
         )
         self.add_behaviour(receiver_behaviour)

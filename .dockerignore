@@ -4,3 +4,5 @@ venv
 uv.lock
 __pycache__
 *.egg-info
+
+images/
