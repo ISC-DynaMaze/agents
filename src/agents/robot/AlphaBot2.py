@@ -5,8 +5,8 @@ from adafruit_servokit import ServoKit
 
 
 class AlphaBot2(object):
-    MIN_PAN_ANGLE = -90
-    MAX_PAN_ANGLE = 90
+    MIN_PAN_ANGLE = -75
+    MAX_PAN_ANGLE = 75
     MIN_TILT_ANGLE = 0
     MAX_TILT_ANGLE = 45
 
