@@ -1,8 +1,11 @@
+from common.models.common import ReqResAdapter
+from common.sender import BaseSenderBehaviour
 from spade.behaviour import OneShotBehaviour
-from .AlphaBot2 import AlphaBot2
+from agents.robot.AlphaBot2 import AlphaBot2
+from common.models.controller import AngleRequest, AngleResponse
+
 import logger
 import datetime
-import Message
 import json
 import asyncio
 import numpy as np
@@ -64,22 +67,19 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     async def ask_angle(self):
         logger.debug("[Behaviour] Ask controller for actual angle")
 
-        msg = Message(to="alberto-ctrl@isc-coordinator.lan")
-        msg.set_metadata("performative", "inform")
-        msg.set_metadata("ontology", "calibration")
-        msg.body = "actual_angle"
-        await self.send(msg)
-
-        reply = await self.receive(timeout=15.0)
-
-        if reply:
+        msg = AngleRequest()
+        self.agent.add_behaviour(BaseSenderBehaviour(msg, "camera@isc-coordinator.lan"))
+        
+        while True:
+            reply = await self.receive(timeout=15)
             try:
-                actual_angle = json.loads(reply.body)["angle"]
-                return actual_angle
+                assert reply is not None
+                res = ReqResAdapter.validate_json(reply.body)
+                assert isinstance(res, AngleResponse)
+                break
             except:
-                logger.debug("[Behaviour] Angle format is not correct")
-        else:
-            logger.debug("[Behaviour] No response from controller")
+                continue
+        return res.angle
 
     async def calibration_sequence(self, angle_history, delta_history, delta_t=0.1):
         logger.info(f"[Time] Time : {self.time}")
