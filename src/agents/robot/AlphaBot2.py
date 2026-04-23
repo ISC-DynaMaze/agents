@@ -35,6 +35,8 @@ class AlphaBot2(object):
         GPIO.setup(self.DL, GPIO.IN, GPIO.PUD_UP)
         self.PWMA = GPIO.PWM(self.ENA, 500)
         self.PWMB = GPIO.PWM(self.ENB, 500)
+        self.PA = 50
+        self.PB = 50
         self.PWMA.start(self.PA)
         self.PWMB.start(self.PB)
         self.stop()
