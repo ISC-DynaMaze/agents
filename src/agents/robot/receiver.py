@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
+from agents.robot.look_around import LookAroundBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.status import SendStatusBehaviour
@@ -13,6 +14,7 @@ from common.models.common import Request, StopRequest
 from common.models.robot import (
     CameraPhotoRequest,
     HonkRequest,
+    LookAroundRequest,
     PanTiltRequest,
     RepositionRequest,
     RobotMoveRequest,
@@ -62,3 +64,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case RepositionRequest():
                 self.agent.add_behaviour(RepositionBehaviour())
+
+            case LookAroundRequest():
+                self.agent.add_behaviour(LookAroundBehaviour())
