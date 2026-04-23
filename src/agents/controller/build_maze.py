@@ -42,6 +42,7 @@ class BuildMazeBehaviour(OneShotBehaviour):
             return
 
         maze = result["maze"]
+        self.agent.maze = maze
 
         # debug image
         grid_img = result["grid_img"]
