@@ -56,6 +56,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 if not self.agent.maze:
                     self.agent.logger.error("Received path request but maze is not set")
                     return
+                find_path = FindPathBehaviour(maze=self.agent.maze)  # type: ignore
+                self.agent.add_behaviour(find_path)
+
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
