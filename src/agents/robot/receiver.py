@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
+from agents.robot.move import MoveBehaviour
 from agents.robot.status import SendStatusBehaviour
 from common.models.common import Request, StopRequest
-from common.models.robot import CameraPhotoRequest, PanTiltRequest
+from common.models.robot import CameraPhotoRequest, PanTiltRequest, RobotMoveRequest
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -32,3 +33,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.bot.setCameraTilt(tilt)
 
                 self.agent.add_behaviour(SendStatusBehaviour(self.agent.logger_jid))
+
+            case RobotMoveRequest():
+                self.agent.add_behaviour(MoveBehaviour())
