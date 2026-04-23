@@ -37,15 +37,25 @@ class StatusResponse(RobotResponseBase):
     type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
     camera: CameraStatus
 
+class TurnCalibrationRequest(RobotRequestBase):
+    type : Literal["bot-calib-turn-req"] = "bot-calib-turn-req"
+
+class TurnCalibrationResponse(RobotResponseBase):
+    type : Literal["bot-calib-turn-res"] = "bot-calib-turn-res"
 
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
         CameraPhotoRequest,
+        TurnCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
 
 RobotResponse = Annotated[
-    Union[CameraPhotoResponse, StatusResponse], Field(discriminator="type")
+    Union[
+        CameraPhotoResponse,
+        StatusResponse,
+        TurnCalibrationResponse
+    ], Field(discriminator="type")
 ]
