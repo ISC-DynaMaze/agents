@@ -24,7 +24,7 @@ class LookAroundBehaviour(OneShotBehaviour):
 
     ANGLES: dict[str, tuple[float, float, float]] = {
         "left": (20, 30, 135),
-        "front": (3, 20, 0),
+        "front": (-8, 20, 0),
         "right": (-20, 30, 45),
     }
 
@@ -168,10 +168,10 @@ class LookAroundBehaviour(OneShotBehaviour):
         blurred = cv2.GaussianBlur(img, (11, 11), 5)
         lab_img = cv2.cvtColor(blurred, cv2.COLOR_BGR2LAB)
 
-        l_bin = np.where(lab_img[..., 0] > 50, 255, 0).astype(np.uint8)
 
         l, a, b = cv2.split(lab_img)
-        _, l_bin = cv2.threshold(l, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        l_bin = np.where(l > 150, 255, 0).astype(np.uint8)
+        #_, l_bin = cv2.threshold(l, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         cv2.imwrite(self.IMG_DIR / f"{side}_l_bin.png", l_bin.astype(np.uint8))
 
         cnts, hrcy = cv2.findContours(l_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
