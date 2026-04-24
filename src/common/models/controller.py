@@ -40,10 +40,16 @@ class AngleResponse(ControllerResponseBase):
     id: int
     angle: float
 
+class DirectionResponse(ControllerResponseBase):
+    type: Literal["ctrl-direction-res"] = "ctrl-direction-res"  # type: ignore
+
+class DirectionRequest(ControllerRequestBase):
+    type: Literal["ctrl-direction-req"] = "ctrl-direction-req"  # type: ignore
+
 
 ControllerRequest = Annotated[
-    Union[MazeRequest, AngleRequest, PathRequest], Field(discriminator="type")
+    Union[MazeRequest, AngleRequest, PathRequest, DirectionRequest], Field(discriminator="type")
 ]
 ControllerResponse = Annotated[
-    Union[MazeResponse, AngleResponse, PathResponse], Field(discriminator="type")
+    Union[MazeResponse, AngleResponse, PathResponse, DirectionResponse], Field(discriminator="type")
 ]

@@ -11,11 +11,18 @@ import numpy as np
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
-from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.find_path import FindPathBehaviour
+from agents.controller.photo import RequestPhotoBehaviour
+from agents.controller.send_direction import SendDirectionBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
-from common.models.controller import AngleRequest, MazeRequest, PathRequest, PathResponse
+from common.models.controller import (
+    AngleRequest,
+    DirectionRequest,
+    MazeRequest,
+    PathRequest,
+    PathResponse,
+)
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -61,6 +68,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 find_path = FindPathBehaviour(maze=self.agent.maze, output_dir=self.path_dir)  # type: ignore
                 self.agent.add_behaviour(find_path)
 
+            case DirectionRequest():
+                self.agent.direction_requesters.append(sender_jid)
+                send_direction = SendDirectionBehaviour()
+                self.agent.add_behaviour(send_direction)
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
