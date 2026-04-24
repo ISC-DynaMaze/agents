@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 from adafruit_servokit import ServoKit
 from rpi_ws281x import Adafruit_NeoPixel
 
+from agents.robot.TRSensors import TRSensor
+
 
 class AlphaBot2(object):
     MIN_PAN_ANGLE = -75
@@ -11,7 +13,9 @@ class AlphaBot2(object):
     MIN_TILT_ANGLE = 0
     MAX_TILT_ANGLE = 45
 
-    def __init__(self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19, buz=4):
+    def __init__(
+        self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19, buz=4
+    ):
         self.AIN1 = ain1
         self.AIN2 = ain2
         self.BIN1 = bin1
@@ -59,6 +63,8 @@ class AlphaBot2(object):
             channel=0,
         )
         self.back_leds.begin()
+
+        self.bottom_ir = TRSensor()
 
     def forward(self):
         GPIO.output(self.AIN1, GPIO.LOW)
