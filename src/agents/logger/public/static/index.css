@@ -99,7 +99,7 @@ button.button {
     }
 
     #recipient {
-        & > [data-type]:not(.show) {
+        &>[data-type]:not(.show) {
             display: none;
         }
     }

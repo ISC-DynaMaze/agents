@@ -9,13 +9,13 @@
  */
 
 export class Agent {
-    constructor(host="isc-coordinator.lan") {
+    constructor(host = "isc-coordinator.lan") {
         this.ws = new WebSocket("/ws")
         this.ws.addEventListener("message", event => this.onWSMessage(event))
-        
+
         /** @type {Object.<string, messageCallback[]>} */
         this.listeners = {}
-        
+
         this.hostKey = "dynamaze-host"
         this.hostInput = document.getElementById("xmpp-host")
         this.hostSetBtn = document.getElementById("set-xmpp-host")

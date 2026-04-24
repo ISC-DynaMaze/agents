@@ -103,7 +103,7 @@ export class Bookmarks {
         const store = db
             .transaction(this.storeName, "readwrite")
             .objectStore(this.storeName)
-        
+
         const req = store.delete(bookmark.id)
     }
 

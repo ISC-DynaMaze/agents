@@ -74,7 +74,6 @@ export class Sender {
         })
 
         this.node.querySelector("#sender-send").addEventListener("click", () => this.send())
-        // TODO: bookmark button
     }
 
     setRecipientType(recipientType, updateRadio = false) {
@@ -101,10 +100,7 @@ export class Sender {
         try {
             const data = JSON.parse(body)
             return data
-        } catch (e) {
-            // TODO
-            throw e
-        }
+        } catch (e) { }
     }
 
     getMessage() {

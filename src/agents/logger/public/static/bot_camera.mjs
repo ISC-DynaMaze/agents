@@ -25,7 +25,7 @@ class AngleSlider {
         })
     }
 
-    setValue(value, updateSlider=false) {
+    setValue(value, updateSlider = false) {
         this.curLabel.innerText = `${value}°`
         if (updateSlider) {
             this.slider.value = value
@@ -84,7 +84,7 @@ export class RobotCamera {
         }, "alberto-robot")
     }
 
-    setAngles(panAngle=null, tiltAngle=null) {
+    setAngles(panAngle = null, tiltAngle = null) {
         this.agent.send({
             type: "bot-pan-tilt-req",
             pan: panAngle,
