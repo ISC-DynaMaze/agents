@@ -1,4 +1,26 @@
+import { EditorView, basicSetup } from "https://esm.sh/codemirror"
+import { keymap } from "https://esm.sh/@codemirror/view"
+import { json, jsonParseLinter } from "https://esm.sh/@codemirror/lang-json"
+import { linter, lintGutter } from "https://esm.sh/@codemirror/lint"
+import {indentWithTab} from "https://esm.sh/@codemirror/commands"
+
 import { Agent } from "./agent.mjs"
+
+const customMessageLinter = linter(view => {
+    let diagnostics = []
+    try {
+        const obj = JSON.parse(view.state.doc.toString())
+        if (!("type" in obj)) {
+            diagnostics.push({
+                from: 0,
+                to: view.state.doc.length,
+                severity: "error",
+                message: "Missing required field: 'type'"
+            })
+        }
+    } catch (e) {}
+    return diagnostics
+})
 
 export class Message {
     /**
@@ -21,6 +43,20 @@ export class Sender {
         this.node = node
 
         this.recipientType = "predefined"
+
+        this.editorNode = this.node.querySelector("#sender-message")
+        this.editor = new EditorView({
+            doc: '{\n  "type": ""\n}',
+            extensions: [
+                basicSetup,
+                json(),
+                linter(jsonParseLinter()),
+                customMessageLinter,
+                lintGutter(),
+                keymap.of([indentWithTab])
+            ],
+            parent: this.editorNode
+        })
 
         this.initListeners()
     }
@@ -59,7 +95,7 @@ export class Sender {
     }
 
     getBody() {
-        const body = this.node.querySelector("#sender-message").value
+        const body = this.editor.state.doc.toString()
         try {
             const data = JSON.parse(body)
             return data

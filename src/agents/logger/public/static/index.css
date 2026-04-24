@@ -47,15 +47,6 @@ input, select, textarea {
             display: none;
         }
     }
-
-    .message, .recipient {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .message textarea {
-        resize: vertical;
-    }
 }
 
 #receiver {
