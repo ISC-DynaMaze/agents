@@ -50,8 +50,9 @@ def print_path(path):
 
 # a* search algorithm
 def a_star_search(maze, src, dest):
+    maze.clear_pathfinding_info()
+
     # Check if the source and destination are valid
-    print("INN AAAAA STAR")
     if not maze.is_valid_cell(src[0], src[1]) or not maze.is_valid_cell(
         dest[0], dest[1]
     ):

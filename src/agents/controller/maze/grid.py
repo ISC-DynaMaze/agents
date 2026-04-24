@@ -28,6 +28,12 @@ class Cell:
 
     def has_wall(self, position):
         return self.walls[position]
+    
+    def clear_pathfinding_info(self):
+        self.f = float("inf")
+        self.g = float("inf")
+        self.h = 0
+        self.parent = None
 
     def __repr__(self):
         return f"Cell({self.row}, {self.col}, walls={self.walls})"
@@ -241,6 +247,11 @@ class Maze:
                 return
 
         print(f"Aruco marker ID {bot_id} not found, cannot set bot cell")
+
+    def clear_pathfinding_info(self):
+        for row in self.grid:
+            for cell in row:
+                cell.clear_pathfinding_info()
 
     # helper functions for building maze from detected lines
 
