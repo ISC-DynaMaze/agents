@@ -42,6 +42,12 @@ input, select, textarea {
 }
 
 #sender {
+    #recipient {
+        :not(.show) {
+            display: none;
+        }
+    }
+
     .message, .recipient {
         display: flex;
         flex-direction: column;
