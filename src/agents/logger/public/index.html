@@ -5,11 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DynaMaze Dashboard</title>
     <link rel="stylesheet" href="/static/fontawesome/css/fontawesome.min.css">
-    <link rel="stylesheet" href="/static/fontawesome/css/regular.min.css">
+    <link rel="stylesheet" href="/static/fontawesome/css/solid.min.css">
     <link rel="stylesheet" href="/static/index.css">
     <script src="/static/index.js"></script>
 </head>
 <body>
+    <div class="template message">
+        <input type="text" class="name">
+        <button class="send">Send <i class="fa-solid fa-paper-plane"></i></button>
+        <button class="delete"><i class="fa-solid fa-trash-can"></i></button>
+        <div class="recipient"></div>
+    </div>
     <datalist id="recipients">
         <option value="logger@isc-coordinator.lan">Logger</option>
         <option value="alberto-robot@isc-coordinator.lan">Robot</option>
@@ -25,59 +31,75 @@
         <div id="sender" class="card">
             <h2 class="title">Sender</h2>
             <div class="content">
-                <div class="message">
-                    <label for="sender-message">Message</label>
+                <section>
+                    <h3>Recipient</h3>
+                    <div class="row" id="recipient-type">
+                        <div class="opt">
+                            <input type="radio" name="recipient-type" id="recipient-type-predefined" checked>
+                            <label for="recipient-type-predefined">Predefined</label>
+                        </div>
+                        <div class="opt">
+                            <input type="radio" name="recipient-type" id="recipient-type-manual">
+                            <label for="recipient-type-manual">Manual</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <select name="recipient-predefined" id="recipient-predefined"></select>
+                        <input type="text" name="recipient-manual" id="recipient-manual" />
+                    </div>
+                </section>
+                <section>
+                    <h3>JSON Body</h3>
                     <textarea name="message" id="sender-message"></textarea>
+                </section>
+                <div class="actions">
+                    <button id="sender-save">Save</button>
+                    <button id="sender-send">Send</button>
                 </div>
-                <div class="recipient">
-                    <label for="sender-recipient">Recipient</label>
-                    <input name="recipient"
-                           id="sender-recipient"
-                           type="text"
-                           placeholder="agent@localhost"
-                           list="recipients"/>
-                </div>
-                <button id="sender-send">Send</button>
+            </div>
+        </div>
+        <div id="saved" class="card">
+            <h2>Saved messages</h2>
+            <div class="content">
+                <div id="saved-messages"></div>
+            </div>
+        </div>
+        <div id="bot-cam" class="card">
+            <h2 class="title">Robot Camera</h2>
+            <div class="content">
+                <section>
+                    <img id="image-display">
+                </section>
+                <section>
+                    <div class="actions">
+                        <button id="take-pic">Take picture</button>
+                        <button id="set-home">Set to home</button>
+                    </div>
+                </section>
+                <section>
+                    <div class="pan">
+                        <label for="set-pan">Pan</label>
+                        <div class="cur-pan">0°</div>
+                        <input type="range" id="set-pan" min="-75" max="75" step="1" value="0">
+                    </div>
+                    <div class="tilt">
+                        <label for="set-tilt">Tilt</label>
+                        <div class="cur-tilt">0°</div>
+                        <input type="range" id="set-tilt" min="0" max="45" step="1" value="0">
+                    </div>
+                    <div class="nudge">
+                        <button class="up"><i class="fa-solid fa-caret-up"></i></button>
+                        <button class="left"><i class="fa-solid fa-caret-left"></i></button>
+                        <button class="right"><i class="fa-solid fa-caret-right"></i></button>
+                        <button class="down"><i class="fa-solid fa-caret-down"></i></button>
+                    </div>
+                </section>
             </div>
         </div>
         <div id="receiver" class="card">
             <h2 class="title">Receiver</h2>
             <div class="content">
-                <div class="messages"></div>
-            </div>
-        </div>
-        <div id="image" class="card">
-            <h2 class="title">Image</h2>
-            <div class="content">
-                <img id="image-display">
-            </div>
-        </div>
-        <div id="robot" class="card">
-            <h2 class="title">Robot</h2>
-            <div class="content">
-                <section>
-                    <h3>Camera</h3>
-                    <div class="options">
-                        <button id="take-pic">Take picture</button>
-                        <button id="set-home">Set to home</button>
-                        <div class="row">
-                            <label for="current-pan">Current Pan:</label>
-                            <div id="current-pan">0</div>
-                        </div>
-                        <div class="row">
-                            <input type="number" min="-75" max="75" id="new-pan" value="0">
-                            <button id="set-pan">Set pan</button>
-                        </div>
-                        <div class="row">
-                            <label for="current-tilt">Current Tilt:</label>
-                            <div id="current-tilt">0</div>
-                        </div>
-                        <div class="row">
-                            <input type="number" min="0" max="45" id="new-tilt" value="0">
-                            <button id="set-tilt">Set tilt</button>
-                        </div>
-                    </div>
-                </section>
+                <table id="messages"></table>
             </div>
         </div>
     </div>
