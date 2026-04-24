@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -55,7 +56,9 @@ class LoggerAgent(Agent):
                 if msg.type == web.WSMsgType.TEXT:
                     await self.handle_ws_msg(msg.json())
                 elif msg.type == web.WSMsgType.ERROR:
-                    self.logger.warning(f"WS connection closed with exception {ws.exception()}")
+                    self.logger.warning(
+                        f"WS connection closed with exception {ws.exception()}"
+                    )
         finally:
             self.ws_clients.remove(ws)
 
@@ -64,7 +67,8 @@ class LoggerAgent(Agent):
     async def handle_ws_msg(self, msg: dict):
         match msg["type"]:
             case "send":
-                self.add_behaviour(SenderBehaviour(msg["msg"], msg["to"]))
+                body: str = json.dumps(msg["msg"])
+                self.add_behaviour(SenderBehaviour(body, msg["to"]))
 
     async def send_ws(self, msg: dict):
         for ws in self.ws_clients:
