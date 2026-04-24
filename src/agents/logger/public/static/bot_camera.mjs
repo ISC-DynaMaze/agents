@@ -21,7 +21,7 @@ class AngleSlider {
         this.slider.addEventListener("change", () => {
             const value = +this.slider.value
             this.setValue(value)
-            this.listeners.forEach(listener => listener(value))
+            this.notify(value)
         })
     }
 
@@ -34,6 +34,25 @@ class AngleSlider {
 
     onChange(listener) {
         this.listeners.push(listener)
+    }
+
+    notify(value) {
+        this.listeners.forEach(listener => listener(value))
+    }
+
+    nudge(delta) {
+        const curValue = +this.slider.value
+        const newValue = Math.min(
+            +this.slider.max,
+            Math.max(
+                +this.slider.min,
+                curValue + delta
+            )
+        )
+        if (curValue != newValue) {
+            this.setValue(newValue, true)
+            this.notify(newValue)
+        }
     }
 }
 
@@ -53,6 +72,11 @@ export class RobotCamera {
         this.panSlider = new AngleSlider(this.node.querySelector(".pan"))
         this.tiltSlider = new AngleSlider(this.node.querySelector(".tilt"))
 
+        this.nudgeUpBtn = this.node.querySelector(".nudge .up")
+        this.nudgeLeftBtn = this.node.querySelector(".nudge .left")
+        this.nudgeRightBtn = this.node.querySelector(".nudge .right")
+        this.nudgeDownBtn = this.node.querySelector(".nudge .down")
+
         this.initListeners()
     }
 
@@ -71,7 +95,19 @@ export class RobotCamera {
             this.tiltSlider.setValue(msg.status.tilt)
         })
 
-        // TODO: nudge buttons
+        
+        this.nudgeUpBtn.addEventListener("click", () => {
+            this.tiltSlider.nudge(-5)
+        })
+        this.nudgeDownBtn.addEventListener("click", () => {
+            this.tiltSlider.nudge(5)
+        })
+        this.nudgeLeftBtn.addEventListener("click", () => {
+            this.panSlider.nudge(5)
+        })
+        this.nudgeRightBtn.addEventListener("click", () => {
+            this.panSlider.nudge(-5)
+        })
     }
 
     displayImage(base64Img) {
