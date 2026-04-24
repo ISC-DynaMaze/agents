@@ -10,8 +10,7 @@ import cv2
 from spade.behaviour import OneShotBehaviour
 
 from common.models.camera import CameraRequest
-from common.models.common import ReqResAdapter
-from common.models.controller import DirectionResponse, PathRequest, PathResponse
+from common.models.controller import DirectionResponse, PathRequest
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -67,7 +66,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         path = await self.wait_for_path(previous_path, timeout=10.0)
         if path is None:
             self.agent.logger.error("Timed out waiting for path response")
-        
+
         self.agent.logger.info(f"New path: {path}")
 
         self.path = path
@@ -136,26 +135,14 @@ class SendDirectionBehaviour(OneShotBehaviour):
 
     # Wait for a new path response that is different from agent.current_path
     async def wait_for_path(self, previous_path, timeout: float):
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.agent.logger.error("Timed out waiting for path response message")
-                    continue
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, PathResponse)
-                return res.path
-            except Exception as e:
-                self.agent.logger.error(f"Error occurred while waiting for path: {e}")
-                continue
 
-        # deadline = time.monotonic() + timeout
-        # while time.monotonic() < deadline:
-        #     current_path = self.agent.current_path
-        #     if current_path is not None and current_path != previous_path:
-        #         return current_path
-        #     await asyncio.sleep(0.2)
-        # return None
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            current_path = self.agent.current_path
+            if current_path is not None and current_path != previous_path:
+                return current_path
+            await asyncio.sleep(0.2)
+        return None
 
     # infer bot orientation based on position of bot marker corners
     def get_bot_orientation(self, corners, ids, bot_id: int = 7):
