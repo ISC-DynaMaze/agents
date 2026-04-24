@@ -9,7 +9,7 @@ from spade.behaviour import CyclicBehaviour
 #     SurroundingsRequest,
 #     SurroundingsResponse,
 # )
-from common.sender import BaseSenderBehaviour
+#from common.sender import BaseSenderBehaviour
 
 
 class MoveBehaviour(CyclicBehaviour):
@@ -19,20 +19,25 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def on_start(self):
         self.bot = self.agent.bot
+        self.surroundings = []  # mental state of what the robot saw
 
     async def run(self):
         await self.go_forward_for(0.15)
-        self.agent.logger.info(f"Moved forward for 0.15 seconds")
+        self.agent.logger.info("Moved forward for 0.15 seconds")
 
+        # get next surrounding
+        await self.get_next_surrounding() # add directly to mental state
 
-        # surroundings is a list of tuples (direction, is_free) (str, bool)
-        surroundings = await self.ask_surroundings()
-        if surroundings is None:
-            self.agent.logger.error("No response received for surroundings request")
+        # check if we have already seen the surroundings for current cell 
+        if len(self.surroundings) == 1:
+            self.agent.logger.info("No surroundings in mental state")
             return
+        
+        # get current surroundings and check which directions are open     
+        current_surrounding = await self.get_current_surrounding()
 
-        # left - front - right
-        free_directions = [direction for direction, is_free in surroundings if is_free]
+        # check free direction in current surroundings
+        free_directions = [direction for direction, status in current_surrounding if status == "open"]
 
         if len(free_directions) == 1:
             self.agent.logger.info(f"Only one free direction: {free_directions[0]}")
@@ -59,22 +64,22 @@ class MoveBehaviour(CyclicBehaviour):
     async def turn_and_go(self, direction: str):
         if direction == "left":
             self.bot.left()
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.5)
             self.bot.stop()
         elif direction == "right":
             self.bot.right()
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.5)
             self.bot.stop()
 
         # go forward after turning or if direction is forward
-        await self.go_forward_for(0.2)
+        await self.go_forward_for(0.3)
 
     # ask for surroundings
     # TODO: adapt with actual response
     async def ask_surroundings(self):
         # req = SurroundingsRequest()
         # self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
-        directions = [("left", True), ("front", False), ("right", False)]
+        directions = {"left": "wall", "front": "open", "right": "wall"}
         return directions
 
     # ask controllor where to go
@@ -84,3 +89,19 @@ class MoveBehaviour(CyclicBehaviour):
         # self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.controller_jid)))
         direction = "front"
         return direction
+    
+    async def get_next_surrounding(self):
+        self.bot.stop(1)  # stop the bot before asking for surroundings
+        next_surrounding = await self.ask_surroundings()
+        if next_surrounding is None:
+            self.agent.logger.error("No response received for surroundings request")
+            return
+        else: 
+            self.surroundings.append(next_surrounding)
+
+    # returns list of tuples with direction and status of current surrounding
+    async def get_current_surrounding(self):
+        if len(self.surroundings) == 1:
+            self.agent.logger.warning("No current current surrounding in mental state") # should never happen when calling this function
+            return None
+        return list(self.surroundings[-1].items())
