@@ -158,24 +158,45 @@ button.button {
     }
 }
 
-#receiver {
-    .messages {
-        display: flex;
-        flex-direction: column;
+#logger {
+    #messages {
         max-height: 10em;
         overflow-x: hidden;
         overflow-y: auto;
         border: black solid 1px;
         min-height: 1em;
-        white-space: nowrap;
+        font-family: monospace;
 
-        .message {
+        --col: black;
+
+        td {
             padding: .2em .4em;
-            text-overflow: ellipsis;
+            vertical-align: baseline;
 
-            &:nth-child(even) {
-                background-color: rgb(238, 238, 238);
+            &:last-child {
+                word-break: break-all;
+                width: 100%;
             }
+
+            &:nth-child(2) {
+                color: var(--col);
+            }
+        }
+
+        tr[data-type="error"] {
+            --col: #b71313;
+        }
+
+        tr[data-type="warning"] {
+            --col: #e3a71f;
+        }
+
+        tr[data-type="info"] {
+            --col: #0f98d9;
+        }
+
+        tr[data-type="debug"] {
+            --col: rgb(151, 29, 182);
         }
     }
 }
