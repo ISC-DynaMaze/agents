@@ -9,7 +9,10 @@ body {
     padding: 1em;
 }
 
-input, select, textarea {
+input,
+select,
+textarea,
+select {
     font-family: inherit;
     font-size: inherit;
 }
@@ -42,9 +45,62 @@ input, select, textarea {
 }
 
 #sender {
+    section {
+        display: flex;
+        flex-direction: column;
+        gap: .2em;
+    }
+
+    #recipient-type {
+        display: flex;
+        padding: 0.2em;
+
+        input[type="radio"] {
+            display: none;
+
+            &:checked+label {
+                font-weight: bold;
+                background-color: #d3e9f8;
+            }
+        }
+
+        label {
+            font-style: normal;
+            padding: 0.4em 0.4em;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .opt {
+            &:first-child label {
+                border-radius: 0.8em 0 0 0.8em;
+            }
+
+            &:last-child label {
+                border-radius: 0 0.8em 0.8em 0;
+            }
+        }
+    }
+
     #recipient {
         :not(.show) {
             display: none;
+        }
+    }
+
+    .actions {
+        display: flex;
+        justify-content: space-evenly;
+        gap: 1em;
+
+        button {
+            font-size: inherit;
+            font-family: inherit;
+            padding: .4em 6em;
+            border-radius: .2em;
+            border: solid black 1px;
+            background: none;
         }
     }
 }
@@ -90,4 +146,8 @@ label {
 
 button {
     cursor: pointer;
+}
+
+.template {
+    display: none !important;
 }

@@ -2,7 +2,8 @@ import { EditorView, basicSetup } from "https://esm.sh/codemirror"
 import { keymap } from "https://esm.sh/@codemirror/view"
 import { json, jsonParseLinter } from "https://esm.sh/@codemirror/lang-json"
 import { linter, lintGutter } from "https://esm.sh/@codemirror/lint"
-import {indentWithTab} from "https://esm.sh/@codemirror/commands"
+import { indentWithTab } from "https://esm.sh/@codemirror/commands"
+import { tomorrow } from "https://esm.sh/thememirror"
 
 import { Agent } from "./agent.mjs"
 
@@ -18,7 +19,7 @@ const customMessageLinter = linter(view => {
                 message: "Missing required field: 'type'"
             })
         }
-    } catch (e) {}
+    } catch (e) { }
     return diagnostics
 })
 
@@ -53,7 +54,8 @@ export class Sender {
                 linter(jsonParseLinter()),
                 customMessageLinter,
                 lintGutter(),
-                keymap.of([indentWithTab])
+                keymap.of([indentWithTab]),
+                tomorrow
             ],
             parent: this.editorNode
         })
