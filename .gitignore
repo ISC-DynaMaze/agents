@@ -7,3 +7,6 @@ uv.lock
 *.egg-info
 
 images/
+mazes/
+photos/
+paths/
