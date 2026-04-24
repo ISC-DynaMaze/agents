@@ -49,10 +49,11 @@ RobotRequest = Annotated[
     Union[
         PanTiltRequest,
         CameraPhotoRequest,
+        RobotMoveRequest,
     ],
     Field(discriminator="type"),
 ]
 
 RobotResponse = Annotated[
-    Union[CameraPhotoResponse, StatusResponse], Field(discriminator="type")
+    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse], Field(discriminator="type")
 ]
