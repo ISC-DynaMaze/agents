@@ -98,6 +98,14 @@ button.button {
         }
     }
 
+    #sender-message {
+        max-height: 15em;
+
+        .cm-editor {
+            height: 100%;
+        }
+    }
+
     .actions {
         display: flex;
         justify-content: space-evenly;
@@ -105,6 +113,41 @@ button.button {
 
         button {
             flex-grow: 1;
+        }
+    }
+}
+
+#saved {
+    #saved-messages {
+        display: flex;
+        flex-direction: column;
+        gap: .8em;
+        max-height: 15em;
+        overflow-y: auto;
+
+        /* workaround to show shadows */
+        margin: 0 -1em;
+        padding: 1em;
+
+        .message {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0 .4em;
+            padding: .4em;
+            border-radius: .4em;
+            box-shadow: 1px 1px 4px #7d7d7d;
+
+            .name {
+                &:not(:hover) {
+                    border-color: transparent;
+                }
+            }
+
+            .recipient {
+                color: #2c2c2c;
+                font-size: 80%;
+                padding-left: 1em;
+            }
         }
     }
 }
