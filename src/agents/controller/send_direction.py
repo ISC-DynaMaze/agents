@@ -35,7 +35,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             self.agent.logger.error("Cannot send direction: maze is not initialized")
             return
 
-        # request new image 
+        # request new image
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
         if img is None:
@@ -58,7 +58,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
             return
         self.agent.logger.info(f"Bot orientation: {orientation}")
 
-    
         # request new path based on updated bot cell
         previous_path = self.agent.current_path
         await self.req_path()
@@ -73,14 +72,16 @@ class SendDirectionBehaviour(OneShotBehaviour):
             self.agent.logger.info("Bot is already at destination")
             return
 
-        # direction to the next cell in the path (from maze perspective) 
+        # direction to the next cell in the path (from maze perspective)
         desired_direction = self.get_direction_from_path_step(path)
         if desired_direction is None:
             self.agent.logger.error("Could not derive desired direction from path")
             return
 
-        # get turn instruction to go from current bot orientation to desired direction 
-        turn = self.get_turn_instruction(current_heading=orientation, target_heading=desired_direction)
+        # get turn instruction to go from current bot orientation to desired direction
+        turn = self.get_turn_instruction(
+            current_heading=orientation, target_heading=desired_direction
+        )
         if turn is None:
             self.agent.logger.error("Could not compute turn instruction")
             return
@@ -90,7 +91,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         )
 
         await self.send_turn_message(turn)
-    
+
     # send turn instruction to requester
     async def send_turn_message(self, turn: str):
         res = DirectionResponse(path=turn)
@@ -202,12 +203,10 @@ class SendDirectionBehaviour(OneShotBehaviour):
         if delta == 2:
             return "back"
         return "left"
-    
+
     # get next cell in path
     async def get_next_cell(self):
         if self.path is None or len(self.path) < 2:
             self.agent.logger.error("No path available to get next cell")
             return None
         return self.path[1]  # path[0] is current cell, path[1] is next cell
-    
-    

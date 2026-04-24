@@ -54,18 +54,20 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 self.agent.maze_requesters.append(sender_jid)
                 if not self.agent.requesting_image:
                     await self.request_photo()
-            
+
             case AngleRequest():
                 self.agent.angle_requesters.append(sender_jid)
                 if not self.agent.requesting_image:
                     await self.request_photo()
-            
+
             case PathRequest():
                 self.agent.path_requesters.append(sender_jid)
                 if not self.agent.maze:
                     self.agent.logger.error("Received path request but maze is not set")
                     return
-                find_path = FindPathBehaviour(maze=self.agent.maze, output_dir=self.path_dir)  # type: ignore
+                find_path = FindPathBehaviour(
+                    maze=self.agent.maze, output_dir=self.path_dir
+                )  # type: ignore
                 self.agent.add_behaviour(find_path)
 
             case DirectionRequest():
@@ -103,9 +105,11 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                         output_dir=self.maze_dir,
                     )
                     self.agent.add_behaviour(build_maze)
-                
+
                 if len(self.agent.path_requesters) != 0:
-                    find_path = FindPathBehaviour(maze=self.agent.maze, output_dir=self.path_dir)  # type: ignore
+                    find_path = FindPathBehaviour(
+                        maze=self.agent.maze, output_dir=self.path_dir
+                    )  # type: ignore
                     self.agent.add_behaviour(find_path)
 
             case PathResponse(path=path):
