@@ -3,29 +3,27 @@ from typing import Any
 
 from spade.behaviour import CyclicBehaviour
 
-from agents.robot.agent import RobotAgent
-from common.models.controller import (
-    MoveRequest,
-    PathRequest,
-    SurroundingsRequest,
-    SurroundingsResponse,
-)
+# from common.models.controller import (
+#     MoveRequest,
+#     PathRequest,
+#     SurroundingsRequest,
+#     SurroundingsResponse,
+# )
 from common.sender import BaseSenderBehaviour
 
 
 class MoveBehaviour(CyclicBehaviour):
-    agent: RobotAgent
-
     def __init__(self):
         super().__init__()
         self.bot = None
 
-    def on_start(self):
+    async def on_start(self):
         self.bot = self.agent.bot
-        self.bot.setBothPWM(40)
 
     async def run(self):
-        await self._go_forward_for(0.15)
+        await self.go_forward_for(0.15)
+        self.agent.logger.info(f"Moved forward for 0.15 seconds")
+
 
         # surroundings is a list of tuples (direction, is_free) (str, bool)
         surroundings = await self.ask_surroundings()
@@ -40,7 +38,6 @@ class MoveBehaviour(CyclicBehaviour):
             self.agent.logger.info(f"Only one free direction: {free_directions[0]}")
             await self.turn_and_go(free_directions[0])
             self.agent.logger.info(f"Moved {free_directions[0]}")
-            return
 
         if len(free_directions) > 1:
             self.agent.logger.info(f"Multiple free directions: {free_directions}")
@@ -49,7 +46,6 @@ class MoveBehaviour(CyclicBehaviour):
             self.agent.logger.info(f"Controller directed to go: {direction}")
             await self.turn_and_go(direction)
             self.agent.logger.info(f"Moved {direction}")
-            return
 
         self.bot.stop()
         self.kill()  # stop the behaviour until next run when it will ask for surroundings again
