@@ -9,15 +9,34 @@
  */
 
 export class Agent {
-    
     constructor(host="isc-coordinator.lan") {
         this.ws = new WebSocket("/ws")
         this.ws.addEventListener("message", event => this.onWSMessage(event))
-
+        
         /** @type {Object.<string, messageCallback[]>} */
         this.listeners = {}
-
+        
+        this.hostKey = "dynamaze-host"
+        this.hostInput = document.getElementById("xmpp-host")
+        this.hostSetBtn = document.getElementById("set-xmpp-host")
+        this.initListeners()
         this.host = host
+        this.loadHost()
+    }
+
+    initListeners() {
+        this.hostSetBtn.addEventListener("click", () => {
+            this.host = this.hostInput.value
+            localStorage.setItem(this.hostKey, this.host)
+        })
+    }
+
+    loadHost() {
+        const host = localStorage.getItem(this.hostKey)
+        if (host) {
+            this.host = host
+            this.hostInput.value = host
+        }
     }
 
     onWSMessage(event) {

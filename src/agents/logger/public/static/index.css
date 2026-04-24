@@ -30,6 +30,12 @@ button.button {
     display: flex;
     gap: 1em;
     padding: .4em .8em;
+
+    label {
+        font-style: normal;
+        font-weight: bold;
+        align-self: center;
+    }
 }
 
 .cards {
@@ -93,7 +99,7 @@ button.button {
     }
 
     #recipient {
-        :not(.show) {
+        & > [data-type]:not(.show) {
             display: none;
         }
     }

@@ -24,8 +24,9 @@
     </datalist>
     <h1>Dashboard</h1>
     <div id="host">
+        <label for="xmpp-host">Host</label>
         <input type="text" id="xmpp-host" value="isc-coordinator.lan">
-        <button id="set-xmpp-host">Set</button>
+        <button class="button" id="set-xmpp-host">Set</button>
     </div>
     <div class="cards">
         <div id="sender" class="card">
@@ -51,7 +52,12 @@
                         </div>
                     </div>
                     <div class="row" id="recipient">
-                        <select name="recipient-predefined" data-type="predefined" class="show"></select>
+                        <select name="recipient-predefined" data-type="predefined" class="show">
+                            <option value="logger">Logger</option>
+                            <option value="alberto-robot">Robot</option>
+                            <option value="alberto-ctrl">Controller</option>
+                            <option value="camera">Camera</option>
+                        </select>
                         <input type="text" name="recipient-manual" data-type="manual" />
                     </div>
                 </section>

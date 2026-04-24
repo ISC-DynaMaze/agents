@@ -6,7 +6,6 @@ import { Sender } from "./sender.mjs";
 
 export class Dashboard {
     constructor() {
-        // TODO: set host button
         this.agent = new Agent()
         this.sender = new Sender(this.agent, document.getElementById("sender"))
         this.bookmarks = new Bookmarks(this.agent, document.getElementById("saved"))
