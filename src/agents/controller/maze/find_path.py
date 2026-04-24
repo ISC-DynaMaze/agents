@@ -51,6 +51,7 @@ def print_path(path):
 # a* search algorithm
 def a_star_search(maze, src, dest):
     # Check if the source and destination are valid
+    print("INN AAAAA STAR")
     if not maze.is_valid_cell(src[0], src[1]) or not maze.is_valid_cell(
         dest[0], dest[1]
     ):
@@ -164,9 +165,11 @@ def draw_path(maze_img, path, cell_size=140, margin=40, color=(0, 0, 0), thickne
 def find_path(maze: Maze):
     start = (maze.bot_cell.row, maze.bot_cell.col)
     target = (maze.target_cell.row, maze.target_cell.col)
+    print(f"Start: {start}, Target: {target}")
 
     # A* search to find path
     path = a_star_search(maze, start, target)
+    print("PATH FOUUUUUUUUUUUUUUUUUUUUUUUND")
     return path
 
 

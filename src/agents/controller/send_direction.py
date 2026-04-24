@@ -10,7 +10,8 @@ import cv2
 from spade.behaviour import OneShotBehaviour
 
 from common.models.camera import CameraRequest
-from common.models.controller import DirectionResponse, PathRequest
+from common.models.common import ReqResAdapter
+from common.models.controller import DirectionResponse, PathRequest, PathResponse
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -43,19 +44,21 @@ class SendDirectionBehaviour(OneShotBehaviour):
             return
 
         # detect aruco marker and update bot cell in maze
-        corners, ids, _ = self.maze.detect_markers(img)
+        corners, ids, _ = self.maze.detect_aruco_markers(img)
         if ids is None or len(ids) == 0:
             self.agent.logger.error("No markers detected in camera image")
             return
 
+        self.agent.logger.info(f"Old bot cell: {self.maze.bot_cell}")
         # update bot cell in maze
         self.maze.set_bot_cell(corners, ids)
+        self.agent.logger.info(self.maze)
+        self.agent.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
 
         # infer bot orientation based on marker corners
-        orientation = self.get_bot_orientation(corners, ids)
+        orientation = self.get_bot_orientation(corners, ids, 13)
         if orientation is None:
             self.agent.logger.error("Bot marker not found, cannot infer orientation")
-            return
         self.agent.logger.info(f"Bot orientation: {orientation}")
 
         # request new path based on updated bot cell
@@ -64,7 +67,8 @@ class SendDirectionBehaviour(OneShotBehaviour):
         path = await self.wait_for_path(previous_path, timeout=10.0)
         if path is None:
             self.agent.logger.error("Timed out waiting for path response")
-            return
+        
+        self.agent.logger.info(f"New path: {path}")
 
         self.path = path
         next_cell = await self.get_next_cell()
@@ -132,13 +136,26 @@ class SendDirectionBehaviour(OneShotBehaviour):
 
     # Wait for a new path response that is different from agent.current_path
     async def wait_for_path(self, previous_path, timeout: float):
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            current_path = self.agent.current_path
-            if current_path is not None and current_path != previous_path:
-                return current_path
-            await asyncio.sleep(0.2)
-        return None
+        while True:
+            try:
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.agent.logger.error("Timed out waiting for path response message")
+                    continue
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, PathResponse)
+                return res.path
+            except Exception as e:
+                self.agent.logger.error(f"Error occurred while waiting for path: {e}")
+                continue
+
+        # deadline = time.monotonic() + timeout
+        # while time.monotonic() < deadline:
+        #     current_path = self.agent.current_path
+        #     if current_path is not None and current_path != previous_path:
+        #         return current_path
+        #     await asyncio.sleep(0.2)
+        # return None
 
     # infer bot orientation based on position of bot marker corners
     def get_bot_orientation(self, corners, ids, bot_id: int = 7):

@@ -216,7 +216,7 @@ class Maze:
         print(f"Aruco marker ID {target_id} not found, cannot set target cell")
 
     # set bot marker (can move; we can call this multiple times to update target position in find_path)
-    def set_bot_cell(self, corners, ids, bot_id=7):
+    def set_bot_cell(self, corners, ids, bot_id=13):
         if ids is None:
             print("No Aruco markers detected, cannot set bot cell")
             return
