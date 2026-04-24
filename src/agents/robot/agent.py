@@ -61,4 +61,5 @@ class RobotAgent(Agent):
         self.bot.stop()
         self.bot.back_leds.setBrightness(0)
         self.bot.back_leds.show()
+        self.bot.stopBuzzer()
         return await super().stop()

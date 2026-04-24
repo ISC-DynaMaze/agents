@@ -12,12 +12,14 @@ class RobotRequestBase(RequestBase):
 class RobotResponseBase(ResponseBase):
     pass
 
+
 class RobotMoveRequest(RobotRequestBase):
     type: Literal["bot-move-req"] = "bot-move-req"  # type: ignore
 
+
 class RobotMoveResponse(RobotResponseBase):
     type: Literal["bot-move-res"] = "bot-move-res"  # type: ignore
-    #directions: list[directions] 
+    # directions: list[directions]
 
 
 class PanTiltRequest(RobotRequestBase):
@@ -45,15 +47,21 @@ class StatusResponse(RobotResponseBase):
     camera: CameraStatus
 
 
+class HonkRequest(RobotRequestBase):
+    type: Literal["bot-honk"] = "bot-honk"  # type: ignore
+
+
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
         CameraPhotoRequest,
         RobotMoveRequest,
+        HonkRequest,
     ],
     Field(discriminator="type"),
 ]
 
 RobotResponse = Annotated[
-    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse], Field(discriminator="type")
+    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse],
+    Field(discriminator="type"),
 ]
