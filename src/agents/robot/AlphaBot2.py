@@ -19,6 +19,8 @@ class AlphaBot2(object):
         self.ENB = enb
         self.DR = dr
         self.DL = dl
+        self.PA = 40
+        self.PB = 40
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)

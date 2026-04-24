@@ -40,6 +40,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ForwardCalibrationRequest():
                 fw_calibration_behaviour = ForwardCalibrationBehaviour()
-                self.agent.add_behaviour (fw_calibration_behaviour)
+                self.agent.add_behaviour(fw_calibration_behaviour)
 
             
