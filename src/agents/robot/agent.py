@@ -36,6 +36,7 @@ class RobotAgent(Agent):
         self.logger_jid: str = logger_jid
         self.controller_jid: str = controller_jid
         self.camera_res: tuple[int, int] = camera_res
+        self.logger = logging.getLogger("RobotAgent")
 
     async def setup(self):
         self.bot = AlphaBot2()
