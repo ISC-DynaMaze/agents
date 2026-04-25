@@ -26,7 +26,8 @@ class AngleSlider {
     }
 
     setValue(value, updateSlider = false) {
-        this.curLabel.innerText = `${value}°`
+        const valStr = Math.round(value * 100) / 100
+        this.curLabel.innerText = `${valStr}°`
         if (updateSlider) {
             this.slider.value = value
         }
@@ -91,8 +92,8 @@ export class RobotCamera {
         })
 
         this.agent.on("cam-status", msg => {
-            this.panSlider.setValue(msg.status.pan)
-            this.tiltSlider.setValue(msg.status.tilt)
+            this.panSlider.setValue(msg.status.pan, true)
+            this.tiltSlider.setValue(msg.status.tilt, true)
         })
 
         
