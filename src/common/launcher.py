@@ -2,23 +2,26 @@ import asyncio
 import logging
 import os
 import signal
-from typing import Generic, Optional, Type, TypeVar
+from typing import Any, Callable, Generic, Optional, Type, TypeVar, Union
 
 from spade.agent import Agent
 
 T = TypeVar("T", bound=Agent)
+ParamValue = Union[
+    tuple[str, Any], tuple[str, Any, Callable[[Any], Any]], Callable[[], Any]
+]
 
 
 class Launcher(Generic[T]):
     def __init__(
         self,
         agent_cls: Type[T],
-        env_vars: Optional[dict] = None,
+        env_vars: Optional[dict[str, ParamValue]] = None,
         debug_loggers: Optional[list[str]] = None,
     ) -> None:
         self.logger = logging.getLogger("Launcher")
         self.agent_cls: Type[T] = agent_cls
-        self.env_vars: dict = env_vars or {}
+        self.env_vars: dict[str, ParamValue] = env_vars or {}
         self.debug_loggers: list[str] = debug_loggers or []
 
     def config_loggers(self):
@@ -31,8 +34,22 @@ class Launcher(Generic[T]):
 
     def make_agent(self) -> T:
         vars = {}
-        for param_name, (env_name, default) in self.env_vars.items():
-            vars[param_name] = os.environ.get(env_name, default)
+        for param_name, param_value in self.env_vars.items():
+            value = None
+            if isinstance(param_value, tuple):
+                env_name = param_value[0]
+                default = param_value[1]
+                value = os.environ.get(env_name, default)
+                if len(param_value) > 2:
+                    func = param_value[2]
+                    value = func(value)
+            elif callable(param_value):
+                value = param_value()
+            else:
+                raise ValueError(
+                    f"invalid parameter value for {param_name}: {param_value}"
+                )
+            vars[param_name] = value
 
         agent: T = self.agent_cls(**vars, verify_security=False)
         return agent
