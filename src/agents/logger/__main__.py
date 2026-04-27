@@ -8,8 +8,8 @@ async def main():
     launcher: Launcher[LoggerAgent] = Launcher(
         LoggerAgent,
         {
-            "jid": ("XMPP_JID", "alberto-ctrl@isc-coordinator.lan"),
-            "password": ("XMPP_PASSWORD", "plsnohack"),
+            "jid": ("XMPP_JID", "logger@isc-coordinator.lan"),
+            "password": ("XMPP_PASSWORD", "top_secret"),
         },
         debug_loggers=["spade"],
     )
