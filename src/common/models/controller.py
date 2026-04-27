@@ -43,6 +43,7 @@ class AngleResponse(ControllerResponseBase):
 
 class DirectionResponse(ControllerResponseBase):
     type: Literal["ctrl-direction-res"] = "ctrl-direction-res"  # type: ignore
+    direction: str
 
 
 class DirectionRequest(ControllerRequestBase):

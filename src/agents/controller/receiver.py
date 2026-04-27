@@ -19,6 +19,7 @@ from common.models.common import Request, Response
 from common.models.controller import (
     AngleRequest,
     DirectionRequest,
+    DirectionResponse,
     MazeRequest,
     PathRequest,
     PathResponse,
@@ -107,3 +108,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 print("Received path response")
                 print(f"Path: {path}")
                 self.agent.current_path = path
+
+            case DirectionResponse(direction=direction):
+                print("Received direction response")
+                print(f"Direction: {direction}")
+                self.agent.logger.info(f"Received direction response: {direction}")
