@@ -31,3 +31,6 @@ robot = [
     "simplejpeg>=1.8.2",
     "spidev>=3.8",
 ]
+referee = [
+    "paho-mqtt>=2.1.0",
+]
