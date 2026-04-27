@@ -46,6 +46,12 @@ class StatusResponse(RobotResponseBase):
     type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
     camera: CameraStatus
 
+class TurningRequest(RobotRequestBase):
+    type: Literal["bot-turn-req"] = "bot-turn-req"
+    direction: bool #0=left, 1=right
+    angle : float
+    speed : Optional[int] = None
+
 
 class HonkRequest(RobotRequestBase):
     type: Literal["bot-honk"] = "bot-honk"  # type: ignore

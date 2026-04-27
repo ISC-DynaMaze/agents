@@ -32,7 +32,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
 
         if latest_data:
             now = datetime.datetime.now()
-            interval = (now - latest_data[1]).total_seconds()
+            interval = (now - latest_data[0]).total_seconds()
             if interval > 3600:
                 logger.info("[Behaviour] New calibration required")
 
@@ -62,8 +62,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             logger.info(f"[Interpolate] : {test}")
             result_test = await self.test_sequence(test)
             self.save_result(delta_history, result_test)
-        else:
-            self.load_profile(latest_data[0])
+        else :
+            logger.info(f"[Calibration] ")
 
     async def ask_angle(self):
         logger.debug("[Behaviour] Ask controller for actual angle")
@@ -166,14 +166,4 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         file_time = datetime.datetime.strptime(date_str, "%Y%m%d_%H%M%S")
         return latest_file, file_time
 
-    def load_profile(self, file_path):
-        try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
-                self.delta_history = [[m["angle"], m["time"]] for m in data["measures"]]
-                self.speed = data.get("speed", 20)
-                logger.info(f"[Load] Existing config loaded ")
-                return True
-        except Exception as e:
-            logger.error(f"[Load] Erreur : {e}")
-            return False
+    

@@ -6,12 +6,14 @@ from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.status import SendStatusBehaviour
+from agents.robot.turn import TurningBehaviour
 from common.models.common import Request, StopRequest
 from common.models.robot import (
     CameraPhotoRequest,
     HonkRequest,
     PanTiltRequest,
     RobotMoveRequest,
+    TurningRequest,
 )
 from common.receiver import BaseReceiverBehaviour
 
@@ -45,3 +47,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case HonkRequest():
                 self.agent.add_behaviour(HonkBehaviour())
+
+            case TurningRequest(direction=direction, angle=angle):
+                turning_behaviour = TurningBehaviour(direction, angle)
+                self.agent.add_behaviour(turning_behaviour)
