@@ -43,7 +43,7 @@ class TurningBehaviour(OneShotBehaviour):
         self.logger.info(f"x={self.angle} y={time}")
         return time
 
-    def load_profile(self, file_path):
+    def load_profile(self, file_path) -> list[tuple[float, float]]:
         with open(file_path, "r") as f:
             data = json.load(f)
             parameters = [[m["angle"], m["time"]] for m in data["measures"]]
