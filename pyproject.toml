@@ -26,3 +26,6 @@ robot = [
     "rpi-ws281x>=5.0.0",
     "spidev>=3.8",
 ]
+referee = [
+    "paho-mqtt>=2.1.0",
+]

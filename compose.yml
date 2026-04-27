@@ -70,6 +70,25 @@ services:
     volumes:
       - ./:/app
 
+  referee:
+    profiles:
+      - gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - loop-breakers/referee
+      args:
+        AGENT: referee
+    container_name: referee-agent
+    environment:
+      XMPP_JID: "referee@$XMPP_HOST"
+      XMPP_PASSWORD: $XMPP_PASSWORD
+      MQTT_HOST: $MQTT_HOST
+      MQTT_PORT: $MQTT_PORT
+    volumes:
+      - ./:/app
+
   logger:
     profiles:
       - logger
