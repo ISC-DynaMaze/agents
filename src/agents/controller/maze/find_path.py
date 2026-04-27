@@ -170,7 +170,6 @@ def find_path(maze: Maze):
 
     # A* search to find path
     path = a_star_search(maze, start, target)
-    print("PATH FOUUUUUUUUUUUUUUUUUUUUUUUND")
     return path
 
 
