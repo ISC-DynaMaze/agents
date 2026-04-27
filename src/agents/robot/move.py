@@ -23,7 +23,7 @@ class MoveBehaviour(CyclicBehaviour):
         self.logger.info("Moved forward for 0.15 seconds")
 
         # get next surrounding
-        await self.get_next_surrounding()  # add directly to mental state
+       # await self.get_next_surrounding()  # add directly to mental state
 
         # check if we have already seen the surroundings for current cell
         if len(self.surroundings) == 1:
@@ -31,12 +31,12 @@ class MoveBehaviour(CyclicBehaviour):
             return
 
         # get current surroundings and check which directions are open
-        current_surrounding = await self.get_current_surrounding()
+        #current_surrounding = await self.get_current_surrounding()
 
         # check free direction in current surroundings
-        free_directions = [
-            direction for direction, status in current_surrounding if status == "open"
-        ]
+        # free_directions = [
+        #     direction for direction, status in current_surrounding if status == "open"
+        # ]
 
         # TODO: implement logic when check for surroundings implemented
         # if len(free_directions) == 1:
@@ -93,7 +93,7 @@ class MoveBehaviour(CyclicBehaviour):
         return directions
 
     async def get_next_surrounding(self):
-        self.bot.stop(1)  # stop the bot before asking for surroundings
+        self.bot.stop()  # stop the bot before asking for surroundings
         next_surrounding = await self.ask_surroundings()
         if next_surrounding is None:
             self.logger.error("No response received for surroundings request")
