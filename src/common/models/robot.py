@@ -46,11 +46,16 @@ class StatusResponse(RobotResponseBase):
     type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
     camera: CameraStatus
 
+
 class TurningRequest(RobotRequestBase):
     type: Literal["bot-turn-req"] = "bot-turn-req"
-    direction: bool #0=left, 1=right
-    angle : float
-    speed : Optional[int] = None
+    direction: bool  # 0=left, 1=right
+    angle: float
+    speed: Optional[int] = None
+
+
+class TurningCalibrationRequest(RobotRequestBase):
+    type: Literal["bot-calub-turn-req"] = "bot-calub-turn-req"
 
 
 class HonkRequest(RobotRequestBase):
@@ -63,6 +68,8 @@ RobotRequest = Annotated[
         CameraPhotoRequest,
         RobotMoveRequest,
         HonkRequest,
+        TurningRequest,
+        TurningCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
