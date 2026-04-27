@@ -60,7 +60,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     
     async def pipeline(self, angle_history, delta_history, direction):
         for i in range(10):
-            await self.calibration_sequence(angle_history, delta_history, i*self.delta_t, Direction.Left)
+            await self.calibration_sequence(angle_history, delta_history, i*self.delta_t, direction)
         logger.info(f"[Calibration result] : {delta_history}")
         test = self.interpolate(delta_history)
 
