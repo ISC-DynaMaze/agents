@@ -6,17 +6,17 @@ from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.status import SendStatusBehaviour
-from agents.robot.turn_calibration import AngleCalibrationBehaviour
 from agents.robot.turn import TurningBehaviour
+from agents.robot.turn_calibration import AngleCalibrationBehaviour
 from common.models.common import Request, StopRequest
 from common.models.robot import (
     CameraPhotoRequest,
     HonkRequest,
     PanTiltRequest,
     RobotMoveRequest,
+    TurningCalibrationRequest,
     TurningRequest,
 )
-from common.models.robot import CameraPhotoRequest, PanTiltRequest, TurningRequest, TurningCalibrationRequest
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -43,13 +43,13 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.bot.setCameraTilt(tilt)
 
                 self.agent.add_behaviour(SendStatusBehaviour(self.agent.logger_jid))
-            
+
             case TurningCalibrationRequest():
                 turning_calibration_behaviour = AngleCalibrationBehaviour()
                 self.agent.add_behaviour(turning_calibration_behaviour)
 
             case TurningRequest(direction=direction, angle=angle):
-                turning_behaviour = TurningBehaviour(angle,direction)
+                turning_behaviour = TurningBehaviour(angle, direction)
                 self.agent.add_behaviour(turning_behaviour)
 
             case RobotMoveRequest():

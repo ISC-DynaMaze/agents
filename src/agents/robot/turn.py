@@ -6,8 +6,10 @@ from pathlib import Path
 
 import numpy as np
 from spade.behaviour import OneShotBehaviour
-from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
+
 from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
+
 
 class TurningBehaviour(OneShotBehaviour):
     def __init__(self, angle, direction, speed=20):
