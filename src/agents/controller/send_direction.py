@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import cv2
+import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from common.models.camera import CameraRequest, CameraResponse
@@ -29,6 +30,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     def __init__(self):
+        super().__init__()
         self.logger = logging.getLogger("SendDirectionLogger")
 
     async def on_start(self):
@@ -122,21 +124,22 @@ class SendDirectionBehaviour(OneShotBehaviour):
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
     # wait for a new image file to appear in photo_dir that is not in known_files, then read and return it
-    async def wait_for_new_image(self, timeout: float):
+    async def wait_for_new_image(self, timeout: float) -> np.ndarray:
         while True:
             try:
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for camera response message"
-                    )
+                    self.logger.error("Timed out waiting for camera response message")
                     continue
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, CameraResponse)
-                img = res.img
+                save_dir = Path("photos")
+                img, _ = await res.decode_img(res.img, save_dir)
                 return img
             except Exception as e:
-                self.logger.error(f"Error occurred while waiting for camera response: {e}")
+                self.logger.error(
+                    f"Error occurred while waiting for camera response: {e}"
+                )
                 continue
 
     # Wait for a new path response that is different from agent.current_path
@@ -145,9 +148,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             try:
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for path response message"
-                    )
+                    self.logger.error("Timed out waiting for path response message")
                     continue
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, PathResponse)

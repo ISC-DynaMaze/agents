@@ -47,7 +47,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_photo(self):
         ask_photo = RequestPhotoBehaviour(self.agent.camera_jid)
         self.agent.add_behaviour(ask_photo)
-    
+
     async def request_direction(self):
         ask_direction = SendDirectionBehaviour()
         self.agent.add_behaviour(ask_direction)
@@ -84,20 +84,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
             case CameraResponse(img=encoded_img):
                 self.agent.requesting_image = False
 
-                print("Received photo message.")
-                img_data = base64.b64decode(encoded_img)
-
-                # Generate filename with timestamp
-                timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"photo_{timestamp}.jpg"
-                filepath = self.save_dir / filename
-
-                # Save the received image
-                async with aiofiles.open(filepath, "wb") as img_file:
-                    await img_file.write(img_data)
-
-                print(f"Photo saved as '{filepath}'.")
-                img: np.ndarray = cv2.imread(filepath)  # type: ignore
+                img, filepath = await res.decode_img(encoded_img, self.save_dir)
 
                 if len(self.agent.angle_requesters) != 0:
                     bot_detection = BotDetectionBehaviour(img)
