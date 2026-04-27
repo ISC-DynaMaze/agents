@@ -55,7 +55,7 @@ class TurningRequest(RobotRequestBase):
 
 
 class TurningCalibrationRequest(RobotRequestBase):
-    type: Literal["bot-calub-turn-req"] = "bot-calub-turn-req"
+    type: Literal["bot-calib-turn-req"] = "bot-calib-turn-req"
 
 
 class HonkRequest(RobotRequestBase):
