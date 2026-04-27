@@ -34,9 +34,14 @@ class TurningBehaviour(OneShotBehaviour):
         self.bot.stop()
         
 
-    def interpolate(self, file):
-        f = np.polyfit(file[0], file[1], 1)
-        return f(self.angle)
+    def interpolate(self, config: list[tuple[float, float]]):
+        data = np.array(config)
+        c = np.polyfit(data[:, 0], data[:, 1], 1)
+        self.logger.info(f"coefficients: {c}")
+        f = np.poly1d(c)
+        time = f(self.angle)
+        self.logger.info(f"x={self.angle} y={time}")
+        return time
 
     def load_profile(self, file_path):
         with open(file_path, "r") as f:
