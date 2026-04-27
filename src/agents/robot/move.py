@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any
 
 from spade.behaviour import CyclicBehaviour
@@ -11,6 +12,7 @@ class MoveBehaviour(CyclicBehaviour):
     def __init__(self):
         super().__init__()
         self.bot = None
+        self.logger = logging.getLogger("MoveBehaviour")
 
     async def on_start(self):
         self.bot = self.agent.bot
@@ -18,14 +20,14 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def run(self):
         await self.go_forward_for(0.15)
-        self.agent.logger.info("Moved forward for 0.15 seconds")
+        self.logger.info("Moved forward for 0.15 seconds")
 
         # get next surrounding
         await self.get_next_surrounding()  # add directly to mental state
 
         # check if we have already seen the surroundings for current cell
         if len(self.surroundings) == 1:
-            self.agent.logger.info("No surroundings in mental state")
+            self.logger.info("No surroundings in mental state")
             return
 
         # get current surroundings and check which directions are open
@@ -47,9 +49,9 @@ class MoveBehaviour(CyclicBehaviour):
 
         # ask controller where to go
         direction = await self.ask_controller()
-        self.agent.logger.info(f"Controller directed to go: {direction}")
+        self.logger.info(f"Controller directed to go: {direction}")
         await self.turn_and_go(direction)
-        self.agent.logger.info(f"Moved {direction}")
+        self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
         self.kill()  # stop the behaviour until next run when it will ask for surroundings again
@@ -94,7 +96,7 @@ class MoveBehaviour(CyclicBehaviour):
         self.bot.stop(1)  # stop the bot before asking for surroundings
         next_surrounding = await self.ask_surroundings()
         if next_surrounding is None:
-            self.agent.logger.error("No response received for surroundings request")
+            self.logger.error("No response received for surroundings request")
             return
         else:
             self.surroundings.append(next_surrounding)
@@ -102,7 +104,7 @@ class MoveBehaviour(CyclicBehaviour):
     # returns list of tuples with direction and status of current surrounding
     async def get_current_surrounding(self):
         if len(self.surroundings) == 1:
-            self.agent.logger.warning(
+            self.logger.warning(
                 "No current current surrounding in mental state"
             )  # should never happen when calling this function
             return None
