@@ -19,19 +19,13 @@ from common.sender import BaseSenderBehaviour
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
-# Enable SPADE and XMPP specific logging
-for log_name in ["spade", "aioxmpp", "xmpp"]:
-    log = logging.getLogger(log_name)
-    log.setLevel(logging.DEBUG)
-    log.propagate = True
-
 
 class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("SendDirectionLogger")
+        self.logger = logging.getLogger("SendDirectionBehaviour")
 
     async def on_start(self):
         self.maze = self.agent.maze
