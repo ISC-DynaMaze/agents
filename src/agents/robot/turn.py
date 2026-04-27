@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from spade.behaviour import OneShotBehaviour
-from agents.robot.turn_calibration import AngleCalibrationBehaviour
+from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
 from agents.robot.AlphaBot2 import AlphaBot2
 
 class TurningBehaviour(OneShotBehaviour):
@@ -22,14 +22,18 @@ class TurningBehaviour(OneShotBehaviour):
         self.calib = AngleCalibrationBehaviour()
     
     async def run(self):
-        test, _ = self.calib.load_latest_data()
-        config = self.load_profile(test)
-        turning_time = self.interpolate(config)
+        turning_time = 0.0
         self.bot.setBothPWM(self.speed)
         if self.direction:
             self.bot.right()
+            test, _ = self.calib.load_latest_data(self.direction)
+            config = self.load_profile(test)
+            turning_time = self.interpolate(config)
         else:
             self.bot.left()
+            test, _ = self.calib.load_latest_data(self.direction)
+            config = self.load_profile(test)
+            turning_time = self.interpolate(config)
         await asyncio.sleep(turning_time)
         self.bot.stop()
         

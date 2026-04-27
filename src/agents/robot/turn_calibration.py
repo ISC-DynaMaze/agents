@@ -39,6 +39,13 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         angle_history = [self.actual_angle]
         delta_history = []
         await self.pipeline(angle_history, delta_history, Direction.Left)
+        self.actual_angle = await self.ask_angle()
+        if self.actual_angle is None:
+            logger.info(f"[Behaviour] No angle given")
+            return
+        self.bot.setBothPWM(self.speed)
+        angle_history = [self.actual_angle]
+        delta_history = []
         await self.pipeline(angle_history, delta_history, Direction.Right)
 
     async def ask_angle(self):
@@ -65,8 +72,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         test = self.interpolate(delta_history)
 
         logger.info(f"[Interpolate] : {test}")
-        result_test = await self.test_sequence(test)
-        self.save_result(delta_history, result_test)
+        result_test = await self.test_sequence(test, direction)
+        self.save_result(delta_history, result_test, direction)
 
 
     async def calibration_sequence(self, angle_history, delta_history, delta_t, direction):
@@ -95,7 +102,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         print(y)
         return np.interp([45, 90, 135], x, y)
 
-    async def test_sequence(self, test):
+    async def test_sequence(self, test, direction):
         test_angle_history = []
         test_delta_history = []
         targets = [45, 90, 135]  #Validation test
@@ -104,7 +111,10 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             start_angle = await self.ask_angle()
             test_angle_history.append(start_angle)
 
-            self.bot.left()
+            if direction == Direction.Left:
+                self.bot.left()
+            else :
+                self.bot.right()
             await asyncio.sleep(t)
             self.bot.stop()
 
@@ -121,7 +131,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.bot.stop()
         return test_delta_history
 
-    def save_result(self, delta_history, test_delta_history):
+    def save_result(self, delta_history, test_delta_history, direction):
         data = {
             "speed": self.speed,
             "measures": [
@@ -130,7 +140,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             "tests": test_delta_history,
         }
 
-        save_path = Path("test_result")
+        save_path = Path(f"test_result_{direction}")
         save_path.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = save_path / f"debug_{timestamp}.json"
@@ -142,8 +152,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         except Exception as e:
             logger.error(f"Error :  {e}")
 
-    def load_latest_data(self):
-        files = list(Path("test_result").glob("debug_*.json"))
+    def load_latest_data(self, direction):
+        files = list(Path(f"test_result_{direction}").glob("debug_*.json"))
         if not files:
             return False
 
