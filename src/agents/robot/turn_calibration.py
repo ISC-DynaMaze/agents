@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import json
 from pathlib import Path
+from enum import StrEnum
 
 import logging
 import numpy as np
@@ -13,6 +14,10 @@ from common.models.controller import AngleRequest, AngleResponse
 from common.sender import BaseSenderBehaviour
 
 logger = logging.getLogger("AngleCalibrationBehaviour")
+
+class Direction(StrEnum):
+    Left = "left"
+    Right = "right"
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
     def __init__(self, time=0.1, speed=20, delta_t=0.05):
@@ -33,17 +38,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.bot.setBothPWM(self.speed)
         angle_history = [self.actual_angle]
         delta_history = []
-        await self.calibration_sequence(angle_history, delta_history)
-        for i in range(10):
-            await self.calibration_sequence(
-                angle_history, delta_history, self.delta_t
-            )
-        logger.info(f"[Calibration result] : {delta_history}")
-        test = self.interpolate(delta_history)
-
-        logger.info(f"[Interpolate] : {test}")
-        result_test = await self.test_sequence(test)
-        self.save_result(delta_history, result_test)
+        await self.pipeline(angle_history, delta_history, Direction.Left)
+        await self.pipeline(angle_history, delta_history, Direction.Right)
 
     async def ask_angle(self):
         logger.debug("[Behaviour] Ask controller for actual angle")
@@ -61,14 +57,28 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             except:
                 continue
         return res.angle
+    
+    async def pipeline(self, angle_history, delta_history, direction):
+        for i in range(10):
+            await self.calibration_sequence(angle_history, delta_history, i*self.delta_t, Direction.Left)
+        logger.info(f"[Calibration result] : {delta_history}")
+        test = self.interpolate(delta_history)
 
-    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.0):
+        logger.info(f"[Interpolate] : {test}")
+        result_test = await self.test_sequence(test)
+        self.save_result(delta_history, result_test)
+
+
+    async def calibration_sequence(self, angle_history, delta_history, delta_t,  direction):
         logger.info(f"[Time] Time : {self.time}")
         logger.info(f"[Time] Additional time : {delta_t}")
         logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
-        self.bot.left()
+
+        if direction == Direction.Left:
+            self.bot.left()
+        elif direction == Direction.Right:
+            self.bot.right()
         await asyncio.sleep(self.time + delta_t)
-        self.time += self.delta_t
         self.bot.stop()
         await asyncio.sleep(1)
         self.actual_angle = await self.ask_angle()
