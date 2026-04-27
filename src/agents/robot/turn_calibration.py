@@ -69,9 +69,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.save_result(delta_history, result_test)
 
 
-    async def calibration_sequence(self, angle_history, delta_history, delta_t,  direction):
-        logger.info(f"[Time] Time : {self.time}")
-        logger.info(f"[Time] Additional time : {delta_t}")
+    async def calibration_sequence(self, angle_history, delta_history, delta_t, direction):
         logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
 
         if direction == Direction.Left:
@@ -84,6 +82,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.actual_angle = await self.ask_angle()
         angle_history.append(self.actual_angle)
         delta = abs(((angle_history[-2] - angle_history[-1] + 180) % 360) - 180)
+        logger.info(f"[Time] Time saved : {self.time+delta_t}")
         delta_history.append([delta, self.time+delta_t])
 
     def interpolate(self, delta_history):
