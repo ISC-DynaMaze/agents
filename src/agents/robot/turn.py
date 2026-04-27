@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from scipy.interpolate import interp1d
 from spade.behaviour import OneShotBehaviour
 from agents.robot.turn_calibration import AngleCalibrationBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
@@ -35,7 +36,8 @@ class TurningBehaviour(OneShotBehaviour):
         
 
     def interpolate(self, file):
-        return np.interp(self.angle, file[0], file[1], bound_error=False)
+        f = interp1d(file[0],file[1], fill_value = "extrapolate")
+        return f(self.angle)
 
     def load_profile(self, file_path):
         with open(file_path, "r") as f:

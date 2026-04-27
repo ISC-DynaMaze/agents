@@ -14,7 +14,7 @@ from common.sender import BaseSenderBehaviour
 
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
-    def __init__(self, time, speed=20, delta_t=0.05, calib_threshold=60):
+    def __init__(self, time=0.1, speed=20, delta_t=0.05, calib_threshold=60):
         super().__init__()
         self.actual_angle = None
         self.speed = speed
@@ -52,7 +52,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             angle_history = [self.actual_angle]
             delta_history = []
             await self.calibration_sequence(angle_history, delta_history)
-            for i in range(7):
+            for i in range(10):
                 await self.calibration_sequence(
                     angle_history, delta_history, self.delta_t
                 )
@@ -82,16 +82,15 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 continue
         return res.angle
 
-    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.1):
+    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.05):
         logger.info(f"[Time] Time : {self.time}")
         logger.info(f"[Time] Additional time : {delta_t}")
         logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
         self.bot.left()
         await asyncio.sleep(self.time + delta_t)
-        self.time += delta_t
+        self.time += self.delta_t
         self.bot.stop()
         await asyncio.sleep(1)
-        logger.info("[Behaviour] Robot Stop")
         self.actual_angle = await self.ask_angle()
         angle_history.append(self.actual_angle)
         delta = abs(((angle_history[-2] - angle_history[-1] + 180) % 360) - 180)
