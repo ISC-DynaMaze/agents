@@ -15,62 +15,41 @@ from common.sender import BaseSenderBehaviour
 logger = logging.getLogger("AngleCalibrationBehaviour")
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
-    def __init__(self, time=0.1, speed=20, delta_t=0.05, calib_threshold=60):
+    def __init__(self, time=0.1, speed=20, delta_t=0.05):
         super().__init__()
         self.actual_angle = None
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
-        self.calib_threshold = calib_threshold
 
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
 
     async def run(self):
-        new_calibration = True
-        latest_data = self.load_latest_data()
-        logger.info(f"[File date] : {latest_data}")
+        self.actual_angle = await self.ask_angle()
+        if self.actual_angle is None:
+            logger.info(f"[Behaviour] No angle given")
+            return
+        self.bot.setBothPWM(self.speed)
+        angle_history = [self.actual_angle]
+        delta_history = []
+        await self.calibration_sequence(angle_history, delta_history)
+        for i in range(10):
+            await self.calibration_sequence(
+                angle_history, delta_history, self.delta_t
+            )
+        logger.info(f"[Calibration result] : {delta_history}")
+        test = self.interpolate(delta_history)
 
-        if latest_data:
-            now = datetime.datetime.now()
-            interval = (now - latest_data[0]).total_seconds()
-            if interval > 3600:
-                logger.info("[Behaviour] New calibration required")
-
-            else:
-                logger.info("[Behaviour] No need of new calibration")
-                new_calibration = False
-        else:
-            logger.info("[Behaviour] No existing calibration")
-            new_calibration = True
-
-        if new_calibration:
-            self.actual_angle = await self.ask_angle()
-            if self.actual_angle is None:
-                logger.info(f"[Behaviour] No angle given")
-                return
-            self.bot.setBothPWM(self.speed)
-            angle_history = [self.actual_angle]
-            delta_history = []
-            await self.calibration_sequence(angle_history, delta_history)
-            for i in range(10):
-                await self.calibration_sequence(
-                    angle_history, delta_history, self.delta_t
-                )
-            logger.info(f"[Calibration result] : {delta_history}")
-            test = self.interpolate(delta_history)
-
-            logger.info(f"[Interpolate] : {test}")
-            result_test = await self.test_sequence(test)
-            self.save_result(delta_history, result_test)
-        else :
-            logger.info(f"[Calibration] ")
+        logger.info(f"[Interpolate] : {test}")
+        result_test = await self.test_sequence(test)
+        self.save_result(delta_history, result_test)
 
     async def ask_angle(self):
         logger.debug("[Behaviour] Ask controller for actual angle")
 
         msg = AngleRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(msg, "camera@isc-coordinator.lan"))
+        self.agent.add_behaviour(BaseSenderBehaviour(msg, "alberto-ctrl@isc-coordinator.lan"))
 
         while True:
             reply = await self.receive(timeout=15)
@@ -83,7 +62,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 continue
         return res.angle
 
-    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.05):
+    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.0):
         logger.info(f"[Time] Time : {self.time}")
         logger.info(f"[Time] Additional time : {delta_t}")
         logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
@@ -165,5 +144,3 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         date_str = f"{parts[1]}_{parts[2]}"
         file_time = datetime.datetime.strptime(date_str, "%Y%m%d_%H%M%S")
         return latest_file, file_time
-
-    
