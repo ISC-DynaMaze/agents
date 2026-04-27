@@ -1,34 +1,19 @@
-import asyncio
-import logging
-import os
-
 import spade
 
 from agents.logger.logger import LoggerAgent
-
-logging.basicConfig(level=logging.DEBUG)
-
-# Enable SPADE and XMPP specific logging
-for log_name in ["spade", "aioxmpp", "xmpp"]:
-    log = logging.getLogger(log_name)
-    log.setLevel(logging.DEBUG)
-    log.propagate = True
+from common.launcher import Launcher
 
 
 async def main():
-    xmpp_jid = os.environ.get("XMPP_JID", "logger@isc-coordinator.lan")
-    xmpp_password = os.environ.get("XMPP_PASSWORD", "plsnohack")
-    agent = LoggerAgent(xmpp_jid, xmpp_password)
-    await agent.start(auto_register=True)
-    print("Agent started")
-
-    try:
-        while agent.is_alive():
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        print("Shutting down...")
-    finally:
-        await agent.stop()
+    launcher: Launcher[LoggerAgent] = Launcher(
+        LoggerAgent,
+        {
+            "jid": ("XMPP_JID", "alberto-ctrl@isc-coordinator.lan"),
+            "password": ("XMPP_PASSWORD", "plsnohack"),
+        },
+        debug_loggers=["spade"],
+    )
+    await launcher.launch()
 
 
 if __name__ == "__main__":

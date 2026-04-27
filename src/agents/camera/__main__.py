@@ -1,34 +1,20 @@
 import asyncio
-import os
 
 from agents.camera.agent import CameraAgent
+from common.launcher import Launcher
 
 
 async def main():
-    sender_jid = os.environ.get("XMPP_JID", "camera@prosody")
-    sender_password = os.environ.get("XMPP_PASSWORD", "top_secret")
-
-    width: int = int(os.environ.get("CAMERA_WIDTH", 768))
-    height: int = int(os.environ.get("CAMERA_HEIGHT", 432))
-
-    sender = CameraAgent(sender_jid, sender_password, width, height)
-
-    await sender.start(auto_register=True)
-
-    if not sender.is_alive():
-        print("Camera agent couldn't connect. Check Prosody configuration.")
-        await sender.stop()
-        return
-
-    print("Camera agent connected successfully. Running...")
-
-    try:
-        while sender.is_alive():
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        print("Shutting down agent...")
-    finally:
-        await sender.stop()
+    launcher: Launcher[CameraAgent] = Launcher(
+        CameraAgent,
+        {
+            "jid": ("XMPP_JID", "camera@prosody"),
+            "password": ("XMPP_PASSWORD", "top_secret"),
+            "width": ("CAMERA_WIDTH", 768, int),
+            "height": ("CAMERA_HEIGHT", 432, int),
+        },
+    )
+    await launcher.launch()
 
 
 if __name__ == "__main__":
