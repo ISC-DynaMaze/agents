@@ -84,7 +84,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.actual_angle = await self.ask_angle()
         angle_history.append(self.actual_angle)
         delta = abs(((angle_history[-2] - angle_history[-1] + 180) % 360) - 180)
-        delta_history.append([delta, self.time])
+        delta_history.append([delta, self.time+delta_t])
 
     def interpolate(self, delta_history):
         x = []
