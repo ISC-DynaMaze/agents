@@ -89,7 +89,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     async def test_sequence(self, test):
         test_angle_history = []
         test_delta_history = []
-        targets = [45, 90, 135]  # Pour référence
+        targets = [45, 90, 135]  #Validation test
 
         for i, t in enumerate(test):
             start_angle = await self.ask_angle()
