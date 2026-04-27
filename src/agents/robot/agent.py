@@ -28,12 +28,15 @@ class RobotAgent(Agent):
         self,
         *args,
         logger_jid: str = "logger@isc-coordinator.lan",
+        controller_jid: str = "alberto-ctrl@isc-coordinator.lan",
         camera_res: tuple[int, int] = (720, 540),
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.logger_jid: str = logger_jid
+        self.controller_jid: str = controller_jid
         self.camera_res: tuple[int, int] = camera_res
+        self.logger = logging.getLogger("RobotAgent")
 
     async def setup(self):
         self.bot = AlphaBot2()

@@ -27,7 +27,9 @@ class ControllerAgent(Agent):
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
         self.path_requesters: list[str] = []
+        self.direction_requesters: list[str] = []
         self.requesting_image: bool = False
+        self.requesting_direction: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(

@@ -51,13 +51,8 @@ class FindPathBehaviour(OneShotBehaviour):
         self.agent.logger.info(f"Path image saved at {grid_img_path}")
 
         await self.send_path_message(path)
-        
 
     async def send_path_message(self, path: list[tuple[int, int]]):
         res = PathResponse(path=path)
         for requester in self.agent.path_requesters:
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
-    
-
-
-  
