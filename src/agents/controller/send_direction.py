@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import time
 from pathlib import Path
@@ -9,76 +10,83 @@ from typing import TYPE_CHECKING
 import cv2
 from spade.behaviour import OneShotBehaviour
 
-from common.models.camera import CameraRequest
-from common.models.controller import DirectionResponse, PathRequest
+from common.models.camera import CameraRequest, CameraResponse
+from common.models.common import ReqResAdapter
+from common.models.controller import DirectionResponse, PathRequest, PathResponse
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
+
+# Enable SPADE and XMPP specific logging
+for log_name in ["spade", "aioxmpp", "xmpp"]:
+    log = logging.getLogger(log_name)
+    log.setLevel(logging.DEBUG)
+    log.propagate = True
 
 
 class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     def __init__(self):
-        super().__init__()
+        self.logger = logging.getLogger("SendDirectionLogger")
 
     async def on_start(self):
         self.maze = self.agent.maze
         self.path = self.agent.current_path
         self.photo_dir = Path("photos")
-        return super().on_start()
 
     async def run(self):
+        # check for photo directory or create it
+        self.photo_dir.mkdir(parents=True, exist_ok=True)
         # check for maze
         if self.maze is None:
-            self.agent.logger.error("Cannot send direction: maze is not initialized")
+            self.logger.error("Cannot send direction: maze is not initialized")
             return
 
         # request new image
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
         if img is None:
-            self.agent.logger.error("Timed out waiting for camera image")
+            self.logger.error("Timed out waiting for camera image")
             return
 
         # detect aruco marker and update bot cell in maze
         corners, ids, _ = self.maze.detect_aruco_markers(img)
         if ids is None or len(ids) == 0:
-            self.agent.logger.error("No markers detected in camera image")
+            self.logger.error("No markers detected in camera image")
             return
 
-        self.agent.logger.info(f"Old bot cell: {self.maze.bot_cell}")
+        self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
         # update bot cell in maze
         self.maze.set_bot_cell(corners, ids)
-        self.agent.logger.info(self.maze)
-        self.agent.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
+        self.logger.info(self.maze)
+        self.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
 
         # infer bot orientation based on marker corners
         orientation = self.get_bot_orientation(corners, ids, 13)
         if orientation is None:
-            self.agent.logger.error("Bot marker not found, cannot infer orientation")
-        self.agent.logger.info(f"Bot orientation: {orientation}")
+            self.logger.error("Bot marker not found, cannot infer orientation")
+        self.logger.info(f"Bot orientation: {orientation}")
 
         # request new path based on updated bot cell
-        previous_path = self.agent.current_path
         await self.req_path()
-        path = await self.wait_for_path(previous_path, timeout=10.0)
+        path = await self.wait_for_path(timeout=10.0)
         if path is None:
-            self.agent.logger.error("Timed out waiting for path response")
+            self.logger.error("Timed out waiting for path response")
 
-        self.agent.logger.info(f"New path: {path}")
+        self.logger.info(f"New path: {path}")
 
         self.path = path
         next_cell = await self.get_next_cell()
         if next_cell is None:
-            self.agent.logger.info("Bot is already at destination")
+            self.logger.info("Bot is already at destination")
             return
 
         # direction to the next cell in the path (from maze perspective)
         desired_direction = self.get_direction_from_path_step(path)
         if desired_direction is None:
-            self.agent.logger.error("Could not derive desired direction from path")
+            self.logger.error("Could not derive desired direction from path")
             return
 
         # get turn instruction to go from current bot orientation to desired direction
@@ -86,10 +94,10 @@ class SendDirectionBehaviour(OneShotBehaviour):
             current_heading=orientation, target_heading=desired_direction
         )
         if turn is None:
-            self.agent.logger.error("Could not compute turn instruction")
+            self.logger.error("Could not compute turn instruction")
             return
 
-        self.agent.logger.info(
+        self.logger.info(
             f"Next path ready: {path} | next cell: {next_cell} | target heading: {desired_direction} | turn: {turn}"
         )
 
@@ -115,36 +123,38 @@ class SendDirectionBehaviour(OneShotBehaviour):
 
     # wait for a new image file to appear in photo_dir that is not in known_files, then read and return it
     async def wait_for_new_image(self, timeout: float):
-        deadline = time.monotonic() + timeout
-        known_files = {f.name for f in self.photo_dir.glob("photo_*.jpg")}
-
-        while time.monotonic() < deadline:
-            candidates = sorted(
-                self.photo_dir.glob("photo_*.jpg"),
-                key=lambda p: p.stat().st_mtime,
-            )
-            for file_path in reversed(candidates):
-                if file_path.name in known_files:
+        while True:
+            try:
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.logger.error(
+                        "Timed out waiting for camera response message"
+                    )
                     continue
-
-                img = cv2.imread(str(file_path))
-                if img is not None:
-                    return img
-
-            await asyncio.sleep(0.2)
-
-        return None
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, CameraResponse)
+                img = res.img
+                return img
+            except Exception as e:
+                self.logger.error(f"Error occurred while waiting for camera response: {e}")
+                continue
 
     # Wait for a new path response that is different from agent.current_path
-    async def wait_for_path(self, previous_path, timeout: float):
-
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            current_path = self.agent.current_path
-            if current_path is not None and current_path != previous_path:
-                return current_path
-            await asyncio.sleep(0.2)
-        return None
+    async def wait_for_path(self, timeout: float):
+        while True:
+            try:
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.logger.error(
+                        "Timed out waiting for path response message"
+                    )
+                    continue
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, PathResponse)
+                return res.path
+            except Exception as e:
+                self.logger.error(f"Error occurred while waiting for path: {e}")
+                continue
 
     # infer bot orientation based on position of bot marker corners
     def get_bot_orientation(self, corners, ids, bot_id: int = 7):
@@ -213,6 +223,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
     # get next cell in path
     async def get_next_cell(self):
         if self.path is None or len(self.path) < 2:
-            self.agent.logger.error("No path available to get next cell")
+            self.logger.error("No path available to get next cell")
             return None
         return self.path[1]  # path[0] is current cell, path[1] is next cell
