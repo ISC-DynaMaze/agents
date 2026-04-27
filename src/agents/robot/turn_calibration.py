@@ -3,7 +3,7 @@ import datetime
 import json
 from pathlib import Path
 
-import logger
+import logging
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
@@ -12,6 +12,7 @@ from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
 from common.sender import BaseSenderBehaviour
 
+logger = logging.getLogger("AngleCalibrationBehaviour")
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
     def __init__(self, time=0.1, speed=20, delta_t=0.05, calib_threshold=60):
