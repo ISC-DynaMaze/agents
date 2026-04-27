@@ -47,6 +47,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_photo(self):
         ask_photo = RequestPhotoBehaviour(self.agent.camera_jid)
         self.agent.add_behaviour(ask_photo)
+    
+    async def request_direction(self):
+        ask_direction = SendDirectionBehaviour()
+        self.agent.add_behaviour(ask_direction)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
@@ -72,8 +76,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case DirectionRequest():
                 self.agent.direction_requesters.append(sender_jid)
-                send_direction = SendDirectionBehaviour()
-                self.agent.add_behaviour(send_direction)
+                if not self.agent.requesting_direction:
+                    await self.request_direction()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:

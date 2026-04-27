@@ -100,6 +100,8 @@ class SendDirectionBehaviour(OneShotBehaviour):
         res = DirectionResponse(path=turn)
         for requester in self.agent.direction_requesters:
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
+        self.agent.direction_requesters = []
+        self.agent.requesting_direction = False
 
     # request new image from camera agent
     async def req_image(self):
