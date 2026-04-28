@@ -3,7 +3,6 @@ import datetime
 from typing import Literal
 
 import aiofiles
-import cv2
 import numpy as np
 
 from common.models.base import RequestBase, ResponseBase
@@ -18,6 +17,7 @@ class CameraResponse(ResponseBase):
     img: str
 
     async def decode_img(self, img, save_dir):
+        import cv2
         print("Received photo message.")
         img_data = base64.b64decode(img)
 
@@ -31,6 +31,6 @@ class CameraResponse(ResponseBase):
             await img_file.write(img_data)
 
         print(f"Photo saved as '{filepath}'.")
-        img: np.ndarray = cv2.imread(filepath)  # type: ignore
+        img: np.ndarray = cv2.imread(str(filepath))  # type: ignore
 
         return img, filepath
