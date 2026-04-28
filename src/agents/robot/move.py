@@ -1,22 +1,30 @@
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from spade.behaviour import CyclicBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.turn_calibration import Direction
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
 from common.models.robot import TurningRequest
 from common.sender import BaseSenderBehaviour
 
+if TYPE_CHECKING:
+    from agents.robot.agent import RobotAgent
+
 
 class MoveBehaviour(CyclicBehaviour):
+    agent: RobotAgent
+
     def __init__(self):
         super().__init__()
         self.logger = logging.getLogger("MoveBehaviour")
         self.logger.setLevel(logging.DEBUG)
-        self.turning_angle = 90
+        self.turning_angle = 45
 
     @property
     def bot(self) -> AlphaBot2:
@@ -76,13 +84,15 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def turn_and_go(self, direction: str):
         if direction == "left":
-            await self.turn(direction=True)
+            await self.turn(direction=Direction.Left)
+            await self.turn(direction=Direction.Left)
             self.logger.info("TURNED LEEEEEEFT")
             # self.bot.left()
             # await asyncio.sleep(0.3)
             self.bot.stop()
         elif direction == "right":
-            await self.turn(direction=False)
+            await self.turn(direction=Direction.Right)
+            await self.turn(direction=Direction.Right)
             self.logger.info("TURNED RIGHHHHHHHHT")
             # self.bot.right()
             # await asyncio.sleep(0.3)
@@ -91,14 +101,14 @@ class MoveBehaviour(CyclicBehaviour):
         # go forward after turning or if direction is forward
         await self.go_forward_for(0.2)
 
-    async def turn(self, direction: bool):
+    async def turn(self, direction: Direction):
         req = TurningRequest(direction=direction, angle=self.turning_angle)
-        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
+        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))  
 
     # ask controllor where to go
     async def ask_controller(self):
         req = DirectionRequest()
-        self.agent.add_behaviour(
+        self.agent.add_behaviour(  
             BaseSenderBehaviour(req, str(self.agent.controller_jid))
         )
 
