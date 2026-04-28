@@ -12,7 +12,7 @@ from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
 
 
 class TurningBehaviour(OneShotBehaviour):
-    def __init__(self, angle, direction, speed=20):
+    def __init__(self, angle : float, direction : bool , speed : int =20):
         super().__init__()
         self.angle = angle
         self.speed = speed
@@ -28,29 +28,29 @@ class TurningBehaviour(OneShotBehaviour):
         self.bot.setBothPWM(self.speed)
         if self.direction:
             self.bot.right()
-            test, _ = self.calib.load_latest_data("right")
-            config = self.load_profile(test)
-            turning_time = self.interpolate(config)
+            right_calib, _ = self.calib.load_latest_data("right")
+            config = self.load_profile(right_calib)
+            turning_time = self.interpolate(config, self.angle)
         else:
             self.bot.left()
-            test, _ = self.calib.load_latest_data("left")
-            config = self.load_profile(test)
-            turning_time = self.interpolate(config)
+            left_calib, _ = self.calib.load_latest_data("left")
+            config = self.load_profile(left_calib)
+            turning_time = self.interpolate(config, self.angle)
         await asyncio.sleep(turning_time)
         self.bot.stop()
         
 
-    def interpolate(self, config: list[tuple[float, float]]):
+    def interpolate(self, config: list[tuple[float, float]], angle : float) -> float:
         data = np.array(config)
         c = np.polyfit(data[:, 0], data[:, 1], 1)
         self.logger.info(f"coefficients: {c}")
         f = np.poly1d(c)
-        time = f(self.angle)
-        self.logger.info(f"x={self.angle} y={time}")
+        time = f(angle)
+        self.logger.info(f"x={angle} y={time}")
         return time
 
     def load_profile(self, file_path) -> list[tuple[float, float]]:
         with open(file_path, "r") as f:
             data = json.load(f)
-            parameters = [[m["angle"], m["time"]] for m in data["measures"]]
+            parameters = [(m["angle"], m["time"]) for m in data["measures"]]
             return parameters
