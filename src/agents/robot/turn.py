@@ -34,6 +34,9 @@ class TurningBehaviour(OneShotBehaviour):
             self.bot.left()
             left_calib, _ = self.calib.load_latest_data("left")
             config = self.load_profile(left_calib)
+        else :
+            self.logger.error("[Direction] Wrong direction given")
+            return
         turning_time = self.interpolate(config, self.angle)
         await asyncio.sleep(turning_time)
         self.bot.stop()
