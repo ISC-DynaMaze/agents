@@ -1,9 +1,10 @@
 import asyncio
 import datetime
 import json
+import logging
+from enum import StrEnum
 from pathlib import Path
 
-import logger
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
@@ -13,63 +14,32 @@ from common.models.controller import AngleRequest, AngleResponse
 from common.sender import BaseSenderBehaviour
 
 
+class Direction(StrEnum):
+    Left = "left"
+    Right = "right"
+
+
 class AngleCalibrationBehaviour(OneShotBehaviour):
-    def __init__(self, time, speed=20, delta_t=0.05, calib_threshold=60):
+    def __init__(self, time=0.1, speed=20, delta_t=0.05):
         super().__init__()
         self.actual_angle = None
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
-        self.calib_threshold = calib_threshold
+        self.logger = logging.getLogger("AngleCalibrationBehaviour")
 
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
 
     async def run(self):
-        new_calibration = True
-        latest_data = self.load_latest_data()
-        logger.info(f"[File date] : {latest_data}")
-
-        if latest_data:
-            now = datetime.datetime.now()
-            interval = (now - latest_data[1]).total_seconds()
-            if interval > 3600:
-                logger.info("[Behaviour] New calibration required")
-
-            else:
-                logger.info("[Behaviour] No need of new calibration")
-                new_calibration = False
-        else:
-            logger.info("[Behaviour] No existing calibration")
-            new_calibration = True
-
-        if new_calibration:
-            self.actual_angle = await self.ask_angle()
-            if self.actual_angle is None:
-                logger.info(f"[Behaviour] No angle given")
-                return
-            self.bot.setBothPWM(self.speed)
-            angle_history = [self.actual_angle]
-            delta_history = []
-            await self.calibration_sequence(angle_history, delta_history)
-            for i in range(7):
-                await self.calibration_sequence(
-                    angle_history, delta_history, self.delta_t
-                )
-            logger.info(f"[Calibration result] : {delta_history}")
-            test = self.interpolate(delta_history)
-
-            logger.info(f"[Interpolate] : {test}")
-            result_test = await self.test_sequence(test)
-            self.save_result(delta_history, result_test)
-        else:
-            self.load_profile(latest_data[0])
+        await self.calibrate_direction(Direction.Left)
+        await self.calibrate_direction(Direction.Right)
 
     async def ask_angle(self):
-        logger.debug("[Behaviour] Ask controller for actual angle")
+        self.logger.debug("[Behaviour] Ask controller for actual angle")
 
         msg = AngleRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(msg, "camera@isc-coordinator.lan"))
+        self.agent.add_behaviour(BaseSenderBehaviour(msg, self.agent.controller_jid))
 
         while True:
             reply = await self.receive(timeout=15)
@@ -82,22 +52,49 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 continue
         return res.angle
 
-    async def calibration_sequence(self, angle_history, delta_history, delta_t=0.1):
-        logger.info(f"[Time] Time : {self.time}")
-        logger.info(f"[Time] Additional time : {delta_t}")
-        logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
-        self.bot.left()
-        await asyncio.sleep(self.time + delta_t)
-        self.time += delta_t
+    async def calibrate_direction(self, direction: Direction):
+        self.actual_angle = await self.ask_angle()
+        if self.actual_angle is None:
+            self.logger.info(f"[Behaviour] No angle given")
+            return
+        self.bot.setBothPWM(self.speed)
+        angle_history = [self.actual_angle]
+        delta_history = []
+        for i in range(10):
+            await self.calibration_sequence(
+                angle_history, delta_history, i * self.delta_t, direction
+            )
+        self.logger.info(f"[Calibration result] : {delta_history}")
+        test = self.interpolate(delta_history)
+
+        self.logger.info(f"[Interpolate] : {test}")
+        result_test = await self.test_sequence(test, direction)
+        self.save_result(delta_history, result_test, direction)
+
+    async def calibration_sequence(
+        self,
+        angle_history: list[float],
+        delta_history: list[list[float]],
+        delta_t: float,
+        direction: Direction,
+    ):
+        timing = self.time + delta_t
+        self.logger.info(f"[Behaviour] Robot turn left for {timing} second(s)")
+
+        if direction == Direction.Left:
+            self.bot.left()
+        elif direction == Direction.Right:
+            self.bot.right()
+        await asyncio.sleep(timing)
         self.bot.stop()
         await asyncio.sleep(1)
-        logger.info("[Behaviour] Robot Stop")
         self.actual_angle = await self.ask_angle()
         angle_history.append(self.actual_angle)
         delta = abs(((angle_history[-2] - angle_history[-1] + 180) % 360) - 180)
-        delta_history.append([delta, self.time])
+        self.logger.info(f"[Time] Time saved : {timing}")
+        delta_history.append([delta, timing])
 
-    def interpolate(self, delta_history):
+    def interpolate(self, delta_history: list[list[float]]) -> list[float]:
         x = []
         y = []
         for c in delta_history:
@@ -107,16 +104,21 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         print(y)
         return np.interp([45, 90, 135], x, y)
 
-    async def test_sequence(self, test):
+    async def test_sequence(
+        self, test: list[float], direction: Direction
+    ) -> list[dict]:
         test_angle_history = []
         test_delta_history = []
-        targets = [45, 90, 135]  # Pour référence
+        targets = [45, 90, 135]  # Validation test
 
         for i, t in enumerate(test):
             start_angle = await self.ask_angle()
             test_angle_history.append(start_angle)
 
-            self.bot.left()
+            if direction == Direction.Left:
+                self.bot.left()
+            else:
+                self.bot.right()
             await asyncio.sleep(t)
             self.bot.stop()
 
@@ -133,7 +135,12 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.bot.stop()
         return test_delta_history
 
-    def save_result(self, delta_history, test_delta_history):
+    def save_result(
+        self,
+        delta_history: list[list[float]],
+        test_delta_history: list[dict],
+        direction: Direction,
+    ):
         data = {
             "speed": self.speed,
             "measures": [
@@ -142,7 +149,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             "tests": test_delta_history,
         }
 
-        save_path = Path("test_result")
+        save_path = Path(f"test_result_{direction}")
         save_path.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = save_path / f"debug_{timestamp}.json"
@@ -150,14 +157,14 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         try:
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
-            logger.info(f"Results saved in {filename}")
+            self.logger.info(f"Results saved in {filename}")
         except Exception as e:
-            logger.error(f"Error :  {e}")
+            self.logger.error(f"Error :  {e}")
 
-    def load_latest_data(self):
-        files = list(Path("test_result").glob("debug_*.json"))
+    def load_latest_data(self, direction: Direction):
+        files = list(Path(f"test_result_{direction}").glob("debug_*.json"))
         if not files:
-            return False
+            raise ValueError("No file founded")
 
         latest_file = sorted(files)[-1]
 
@@ -165,15 +172,3 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         date_str = f"{parts[1]}_{parts[2]}"
         file_time = datetime.datetime.strptime(date_str, "%Y%m%d_%H%M%S")
         return latest_file, file_time
-
-    def load_profile(self, file_path):
-        try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
-                self.delta_history = [[m["angle"], m["time"]] for m in data["measures"]]
-                self.speed = data.get("speed", 20)
-                logger.info(f"[Load] Existing config loaded ")
-                return True
-        except Exception as e:
-            logger.error(f"[Load] Erreur : {e}")
-            return False

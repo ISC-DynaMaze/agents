@@ -2,6 +2,7 @@ from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
+from agents.robot.turn_calibration import Direction
 from common.models.base import RequestBase, ResponseBase
 
 
@@ -47,6 +48,17 @@ class StatusResponse(RobotResponseBase):
     camera: CameraStatus
 
 
+class TurningRequest(RobotRequestBase):
+    type: Literal["bot-turn-req"] = "bot-turn-req"  # type: ignore
+    direction: Direction
+    angle: float
+    speed: Optional[int] = None
+
+
+class TurningCalibrationRequest(RobotRequestBase):
+    type: Literal["bot-turn-calib-req"] = "bot-turn-calib-req"  # type: ignore
+
+
 class HonkRequest(RobotRequestBase):
     type: Literal["bot-honk"] = "bot-honk"  # type: ignore
 
@@ -57,6 +69,8 @@ RobotRequest = Annotated[
         CameraPhotoRequest,
         RobotMoveRequest,
         HonkRequest,
+        TurningRequest,
+        TurningCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
