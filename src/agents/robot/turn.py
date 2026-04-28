@@ -28,12 +28,12 @@ class TurningBehaviour(OneShotBehaviour):
         self.bot.setBothPWM(self.speed)
         if self.direction:
             self.bot.right()
-            test, _ = self.calib.load_latest_data(self.direction)
+            test, _ = self.calib.load_latest_data("right")
             config = self.load_profile(test)
             turning_time = self.interpolate(config)
         else:
             self.bot.left()
-            test, _ = self.calib.load_latest_data(self.direction)
+            test, _ = self.calib.load_latest_data("left")
             config = self.load_profile(test)
             turning_time = self.interpolate(config)
         await asyncio.sleep(turning_time)
