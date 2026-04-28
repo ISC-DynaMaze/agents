@@ -7,31 +7,30 @@ from spade.behaviour import CyclicBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
+from common.models.robot import TurningRequest
 from common.sender import BaseSenderBehaviour
 
 
 class MoveBehaviour(CyclicBehaviour):
     def __init__(self):
         super().__init__()
-        print("########## MoveBehaviour initialized")
         self.logger = logging.getLogger("MoveBehaviour")
         self.logger.setLevel(logging.DEBUG)
-    
+        self.turning_angle = 90
+
     @property
     def bot(self) -> AlphaBot2:
         return self.agent.bot
 
     async def on_start(self):
-        print("########## MoveBehaviour started")
         self.surroundings = []  # mental state of what the robot saw
 
     async def run(self):
-        print("########## MoveBehaviour run")
-        #await self.go_forward_for(0.15)
-        self.logger.info("Moved forward for 0.15 seconds")
+        # await self.go_forward_for(0.15)
+        # self.logger.info("Moved forward for 0.15 seconds")
 
         # get next surrounding
-       # await self.get_next_surrounding()  # add directly to mental state
+        # await self.get_next_surrounding()  # add directly to mental state
 
         # check if we have already seen the surroundings for current cell
         if len(self.surroundings) == 1:
@@ -39,7 +38,7 @@ class MoveBehaviour(CyclicBehaviour):
             return
 
         # get current surroundings and check which directions are open
-        #current_surrounding = await self.get_current_surrounding()
+        # current_surrounding = await self.get_current_surrounding()
 
         # check free direction in current surroundings
         # free_directions = [
@@ -53,7 +52,7 @@ class MoveBehaviour(CyclicBehaviour):
         #     self.agent.logger.info(f"Moved {free_directions[0]}")
 
         # if len(free_directions) > 1:
-            # self.agent.logger.info(f"Multiple free directions: {free_directions}")
+        # self.agent.logger.info(f"Multiple free directions: {free_directions}")
 
         # ask controller where to go
         await self.ask_controller()
@@ -61,6 +60,7 @@ class MoveBehaviour(CyclicBehaviour):
         if direction is None:
             self.logger.error("Timed out waiting for direction response")
             return
+
         self.logger.info(f"Controller directed to go: {direction}")
         await self.turn_and_go(direction)
         self.logger.info(f"Moved {direction}")
@@ -76,18 +76,24 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def turn_and_go(self, direction: str):
         if direction == "left":
+            await self.turn(direction=True)
             self.logger.info("TURNED LEEEEEEFT")
-            self.bot.left()
-            await asyncio.sleep(0.3)
+            # self.bot.left()
+            # await asyncio.sleep(0.3)
             self.bot.stop()
         elif direction == "right":
+            await self.turn(direction=False)
             self.logger.info("TURNED RIGHHHHHHHHT")
-            self.bot.right()
-            await asyncio.sleep(0.3)
+            # self.bot.right()
+            # await asyncio.sleep(0.3)
             self.bot.stop()
 
         # go forward after turning or if direction is forward
-        await self.go_forward_for(0.1)
+        await self.go_forward_for(0.2)
+
+    async def turn(self, direction: bool):
+        req = TurningRequest(direction=direction, angle=self.turning_angle)
+        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
     # ask controllor where to go
     async def ask_controller(self):
@@ -102,7 +108,9 @@ class MoveBehaviour(CyclicBehaviour):
             try:
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
-                    self.logger.error("Timed out waiting for direction response message")
+                    self.logger.error(
+                        "Timed out waiting for direction response message"
+                    )
                     continue
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, DirectionResponse)
