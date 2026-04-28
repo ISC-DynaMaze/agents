@@ -31,6 +31,7 @@ class ControllerAgent(Agent):
         self.obstacles_requesters: list[str] = []
         self.requesting_image: bool = False
         self.requesting_direction: bool = False
+        self.requesting_obstacles: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(
