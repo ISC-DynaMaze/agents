@@ -1,9 +1,8 @@
-from agents.robot.turn_calibration import Direction
-
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
+from agents.robot.turn_calibration import Direction
 from common.models.base import RequestBase, ResponseBase
 
 
