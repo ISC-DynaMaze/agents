@@ -12,34 +12,33 @@ from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
 
 
 class TurningBehaviour(OneShotBehaviour):
-    def __init__(self, angle : float, direction : bool , speed : int =20):
+    def __init__(self, angle: float, direction: bool, speed: int = 20):
         super().__init__()
         self.angle = angle
         self.speed = speed
         self.direction = direction
         self.logger = logging.getLogger("TurningBehaviour")
-    
+
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
         self.calib = AngleCalibrationBehaviour()
-    
+
     async def run(self):
         turning_time = 0.0
         self.bot.setBothPWM(self.speed)
-        if self.direction:
+        if self.direction == Direction.Right:
             self.bot.right()
             right_calib, _ = self.calib.load_latest_data("right")
             config = self.load_profile(right_calib)
-        else:
+        elif self.direction == Direction.Left:
             self.bot.left()
             left_calib, _ = self.calib.load_latest_data("left")
             config = self.load_profile(left_calib)
         turning_time = self.interpolate(config, self.angle)
         await asyncio.sleep(turning_time)
         self.bot.stop()
-        
 
-    def interpolate(self, config: list[tuple[float, float]], angle : float) -> float:
+    def interpolate(self, config: list[tuple[float, float]], angle: float) -> float:
         data = np.array(config)
         c = np.polyfit(data[:, 0], data[:, 1], 1)
         self.logger.info(f"coefficients: {c}")

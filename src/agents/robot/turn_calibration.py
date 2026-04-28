@@ -14,18 +14,19 @@ from common.models.controller import AngleRequest, AngleResponse
 from common.sender import BaseSenderBehaviour
 
 
-
 class Direction(StrEnum):
     Left = "left"
     Right = "right"
 
+
 class AngleCalibrationBehaviour(OneShotBehaviour):
-    def __init__(self, time=0.1, speed=20, delta_t=0.05):
+    def __init__(self, reciever, time=0.1, speed=20, delta_t=0.05):
         super().__init__()
         self.actual_angle = None
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
+        self.reciever = reciever
         logger = logging.getLogger("AngleCalibrationBehaviour")
 
     async def on_start(self):
@@ -53,7 +54,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.logger.debug("[Behaviour] Ask controller for actual angle")
 
         msg = AngleRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(msg, "alberto-ctrl@isc-coordinator.lan"))
+        self.agent.add_behaviour(BaseSenderBehaviour(msg, self.reciever))
 
         while True:
             reply = await self.receive(timeout=15)
@@ -65,10 +66,12 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             except:
                 continue
         return res.angle
-    
+
     async def build_model_direction(self, angle_history, delta_history, direction):
         for i in range(10):
-            await self.calibration_sequence(angle_history, delta_history, i*self.delta_t, direction)
+            await self.calibration_sequence(
+                angle_history, delta_history, i * self.delta_t, direction
+            )
         self.logger.info(f"[Calibration result] : {delta_history}")
         test = self.interpolate(delta_history)
 
@@ -76,8 +79,9 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         result_test = await self.test_sequence(test, direction)
         self.save_result(delta_history, result_test, direction)
 
-
-    async def calibration_sequence(self, angle_history, delta_history, delta_t, direction):
+    async def calibration_sequence(
+        self, angle_history, delta_history, delta_t, direction
+    ):
         timing = self.time + delta_t
         self.logger.info(f"[Behaviour] Robot turn left for {timing} second(s)")
 
@@ -107,7 +111,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     async def test_sequence(self, test, direction):
         test_angle_history = []
         test_delta_history = []
-        targets = [45, 90, 135]  #Validation test
+        targets = [45, 90, 135]  # Validation test
 
         for i, t in enumerate(test):
             start_angle = await self.ask_angle()
@@ -115,7 +119,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
 
             if direction == Direction.Left:
                 self.bot.left()
-            else :
+            else:
                 self.bot.right()
             await asyncio.sleep(t)
             self.bot.stop()

@@ -1,3 +1,5 @@
+from agents.robot.turn_calibration import Direction
+
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -48,14 +50,14 @@ class StatusResponse(RobotResponseBase):
 
 
 class TurningRequest(RobotRequestBase):
-    type: Literal["bot-turn-req"] = "bot-turn-req"
-    direction: bool  # 0=left, 1=right
+    type: Literal["bot-turn-req"] = "bot-turn-req"  # type: ignore
+    direction: Direction
     angle: float
     speed: Optional[int] = None
 
 
 class TurningCalibrationRequest(RobotRequestBase):
-    type: Literal["bot-turn-calib-req"] = "bot-turn-calib-req"
+    type: Literal["bot-turn-calib-req"] = "bot-turn-calib-req"  # type: ignore
 
 
 class HonkRequest(RobotRequestBase):

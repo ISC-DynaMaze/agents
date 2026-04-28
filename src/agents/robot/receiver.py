@@ -44,8 +44,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
                 self.agent.add_behaviour(SendStatusBehaviour(self.agent.logger_jid))
 
-            case TurningCalibrationRequest():
-                turning_calibration_behaviour = AngleCalibrationBehaviour()
+            case TurningCalibrationRequest(reciever):
+                turning_calibration_behaviour = AngleCalibrationBehaviour(reciever)
                 self.agent.add_behaviour(turning_calibration_behaviour)
 
             case TurningRequest(direction=direction, angle=angle):
