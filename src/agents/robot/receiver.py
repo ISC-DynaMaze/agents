@@ -3,10 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
+from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.status import SendStatusBehaviour
 from common.models.common import Request, StopRequest
-from common.models.robot import CameraPhotoRequest, PanTiltRequest, RobotMoveRequest
+from common.models.robot import (
+    CameraPhotoRequest,
+    HonkRequest,
+    PanTiltRequest,
+    RobotMoveRequest,
+)
 from common.receiver import BaseReceiverBehaviour
 
 if TYPE_CHECKING:
@@ -36,3 +42,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case RobotMoveRequest():
                 self.agent.add_behaviour(MoveBehaviour())
+
+            case HonkRequest():
+                self.agent.add_behaviour(HonkBehaviour())

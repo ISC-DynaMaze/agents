@@ -2,6 +2,9 @@ from typing import Optional
 
 import RPi.GPIO as GPIO
 from adafruit_servokit import ServoKit
+from rpi_ws281x import Adafruit_NeoPixel
+
+from agents.robot.TRSensors import TRSensor
 
 
 class AlphaBot2(object):
@@ -10,7 +13,9 @@ class AlphaBot2(object):
     MIN_TILT_ANGLE = 0
     MAX_TILT_ANGLE = 45
 
-    def __init__(self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19):
+    def __init__(
+        self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19, buz=4
+    ):
         self.AIN1 = ain1
         self.AIN2 = ain2
         self.BIN1 = bin1
@@ -19,8 +24,7 @@ class AlphaBot2(object):
         self.ENB = enb
         self.DR = dr
         self.DL = dl
-        self.PA = 40
-        self.PB = 40
+        self.BUZ = buz
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
@@ -30,10 +34,13 @@ class AlphaBot2(object):
         GPIO.setup(self.BIN2, GPIO.OUT)
         GPIO.setup(self.ENA, GPIO.OUT)
         GPIO.setup(self.ENB, GPIO.OUT)
+        GPIO.setup(self.BUZ, GPIO.OUT)
         GPIO.setup(self.DR, GPIO.IN, GPIO.PUD_UP)
         GPIO.setup(self.DL, GPIO.IN, GPIO.PUD_UP)
         self.PWMA = GPIO.PWM(self.ENA, 500)
         self.PWMB = GPIO.PWM(self.ENB, 500)
+        self.PA = 50
+        self.PB = 50
         self.PWMA.start(self.PA)
         self.PWMB.start(self.PB)
         self.stop()
@@ -45,6 +52,19 @@ class AlphaBot2(object):
         self.tilt_servo = self.servos.servo[1]
         self.tilt_servo.actuation_range = 180
         self.tilt_servo.set_pulse_width_range(550, 2600)
+
+        self.back_leds = Adafruit_NeoPixel(
+            num=4,
+            pin=18,
+            freq_hz=800_000,
+            dma=5,
+            invert=False,
+            brightness=255,
+            channel=0,
+        )
+        self.back_leds.begin()
+
+        self.bottom_ir = TRSensor()
 
     def forward(self):
         GPIO.output(self.AIN1, GPIO.LOW)
@@ -135,3 +155,9 @@ class AlphaBot2(object):
         if self.tilt_servo.angle is None:
             return None
         return self.tilt_servo.angle - self.tilt_servo.actuation_range / 2
+
+    def startBuzzer(self):
+        GPIO.output(self.BUZ, GPIO.HIGH)
+
+    def stopBuzzer(self):
+        GPIO.output(self.BUZ, GPIO.LOW)

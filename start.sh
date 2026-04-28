@@ -1,2 +1,2 @@
 echo "Running agents.$AGENT"
-python -m agents.$AGENT
+exec python -m agents.$AGENT
