@@ -12,7 +12,7 @@ from agents.robot.turn_calibration import AngleCalibrationBehaviour, Direction
 
 
 class TurningBehaviour(OneShotBehaviour):
-    def __init__(self, angle: float, direction: bool, speed: int = 20):
+    def __init__(self, angle: float, direction: Direction, speed: int = 20):
         super().__init__()
         self.angle = angle
         self.speed = speed
