@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 class ObstaclesBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    async def __init__(self):
+    def __init__(self):
         super().__init__()
         self.logger = logging.getLogger("ObstaclesBehaviour")
 
