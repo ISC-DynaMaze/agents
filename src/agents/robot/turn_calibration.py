@@ -13,7 +13,7 @@ from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
 from common.sender import BaseSenderBehaviour
 
-logger = logging.getLogger("AngleCalibrationBehaviour")
+
 
 class Direction(StrEnum):
     Left = "left"
@@ -26,6 +26,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
+        logger = logging.getLogger("AngleCalibrationBehaviour")
 
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
@@ -33,7 +34,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     async def run(self):
         self.actual_angle = await self.ask_angle()
         if self.actual_angle is None:
-            logger.info(f"[Behaviour] No angle given")
+            self.logger.info(f"[Behaviour] No angle given")
             return
         self.bot.setBothPWM(self.speed)
         angle_history = [self.actual_angle]
@@ -41,7 +42,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         await self.pipeline(angle_history, delta_history, Direction.Left)
         self.actual_angle = await self.ask_angle()
         if self.actual_angle is None:
-            logger.info(f"[Behaviour] No angle given")
+            self.logger.info(f"[Behaviour] No angle given")
             return
         self.bot.setBothPWM(self.speed)
         angle_history = [self.actual_angle]
@@ -49,7 +50,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         await self.pipeline(angle_history, delta_history, Direction.Right)
 
     async def ask_angle(self):
-        logger.debug("[Behaviour] Ask controller for actual angle")
+        self.logger.debug("[Behaviour] Ask controller for actual angle")
 
         msg = AngleRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(msg, "alberto-ctrl@isc-coordinator.lan"))
@@ -65,32 +66,33 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 continue
         return res.angle
     
-    async def pipeline(self, angle_history, delta_history, direction):
+    async def build_model_direction(self, angle_history, delta_history, direction):
         for i in range(10):
             await self.calibration_sequence(angle_history, delta_history, i*self.delta_t, direction)
-        logger.info(f"[Calibration result] : {delta_history}")
+        self.logger.info(f"[Calibration result] : {delta_history}")
         test = self.interpolate(delta_history)
 
-        logger.info(f"[Interpolate] : {test}")
+        self.logger.info(f"[Interpolate] : {test}")
         result_test = await self.test_sequence(test, direction)
         self.save_result(delta_history, result_test, direction)
 
 
     async def calibration_sequence(self, angle_history, delta_history, delta_t, direction):
-        logger.info(f"[Behaviour] Robot turn left for {self.time+delta_t} second(s)")
+        timing = self.time + delta_t
+        self.logger.info(f"[Behaviour] Robot turn left for {timing} second(s)")
 
         if direction == Direction.Left:
             self.bot.left()
         elif direction == Direction.Right:
             self.bot.right()
-        await asyncio.sleep(self.time + delta_t)
+        await asyncio.sleep(timing)
         self.bot.stop()
         await asyncio.sleep(1)
         self.actual_angle = await self.ask_angle()
         angle_history.append(self.actual_angle)
         delta = abs(((angle_history[-2] - angle_history[-1] + 180) % 360) - 180)
-        logger.info(f"[Time] Time saved : {self.time+delta_t}")
-        delta_history.append([delta, self.time+delta_t])
+        self.logger.info(f"[Time] Time saved : {timing}")
+        delta_history.append([delta, timing])
 
     def interpolate(self, delta_history):
         x = []
@@ -148,9 +150,9 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         try:
             with open(filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
-            logger.info(f"Results saved in {filename}")
+            self.logger.info(f"Results saved in {filename}")
         except Exception as e:
-            logger.error(f"Error :  {e}")
+            self.logger.error(f"Error :  {e}")
 
     def load_latest_data(self, direction):
         files = list(Path(f"test_result_{direction}").glob("debug_*.json"))

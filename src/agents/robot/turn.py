@@ -30,12 +30,11 @@ class TurningBehaviour(OneShotBehaviour):
             self.bot.right()
             right_calib, _ = self.calib.load_latest_data("right")
             config = self.load_profile(right_calib)
-            turning_time = self.interpolate(config, self.angle)
         else:
             self.bot.left()
             left_calib, _ = self.calib.load_latest_data("left")
             config = self.load_profile(left_calib)
-            turning_time = self.interpolate(config, self.angle)
+        turning_time = self.interpolate(config, self.angle)
         await asyncio.sleep(turning_time)
         self.bot.stop()
         
