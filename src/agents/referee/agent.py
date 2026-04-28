@@ -114,16 +114,18 @@ class RefereeAgent(Agent, ButtonHandlerMixin):
         )
         return True
 
-    @button_handler(ButtonEvent.CLICK, ButtonEvent.LONG_CLICK)  # type: ignore
+    @button_handler(ButtonEvent.CLICK, ButtonEvent.DOUBLE_CLICK, ButtonEvent.LONG_CLICK)  # type: ignore
     def on_role_assign(self, button_id: str, event: ButtonEvent) -> bool:
         if self.state != State.ROLE_ASSIGN:
             return False
         if button_id not in self.gates:
             return False
+        if event == ButtonEvent.LONG_CLICK:
+            self.state = State.IDLE
+            return True
         gate: Gate = self.gates[button_id]
-        gate.role = GateRole.START if event == ButtonEvent.LONG_CLICK else GateRole.END
+        gate.role = GateRole.END if event == ButtonEvent.DOUBLE_CLICK else GateRole.START
         self.logger.info(f"Gate {button_id} assigned role {gate.role}")
-        self.state = State.IDLE
         self.set_led(
             button_id,
             self.START_COLOR if gate.role == GateRole.START else self.END_COLOR,
