@@ -31,6 +31,15 @@ class PathResponse(ControllerResponseBase):
     path: list[tuple[int, int]]
 
 
+class ObstaclesRequest(ControllerRequestBase):
+    type: Literal["ctrl-obstacles-req"] = "ctrl-obstacles-req"  # type: ignore
+
+
+class ObstaclesResponse(ControllerResponseBase):
+    type: Literal["ctrl-obstacles-res"] = "ctrl-obstacles-res"  # type: ignore
+    # obstacles: list[tuple[int, int]] may return the cells in which there is an obstacle
+
+
 class AngleRequest(ControllerRequestBase):
     type: Literal["ctrl-angle-req"] = "ctrl-angle-req"  # type: ignore
 

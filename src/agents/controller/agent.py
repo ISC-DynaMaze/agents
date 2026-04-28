@@ -28,6 +28,7 @@ class ControllerAgent(Agent):
         self.angle_requesters: list[str] = []
         self.path_requesters: list[str] = []
         self.direction_requesters: list[str] = []
+        self.obstacles_requesters: list[str] = []
         self.requesting_image: bool = False
         self.requesting_direction: bool = False
 
@@ -36,5 +37,6 @@ class ControllerAgent(Agent):
             save_dir=Path("photos"),
             maze_dir=Path("mazes"),
             path_dir=Path("paths"),
+            obstacles_dir=Path("obstacles"),
         )
         self.add_behaviour(receiver_behaviour)
