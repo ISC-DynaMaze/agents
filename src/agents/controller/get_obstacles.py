@@ -9,17 +9,14 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
-from maze.detect_obstacles import draw_detected_obstacles, find_obstacles
+from agents.controller.maze.detect_obstacles import draw_detected_obstacles, find_obstacles
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.maze.obstacles import Obstacle
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
 from common.models.controller import (
-    DirectionResponse,
     ObstaclesResponse,
-    PathRequest,
-    PathResponse,
 )
 from common.sender import BaseSenderBehaviour
 
@@ -27,12 +24,12 @@ if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
 
-class GetObstaclesBehaviour(OneShotBehaviour):
+class ObstaclesBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     async def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("DetectObstaclesBehaviour")
+        self.logger = logging.getLogger("ObstaclesBehaviour")
 
     async def on_start(self):
         self.obstacles_dir = Path("obstacles")
@@ -40,20 +37,24 @@ class GetObstaclesBehaviour(OneShotBehaviour):
     async def run(self):
         # check for obstacles directory or create it
         self.obstacles_dir.mkdir(parents=True, exist_ok=True)
+        self.logger.info(f"ObstaclesBehaviour")
 
         # request new image
         await self.req_image()
+        self.logger.info("Requested new image from camera agent")
         img = await self.wait_for_new_image(timeout=10.0)
         if img is None:
             self.logger.error("Timed out waiting for camera image")
             return
+        self.logger.info("Received new image from camera agent")
 
         # detect obstacles in maze and update maze
+        self.logger.info("Detecting obstacles in the maze")
         detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
-        detected_by_color = detection["detected_by_color"]
         blocks_by_color = detection["blocks_by_color"]
         maze = detection["maze"]  # maze updated with detected obstacles
         self.agent.maze = maze
+        self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
         # visualize detected obstacles on image
         highlighted = draw_detected_obstacles(img, blocks_by_color)
@@ -69,6 +70,8 @@ class GetObstaclesBehaviour(OneShotBehaviour):
         res = ObstaclesResponse(obstacles=obstacles)
         for requester in self.agent.obstacles_requesters:
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
+        self.agent.obstacles_requesters = []
+        self.agent.requesting_obstacles = False
 
     # request new image from camera agent
     async def req_image(self):
@@ -95,6 +98,7 @@ class GetObstaclesBehaviour(OneShotBehaviour):
                 continue
 
     async def save_img(self, img: np.ndarray, save_dir: Path) -> None:
+        self.logger.info(f"Saving image to {save_dir}")
         timestamp = int(time.time())
         img_path = save_dir / f"obstacles_{timestamp}.jpg"
         cv2.imwrite(str(img_path), img)
