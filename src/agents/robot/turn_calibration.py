@@ -26,28 +26,14 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
-        logger = logging.getLogger("AngleCalibrationBehaviour")
+        self.logger = logging.getLogger("AngleCalibrationBehaviour")
 
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
 
     async def run(self):
-        self.actual_angle = await self.ask_angle()
-        if self.actual_angle is None:
-            self.logger.info(f"[Behaviour] No angle given")
-            return
-        self.bot.setBothPWM(self.speed)
-        angle_history = [self.actual_angle]
-        delta_history = []
-        await self.pipeline(angle_history, delta_history, Direction.Left)
-        self.actual_angle = await self.ask_angle()
-        if self.actual_angle is None:
-            self.logger.info(f"[Behaviour] No angle given")
-            return
-        self.bot.setBothPWM(self.speed)
-        angle_history = [self.actual_angle]
-        delta_history = []
-        await self.pipeline(angle_history, delta_history, Direction.Right)
+        await self.calibrate_direction(Direction.Left)
+        await self.calibrate_direction(Direction.Right)
 
     async def ask_angle(self):
         self.logger.debug("[Behaviour] Ask controller for actual angle")
@@ -66,7 +52,14 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 continue
         return res.angle
 
-    async def build_model_direction(self, angle_history, delta_history, direction):
+    async def calibrate_direction(self, direction):
+        self.actual_angle = await self.ask_angle()
+        if self.actual_angle is None:
+            self.logger.info(f"[Behaviour] No angle given")
+            return
+        self.bot.setBothPWM(self.speed)
+        angle_history = [self.actual_angle]
+        delta_history = []
         for i in range(10):
             await self.calibration_sequence(
                 angle_history, delta_history, i * self.delta_t, direction
