@@ -4,10 +4,11 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+from agents.robot.turn import TurningBehaviour
 from spade.behaviour import CyclicBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
-from agents.robot.turn_calibration import Direction
+from common.models.robot import Direction
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
 from common.models.robot import TurningRequest
@@ -85,14 +86,14 @@ class MoveBehaviour(CyclicBehaviour):
     async def turn_and_go(self, direction: str):
         if direction == "left":
             await self.turn(direction=Direction.Left)
-            await self.turn(direction=Direction.Left)
+            #await self.turn(direction=Direction.Left)
             self.logger.info("TURNED LEEEEEEFT")
             # self.bot.left()
             # await asyncio.sleep(0.3)
             self.bot.stop()
         elif direction == "right":
             await self.turn(direction=Direction.Right)
-            await self.turn(direction=Direction.Right)
+            #await self.turn(direction=Direction.Right)
             self.logger.info("TURNED RIGHHHHHHHHT")
             # self.bot.right()
             # await asyncio.sleep(0.3)
@@ -102,8 +103,11 @@ class MoveBehaviour(CyclicBehaviour):
         await self.go_forward_for(0.2)
 
     async def turn(self, direction: Direction):
-        req = TurningRequest(direction=direction, angle=self.turning_angle)
-        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))  
+        behaviour = TurningBehaviour(direction=direction, angle=self.turning_angle)
+        self.agent.add_behaviour(behaviour)
+        await behaviour.join()
+        #req = TurningRequest(direction=direction, angle=self.turning_angle)
+        #self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
     # ask controllor where to go
     async def ask_controller(self):
