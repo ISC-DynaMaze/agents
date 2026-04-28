@@ -1,9 +1,7 @@
 import numpy as np
 import cv2
 
-from agent.obstacles.obstacles import yellowObstacle, redObstacle, greenObstacle
-from agent.walls.wall_detection import build_maze_from_path
-
+from agents.controller.maze.obstacles import yellowObstacle, redObstacle, greenObstacle
 
 def get_image(image_path):
     img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
