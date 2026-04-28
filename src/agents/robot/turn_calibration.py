@@ -20,13 +20,12 @@ class Direction(StrEnum):
 
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
-    def __init__(self, reciever, time=0.1, speed=20, delta_t=0.05):
+    def __init__(self, time=0.1, speed=20, delta_t=0.05):
         super().__init__()
         self.actual_angle = None
         self.speed = speed
         self.time = time
         self.delta_t = delta_t
-        self.reciever = reciever
         logger = logging.getLogger("AngleCalibrationBehaviour")
 
     async def on_start(self):
@@ -54,7 +53,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.logger.debug("[Behaviour] Ask controller for actual angle")
 
         msg = AngleRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(msg, self.reciever))
+        self.agent.add_behaviour(BaseSenderBehaviour(msg, self.agent.controller_jid))
 
         while True:
             reply = await self.receive(timeout=15)
