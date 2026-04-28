@@ -28,11 +28,11 @@ class TurningBehaviour(OneShotBehaviour):
         self.bot.setBothPWM(self.speed)
         if self.direction == Direction.Right:
             self.bot.right()
-            right_calib, _ = self.calib.load_latest_data("right")
+            right_calib, _ = self.calib.load_latest_data(Direction.Right)
             config = self.load_profile(right_calib)
         elif self.direction == Direction.Left:
             self.bot.left()
-            left_calib, _ = self.calib.load_latest_data("left")
+            left_calib, _ = self.calib.load_latest_data(Direction.Left)
             config = self.load_profile(left_calib)
         else :
             self.logger.error("[Direction] Wrong direction given")
