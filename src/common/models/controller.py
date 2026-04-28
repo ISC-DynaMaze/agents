@@ -60,10 +60,10 @@ class DirectionRequest(ControllerRequestBase):
 
 
 ControllerRequest = Annotated[
-    Union[MazeRequest, AngleRequest, PathRequest, DirectionRequest],
+    Union[MazeRequest, AngleRequest, PathRequest, DirectionRequest, ObstaclesRequest],
     Field(discriminator="type"),
 ]
 ControllerResponse = Annotated[
-    Union[MazeResponse, AngleResponse, PathResponse, DirectionResponse],
+    Union[MazeResponse, AngleResponse, PathResponse, DirectionResponse, ObstaclesResponse],
     Field(discriminator="type"),
 ]

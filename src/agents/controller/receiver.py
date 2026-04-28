@@ -12,7 +12,7 @@ import numpy as np
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
 from agents.controller.find_path import FindPathBehaviour
-from agents.controller.get_obstacles import GetObstaclesBehaviour
+from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.send_direction import SendDirectionBehaviour
 from common.models.camera import CameraResponse
@@ -22,6 +22,7 @@ from common.models.controller import (
     DirectionRequest,
     DirectionResponse,
     MazeRequest,
+    ObstaclesRequest,
     ObstaclesResponse,
     PathRequest,
     PathResponse,
@@ -59,6 +60,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         ask_direction = SendDirectionBehaviour()
         self.agent.add_behaviour(ask_direction)
 
+    async def request_obstacles(self):
+        get_obstacles = ObstaclesBehaviour()
+        self.agent.add_behaviour(get_obstacles)
+
     async def on_request(self, sender_jid: str, req: Request):
         match req:
             case MazeRequest():
@@ -85,6 +90,11 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 self.agent.direction_requesters.append(sender_jid)
                 if not self.agent.requesting_direction:
                     await self.request_direction()
+
+            case ObstaclesRequest():
+                self.agent.obstacles_requesters.append(sender_jid)
+                if not self.agent.requesting_obstacles:
+                    await self.request_obstacles()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
@@ -115,7 +125,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                         self.agent.add_behaviour(find_path)
 
                 if len(self.agent.obstacles_requesters) != 0:
-                    get_obstacles = GetObstaclesBehaviour(
+                    get_obstacles = ObstaclesBehaviour(
                         maze=self.agent.maze, obstacles_dir=self.obstacles_dir
                     )
                     self.agent.add_behaviour(get_obstacles)
