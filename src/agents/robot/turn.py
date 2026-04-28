@@ -1,8 +1,6 @@
 import asyncio
-import datetime
 import json
 import logging
-from pathlib import Path
 
 import numpy as np
 from spade.behaviour import OneShotBehaviour
@@ -34,7 +32,7 @@ class TurningBehaviour(OneShotBehaviour):
             self.bot.left()
             left_calib, _ = self.calib.load_latest_data(Direction.Left)
             config = self.load_profile(left_calib)
-        else :
+        else:
             self.logger.error("[Direction] Wrong direction given")
             return
         turning_time = self.interpolate(config, self.angle)
