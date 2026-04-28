@@ -72,8 +72,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.save_result(delta_history, result_test, direction)
 
     async def calibration_sequence(
-        self, angle_history : list[float], delta_history : list[float], delta_t : float, direction : Direction
-    ):
+        self, angle_history : list[float], delta_history : list[list[float]], delta_t : float, direction : Direction):
         timing = self.time + delta_t
         self.logger.info(f"[Behaviour] Robot turn left for {timing} second(s)")
 
@@ -90,7 +89,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.logger.info(f"[Time] Time saved : {timing}")
         delta_history.append([delta, timing])
 
-    def interpolate(self, delta_history : list[float]) -> float:
+    def interpolate(self, delta_history : list[list[float]]) -> list[float]:
         x = []
         y = []
         for c in delta_history:
@@ -100,7 +99,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         print(y)
         return np.interp([45, 90, 135], x, y)
 
-    async def test_sequence(self, test : list[float], direction : Direction):
+    async def test_sequence(self, test : list[float], direction : Direction) -> list[dict]:
         test_angle_history = []
         test_delta_history = []
         targets = [45, 90, 135]  # Validation test
@@ -129,7 +128,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.bot.stop()
         return test_delta_history
 
-    def save_result(self, delta_history, test_delta_history, direction):
+    def save_result(self, delta_history : list[list[float]], test_delta_history : list[dict] , direction : Direction):
         data = {
             "speed": self.speed,
             "measures": [
@@ -150,7 +149,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         except Exception as e:
             self.logger.error(f"Error :  {e}")
 
-    def load_latest_data(self, direction):
+    def load_latest_data(self, direction : Direction):
         files = list(Path(f"test_result_{direction}").glob("debug_*.json"))
         if not files:
             raise ValueError("No file founded")
