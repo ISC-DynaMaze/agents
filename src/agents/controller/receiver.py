@@ -120,9 +120,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.add_behaviour(find_path)
 
                 if len(self.agent.obstacles_requesters) != 0:
-                    get_obstacles = ObstaclesBehaviour(
-                        maze=self.agent.maze, obstacles_dir=self.obstacles_dir
-                    )
+                    get_obstacles = ObstaclesBehaviour()
                     self.agent.add_behaviour(get_obstacles)
 
             case PathResponse(path=path):
