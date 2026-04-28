@@ -57,7 +57,3 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case HonkRequest():
                 self.agent.add_behaviour(HonkBehaviour())
-
-            case TurningRequest(direction=direction, angle=angle):
-                turning_behaviour = TurningBehaviour(direction, angle)
-                self.agent.add_behaviour(turning_behaviour)
