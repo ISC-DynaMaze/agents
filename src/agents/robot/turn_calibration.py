@@ -4,7 +4,6 @@ import asyncio
 import datetime
 import json
 import logging
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -14,15 +13,11 @@ from spade.behaviour import OneShotBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
 from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
+from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
-
-
-class Direction(StrEnum):
-    Left = "left"
-    Right = "right"
 
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
