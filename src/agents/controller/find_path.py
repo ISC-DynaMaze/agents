@@ -56,3 +56,5 @@ class FindPathBehaviour(OneShotBehaviour):
         res = PathResponse(path=path)
         for requester in self.agent.path_requesters:
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
+        self.agent.path_requesters = []
+  
