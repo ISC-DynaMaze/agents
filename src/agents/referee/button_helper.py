@@ -12,7 +12,7 @@ class ButtonEvent(Enum):
     DOUBLE_CLICK = auto()
 
 
-Handler = Callable[[str, ButtonEvent], None]
+Handler = Callable[[str, ButtonEvent], bool]
 
 
 @dataclass
@@ -88,4 +88,21 @@ class ButtonHelper:
     def _emit(self, button_id: str, event: ButtonEvent):
         for events, handler in self._handlers:
             if event in events:
-                handler(button_id, event)
+                if handler(button_id, event):
+                    break
+
+
+def button_handler(*events: ButtonEvent):
+    def decorator(fn: Handler) -> Handler:
+        fn._button_events = frozenset(events)  # type: ignore
+        return fn
+
+    return decorator
+
+
+class ButtonHandlerMixin:
+    def register_handlers(self, helper: ButtonHelper) -> None:
+        for name in dir(self):
+            method = getattr(self, name)
+            if callable(method) and hasattr(method, "_button_events"):
+                helper.add_handler(method, *method._button_events)
