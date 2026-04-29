@@ -38,7 +38,6 @@ class ObstaclesRequest(ControllerRequestBase):
 
 class ObstaclesResponse(ControllerResponseBase):
     type: Literal["ctrl-obstacles-res"] = "ctrl-obstacles-res"  # type: ignore
-    obstacles: list[Obstacle] #may return the cells in which there is an obstacle
 
 
 class AngleRequest(ControllerRequestBase):
@@ -65,6 +64,8 @@ ControllerRequest = Annotated[
     Field(discriminator="type"),
 ]
 ControllerResponse = Annotated[
-    Union[MazeResponse, AngleResponse, PathResponse, DirectionResponse, ObstaclesResponse],
+    Union[
+        MazeResponse, AngleResponse, PathResponse, DirectionResponse, ObstaclesResponse
+    ],
     Field(discriminator="type"),
 ]

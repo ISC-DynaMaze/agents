@@ -9,9 +9,12 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
-from agents.controller.maze.detect_obstacles import draw_detected_obstacles, find_obstacles
 from spade.behaviour import OneShotBehaviour
 
+from agents.controller.maze.detect_obstacles import (
+    draw_detected_obstacles,
+    find_obstacles,
+)
 from agents.controller.maze.obstacles import Obstacle
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
@@ -61,10 +64,10 @@ class ObstaclesBehaviour(OneShotBehaviour):
         # returns list of obstacles
         obstacles = self.agent.maze.obstacles
         self.logger.info(f"Detected {len(obstacles)} obstacles in the maze")
-        await self.send_obstacles_message(obstacles)
+        await self.send_obstacles_message()
 
-    async def send_obstacles_message(self, obstacles: list[Obstacle]):
-        res = ObstaclesResponse(obstacles=obstacles)
+    async def send_obstacles_message(self):
+        res = ObstaclesResponse()
         for requester in self.agent.obstacles_requesters:
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
         self.agent.obstacles_requesters = []
