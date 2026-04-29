@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 DEBUG = os.environ.get("ROBOT_DEBUG", "0") != "0"
 
 SideStr = Union[Literal["front"], Literal["left"], Literal["right"]]
+Segment = tuple[np.ndarray, np.ndarray]
 
 
 class LookAroundBehaviour(OneShotBehaviour):
@@ -36,6 +37,7 @@ class LookAroundBehaviour(OneShotBehaviour):
     INTERVAL_SEC: float = 0.5
     MIN_OPENING_RECTS: float = 1
     MIN_PLINTH_LINES: float = 1
+    MIN_OVERLAP_RATIO: float = 0.5
 
     def __init__(self):
         super().__init__()
@@ -94,15 +96,17 @@ class LookAroundBehaviour(OneShotBehaviour):
             SideType: the type of side
         """
 
-        is_wall = self.detect_plinth(img, expected_angle, side)
-        is_open = self.detect_opening(img, expected_angle, side)
+        is_wall, segments = self.detect_plinth(img, expected_angle, side)
+        is_open = self.detect_opening(img, expected_angle, side, segments)
         if is_open:
             return SideType.OPEN
         if is_wall:
             return SideType.WALL
         return SideType.UNKNOWN
 
-    def detect_plinth(self, img: np.ndarray, expected_angle: float, side: str) -> bool:
+    def detect_plinth(
+        self, img: np.ndarray, expected_angle: float, side: str
+    ) -> tuple[bool, list[Segment]]:
         """Detect whether there is a wall base on the given side
 
         Args:
@@ -132,6 +136,7 @@ class LookAroundBehaviour(OneShotBehaviour):
 
         with_lines = img.copy()
         count = 0
+        segments: list[Segment] = []
         if linesP is not None:
             expected_vec = np.array(
                 [np.cos(np.radians(expected_angle)), np.sin(np.radians(expected_angle))]
@@ -152,11 +157,18 @@ class LookAroundBehaviour(OneShotBehaviour):
                     continue
                 cv2.line(with_lines, p1, p2, (0, 255, 0), 1, cv2.LINE_AA)  # type: ignore
                 count += 1
+                segments.append((p1, p2))
         self.logger.debug(f"Detected {count} base wall lines")
         cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
-        return count >= self.MIN_PLINTH_LINES
+        return count >= self.MIN_PLINTH_LINES, segments
 
-    def detect_opening(self, img: np.ndarray, expected_angle: float, side: str) -> bool:
+    def detect_opening(
+        self,
+        img: np.ndarray,
+        expected_angle: float,
+        side: str,
+        plinth_segments: list[Segment],
+    ) -> bool:
         """Detect whether there is an opening on the given side
 
         Args:
@@ -165,6 +177,7 @@ class LookAroundBehaviour(OneShotBehaviour):
                 expected angle of the opening / wall (degrees, 0 to 180).
                 The angle is given from the horizontal, with the Y axis going down
             side (str): name of the side, used to save debug images
+            plinth_semgents (list[Segment]): list of plinth segments
 
         Returns:
             bool: whether an opening was detected
@@ -222,11 +235,33 @@ class LookAroundBehaviour(OneShotBehaviour):
                 and abs(angle2) > self.RECT_ANGLE_THRESH
             ):
                 continue
+
+            if not self.rect_overlaps_plinth(box, plinth_segments, l1):
+                continue
             cv2.drawContours(with_cnts, [box], 0, (0, 255, 0), 2)  # type: ignore
             count += 1
         self.logger.debug(f"Detected {count} opening rectangles")
         cv2.imwrite(self.IMG_DIR / f"{side}_rects.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
+
+    def rect_overlaps_plinth(
+        self, rect: np.ndarray, segments: list[Segment], max_dist: float
+    ) -> bool:
+        center: np.ndarray = np.mean(rect, axis=0)
+        count: int = 0
+        total: int = len(segments)
+        min_count: int = int(np.ceil(self.MIN_OVERLAP_RATIO * total))
+
+        for segment in segments:
+            d = segment[1] - segment[0]
+            n = np.array([-d[1], d[0]]) / np.linalg.norm(d)
+            v = center - segment[0]
+            dist = np.dot(n, v)
+            if dist < max_dist:
+                count += 1
+                if count >= min_count:
+                    return True
+        return False
 
 
 class LookAroundHandler(RequestHandler):
