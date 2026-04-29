@@ -1,8 +1,10 @@
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING
 
 from spade.behaviour import OneShotBehaviour
 
-from agents.robot.agent import RobotAgent
+
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.turn import TurningBehaviour
 from common.models.common import ReqResAdapter
@@ -10,11 +12,14 @@ from common.models.controller import AngleRequest, AngleResponse
 from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
 
+if TYPE_CHECKING:
+    from agents.robot.agent import RobotAgent
+
 
 class RepositionBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
-    def __init__(self, tolerance_deg: float = 5.0):
+    def __init__(self, tolerance_deg: float = 2):
         super().__init__()
         self.logger = logging.getLogger("RepositionBehaviour")
         self.actual_angle = None
@@ -84,5 +89,3 @@ class RepositionBehaviour(OneShotBehaviour):
         behaviour = TurningBehaviour(direction=direction, angle=correction_angle)
         self.agent.add_behaviour(behaviour)
         await behaviour.join()
-
-        
