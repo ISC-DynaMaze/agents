@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
 from spade.behaviour import OneShotBehaviour
-
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.turn import TurningBehaviour
@@ -40,7 +40,9 @@ class RepositionBehaviour(OneShotBehaviour):
     async def wait_angle_response(self, timeout):
         while True:
             try:
-                # TODO: check for response (should be a list with all angles and ids)
+                # FIXME: to do positioning and calibration, only 1 aruco marker must be in the maze, 
+                # when this will be fixed, we will have to update this to get the angle of the aruco id 
+                # corresponding to the bot
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
                     self.logger.error(
