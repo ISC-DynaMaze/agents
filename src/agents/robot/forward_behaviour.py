@@ -46,6 +46,7 @@ class ForwardBehaviour(CyclicBehaviour):
         if speed_left == 0 and speed_right == 0:
             self.bot.stop()
         else:
-            self.bot.setMotor(speed_left, speed_right)
+            self.bot.setPWMA(speed_right)
+            self.bot.setPWMB(speed_left)
 
         await asyncio.sleep(0.05)
