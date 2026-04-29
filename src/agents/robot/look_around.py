@@ -4,13 +4,14 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, Union
 
 import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
-from common.models.robot import SideType
+from common.models.robot import LookAroundRequest, LookAroundResponse, SideType
+from common.request_handler import RequestHandler
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -18,11 +19,13 @@ if TYPE_CHECKING:
 
 DEBUG = os.environ.get("ROBOT_DEBUG", "0") != "0"
 
+SideStr = Union[Literal["front"], Literal["left"], Literal["right"]]
+
 
 class LookAroundBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
-    ANGLES: dict[str, tuple[float, float, float]] = {
+    ANGLES: dict[SideStr, tuple[float, float, float]] = {
         "left": (20, 30, 135),
         "front": (-8, 20, 0),
         "right": (-20, 30, 45),
@@ -40,12 +43,16 @@ class LookAroundBehaviour(OneShotBehaviour):
         self.IMG_DIR.mkdir(parents=True, exist_ok=True)
 
     async def run(self):
+        sides: dict[SideStr, SideType] = {}
         for side, (pan, tilt, expected_angle) in self.ANGLES.items():
             self.logger.info(f"Looking {side}")
             side_type: SideType = await self.look_and_analyse(
                 pan, tilt, expected_angle, side
             )
             self.logger.info(f"Side {side} is {side_type}")
+            sides[side] = side_type
+        res: LookAroundResponse = LookAroundResponse(**sides)
+        await self.agent.look_around_handler.send_response(res)
 
     async def look_and_analyse(
         self, pan: float, tilt: float, expected_angle: float, side: str
@@ -170,10 +177,9 @@ class LookAroundBehaviour(OneShotBehaviour):
         blurred = cv2.GaussianBlur(img, (11, 11), 5)
         lab_img = cv2.cvtColor(blurred, cv2.COLOR_BGR2LAB)
 
-
         l, a, b = cv2.split(lab_img)
         l_bin = np.where(l > 150, 255, 0).astype(np.uint8)
-        #_, l_bin = cv2.threshold(l, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        # _, l_bin = cv2.threshold(l, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
         cv2.imwrite(self.IMG_DIR / f"{side}_l_bin.png", l_bin.astype(np.uint8))
 
         cnts, hrcy = cv2.findContours(l_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -221,3 +227,13 @@ class LookAroundBehaviour(OneShotBehaviour):
         self.logger.debug(f"Detected {count} opening rectangles")
         cv2.imwrite(self.IMG_DIR / f"{side}_rects.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
+
+
+class LookAroundHandler(RequestHandler):
+    agent: RobotAgent
+
+    def __init__(self, agent: RobotAgent):
+        super().__init__(agent)
+
+    async def do_request(self, req: LookAroundRequest):
+        self.agent.add_behaviour(LookAroundBehaviour())

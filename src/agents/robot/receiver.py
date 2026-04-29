@@ -66,4 +66,4 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 self.agent.add_behaviour(RepositionBehaviour())
 
             case LookAroundRequest():
-                self.agent.add_behaviour(LookAroundBehaviour())
+                await self.agent.look_around_handler.on_request(sender_jid, req)

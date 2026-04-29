@@ -1,3 +1,4 @@
+from dataclasses import field
 from enum import StrEnum
 from typing import Annotated, Literal, Optional, Union
 
@@ -85,9 +86,9 @@ class SideType(StrEnum):
 
 class LookAroundResponse(RobotResponseBase):
     type: Literal["bot-look-around-res"] = "bot-look-around-res"  # type: ignore
-    left: SideType
-    right: SideType
-    front: SideType
+    left: SideType = field(default=SideType.UNKNOWN)
+    right: SideType = field(default=SideType.UNKNOWN)
+    front: SideType = field(default=SideType.UNKNOWN)
 
 
 RobotRequest = Annotated[

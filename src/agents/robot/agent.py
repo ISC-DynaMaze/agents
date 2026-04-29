@@ -6,6 +6,7 @@ from picamera2 import Picamera2
 from spade.agent import Agent
 
 from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.look_around import LookAroundHandler
 from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
 
@@ -37,6 +38,8 @@ class RobotAgent(Agent):
         self.controller_jid: str = controller_jid
         self.camera_res: tuple[int, int] = camera_res
         self.logger = logging.getLogger("RobotAgent")
+
+        self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
 
     async def setup(self):
         self.bot = AlphaBot2()
