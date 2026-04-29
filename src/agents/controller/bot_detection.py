@@ -26,9 +26,9 @@ class BotDetectionBehaviour(OneShotBehaviour):
         corners, ids, rejected = self.detector.detectMarkers(self.img)
 
         if len(corners) > 0:
-            img2 = self.img.copy()
-            cv2.aruco.drawDetectedMarkers(img2, corners, ids)
-            cv2.imwrite("marker.png", img2)
+            # img2 = self.img.copy()
+            # cv2.aruco.drawDetectedMarkers(img2, corners, ids)
+            # cv2.imwrite("marker.png", img2)
             ids = ids.flatten()
             bot_angles: list[tuple[int, float]] = self.get_angles_from_markers(
                 corners, ids
