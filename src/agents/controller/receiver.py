@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-import base64
-import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-import aiofiles
-import cv2
-import numpy as np
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
@@ -115,8 +109,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.add_behaviour(build_maze)
 
                 if len(self.agent.path_requesters) != 0:
-                    if self.agent.maze is None: 
-                        self.agent.logger.error("Received path request but maze is not set")
+                    if self.agent.maze is None:
+                        self.agent.logger.error(
+                            "Received path request but maze is not set"
+                        )
                         return
                     else:
                         find_path = FindPathBehaviour(

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-import math
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,7 +13,6 @@ from agents.controller.maze.detect_obstacles import (
     draw_detected_obstacles,
     find_obstacles,
 )
-from agents.controller.maze.obstacles import Obstacle
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
 from common.models.controller import (

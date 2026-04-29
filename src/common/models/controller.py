@@ -2,7 +2,6 @@ from typing import Annotated, Literal, Union
 
 from pydantic import Field
 
-from agents.controller.maze.obstacles import Obstacle
 from common.models.base import RequestBase, ResponseBase
 
 
