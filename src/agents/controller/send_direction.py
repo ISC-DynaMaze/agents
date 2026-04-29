@@ -168,6 +168,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             dx = float(vec[0])
             dy = float(vec[1])
 
+            # FIXME: bot id 13 dx and dy > 0, for bot id 7, dx and dy < 0 
             if math.fabs(dx) >= math.fabs(dy):
                 return "right" if dx > 0 else "left"
             return "down" if dy > 0 else "up"
