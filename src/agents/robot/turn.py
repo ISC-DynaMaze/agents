@@ -22,12 +22,17 @@ class TurningBehaviour(OneShotBehaviour):
         self.calib = AngleCalibrationBehaviour()
 
     async def run(self):
-        turning_time = 0.0
-        self.bot.setBothPWM(self.speed)
+        turning_time = 0.0 #Initiate the turning time variable
+        self.bot.setBothPWM(self.speed) #Will put both wheels of the robot at the same speed
+
+        '''
+            Depending on the direction given the robot will turn right or left. The turning time is
+            calculated with the calibration result and with an extrapolation
+        '''
         if self.direction == Direction.Right:
             self.bot.right()
-            right_calib, _ = self.calib.load_latest_data(Direction.Right)
-            config = self.load_profile(right_calib)
+            right_calib, _ = self.calib.load_latest_data(Direction.Right) #Get the name of the latest json file created
+            config = self.load_profile(right_calib) #Get the content of the file
         elif self.direction == Direction.Left:
             self.bot.left()
             left_calib, _ = self.calib.load_latest_data(Direction.Left)
@@ -35,19 +40,25 @@ class TurningBehaviour(OneShotBehaviour):
         else:
             self.logger.error("[Direction] Wrong direction given")
             return
-        turning_time = self.interpolate(config, self.angle)
-        await asyncio.sleep(turning_time)
+    
+        turning_time = self.interpolate(config, self.angle) #Here is the interpolation of the turning time (done with numpy)
+        await asyncio.sleep(turning_time) #Time given to the robot before it's forced to stop by a stop()
         self.bot.stop()
 
     def interpolate(self, config: list[tuple[float, float]], angle: float) -> float:
         data = np.array(config)
-        c = np.polyfit(data[:, 0], data[:, 1], 1)
+        '''
+            Build the coefficient for the interpolation, because of the shape of config,
+            we need to separate each tuple and put the result in a dedicated list : the angle list and the time
+        '''
+        c = np.polyfit(data[:, 0], data[:, 1], 1) # Separate the angle and time value in a dedicated list and interpolate
         self.logger.info(f"coefficients: {c}")
         f = np.poly1d(c)
         time = f(angle)
         self.logger.info(f"x={angle} y={time}")
         return time
 
+    #Open the json file given as file_path and take its calibration result
     def load_profile(self, file_path) -> list[tuple[float, float]]:
         with open(file_path, "r") as f:
             data = json.load(f)
