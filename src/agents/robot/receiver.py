@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
-from agents.robot.look_around import LookAroundBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.status import SendStatusBehaviour
