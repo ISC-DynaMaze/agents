@@ -8,6 +8,7 @@ from spade.behaviour import CyclicBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.disco import DiscoBehaviour
+from agents.robot.forward_behaviour import ForwardBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
@@ -89,7 +90,11 @@ class MoveBehaviour(CyclicBehaviour):
     # depending on the free directions, move forward or turn and move forward
     async def go_forward_for(self, seconds: float):
         self.bot.forward()
+        forward_behaviour = ForwardBehaviour()
+        self.agent.add_behaviour(forward_behaviour)
         await asyncio.sleep(seconds)
+        forward_behaviour.kill()
+        await forward_behaviour.join()
         self.bot.stop()
 
     async def turn_and_go(self, direction: str):
