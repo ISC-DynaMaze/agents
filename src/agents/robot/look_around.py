@@ -31,6 +31,8 @@ class LookAroundBehaviour(OneShotBehaviour):
     RECT_ANGLE_THRESH: float = np.radians(20)
     IMG_DIR: Path = Path("images")
     INTERVAL_SEC: float = 0.5
+    MIN_OPENING_RECTS: float = 1
+    MIN_PLINTH_LINES: float = 1
 
     def __init__(self):
         super().__init__()
@@ -145,7 +147,7 @@ class LookAroundBehaviour(OneShotBehaviour):
                 count += 1
         self.logger.debug(f"Detected {count} base wall lines")
         cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
-        return count > 0
+        return count >= self.MIN_PLINTH_LINES
 
     def detect_opening(self, img: np.ndarray, expected_angle: float, side: str) -> bool:
         """Detect whether there is an opening on the given side
@@ -218,4 +220,4 @@ class LookAroundBehaviour(OneShotBehaviour):
             count += 1
         self.logger.debug(f"Detected {count} opening rectangles")
         cv2.imwrite(self.IMG_DIR / f"{side}_rects.png", with_cnts)
-        return count > 1
+        return count >= self.MIN_OPENING_RECTS
