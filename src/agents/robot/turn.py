@@ -3,11 +3,11 @@ import json
 import logging
 
 import numpy as np
-from common.models.robot import Direction
 from spade.behaviour import OneShotBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.turn_calibration import AngleCalibrationBehaviour
+from common.models.robot import Direction
 
 
 class TurningBehaviour(OneShotBehaviour):
