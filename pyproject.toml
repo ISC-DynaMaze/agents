@@ -9,11 +9,11 @@ dependencies = [
     "pydantic>=2.13.3",
     "slixmpp<=1.9.1",
     "spade==4.0.3",
-    "opencv-python-headless>=4.13.0.92",
 ]
 
 [project.optional-dependencies]
 camera = [
+    "opencv-python-headless>=4.13.0.92",
 ]
 controller = [
     "numpy>=2.4.4",
