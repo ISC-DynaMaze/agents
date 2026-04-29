@@ -127,10 +127,10 @@ class AlphaBot2(object):
             self.PWMB.ChangeDutyCycle(0 - left)
 
     def getIRSensorRight(self) -> bool:
-        return GPIO.input(self.DR)
+        return bool(GPIO.input(self.DL))
 
     def getIRSensorLeft(self) -> bool:
-        return GPIO.input(self.DL)
+        return bool(GPIO.input(self.DR))
 
     def setCameraPan(self, angle: float):
         angle = min(self.MAX_PAN_ANGLE, max(self.MIN_PAN_ANGLE, angle))
