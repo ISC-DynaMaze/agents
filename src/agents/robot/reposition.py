@@ -1,0 +1,88 @@
+import logging
+
+from spade.behaviour import OneShotBehaviour
+
+from agents.robot.agent import RobotAgent
+from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.turn import TurningBehaviour
+from common.models.common import ReqResAdapter
+from common.models.controller import AngleRequest, AngleResponse
+from common.models.robot import Direction
+from common.sender import BaseSenderBehaviour
+
+
+class RepositionBehaviour(OneShotBehaviour):
+    agent: RobotAgent
+
+    def __init__(self, tolerance_deg: float = 5.0):
+        super().__init__()
+        self.logger = logging.getLogger("RepositionBehaviour")
+        self.actual_angle = None
+        self.tolerance_deg = tolerance_deg
+
+    @property
+    def bot(self) -> AlphaBot2:
+        return self.agent.bot
+
+    async def run(self):
+        self.bot.stop()
+
+        # get angle
+        await self.ask_angle()
+        self.actual_angle = await self.wait_angle_response(timeout=5)
+        await self.reposition_to_nearest_90_degree()
+
+    async def wait_angle_response(self, timeout):
+        while True:
+            try:
+                # TODO: check for response (should be a list with all angles and ids)
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.logger.error(
+                        "Timed out waiting for direction response message"
+                    )
+                    return None
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, AngleResponse)
+                return res.angle
+            except Exception as e:
+                self.logger.error(f"Error occurred while waiting for angle: {e}")
+                continue
+
+    async def ask_angle(self):
+        req = AngleRequest()
+        self.agent.add_behaviour(
+            BaseSenderBehaviour(req, str(self.agent.controller_jid))
+        )
+
+    async def reposition_to_nearest_90_degree(self):
+        if self.actual_angle is None:
+            self.logger.error("Cannot reposition because actual angle is not set")
+            return
+
+        # normalize to [0, 360) to make nearest cardinal computation robust
+        current_angle = self.actual_angle % 360
+        nearest_90 = round(current_angle / 90) * 90
+        nearest_90 %= 360
+
+        # signed shortest-angle difference in (-180, 180]
+        angle_diff = (nearest_90 - current_angle + 180) % 360 - 180
+
+        if abs(angle_diff) <= self.tolerance_deg:
+            self.logger.info(
+                f"Already aligned: current={current_angle:.2f}°, target={nearest_90:.2f}°, diff={angle_diff:.2f}°"
+            )
+            return
+
+        direction = Direction.Right if angle_diff > 0 else Direction.Left
+        correction_angle = abs(angle_diff)
+
+        self.logger.info(
+            f"Repositioning to nearest 90°: current={current_angle:.2f}°, target={nearest_90:.2f}°, correction={correction_angle:.2f}° {direction.value}"
+        )
+
+        behaviour = TurningBehaviour(direction=direction, angle=correction_angle)
+        self.agent.add_behaviour(behaviour)
+        await behaviour.join()
+
+        
