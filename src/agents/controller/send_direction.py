@@ -152,7 +152,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
                 continue
 
     # infer bot orientation based on position of bot marker corners
-    def get_bot_orientation(self, corners, ids, bot_id: int = 7):
+    def get_bot_orientation(self, corners, ids, bot_id):
         if ids is None:
             return None
 
