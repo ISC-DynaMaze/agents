@@ -17,9 +17,11 @@ camera = [
 ]
 controller = [
     "numpy>=2.4.4",
+    "opencv-python-headless>=4.13.0.92", 
+]
+logger = [
     "opencv-python-headless>=4.13.0.92",
 ]
-logger = []
 robot = [
     "adafruit-circuitpython-servokit>=1.3.23",
     "rpi-gpio>=0.7.1",

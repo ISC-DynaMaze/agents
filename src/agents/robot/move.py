@@ -1,40 +1,60 @@
+from __future__ import annotations
+
 import asyncio
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Optional
 
 from spade.behaviour import CyclicBehaviour
 
+from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.disco import DiscoBehaviour
+from agents.robot.honk import HonkBehaviour
+from agents.robot.turn import TurningBehaviour
+from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
+from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
+
+if TYPE_CHECKING:
+    from agents.robot.agent import RobotAgent
 
 
 class MoveBehaviour(CyclicBehaviour):
+    agent: RobotAgent
+
     def __init__(self):
         super().__init__()
-        self.bot = None
+        self.logger = logging.getLogger("MoveBehaviour")
+        self.logger.setLevel(logging.DEBUG)
+        self.turning_angle = 45
+
+    @property
+    def bot(self) -> AlphaBot2:
+        return self.agent.bot
 
     async def on_start(self):
-        self.bot = self.agent.bot
         self.surroundings = []  # mental state of what the robot saw
+        self.bot.setBothPWM(20)
 
     async def run(self):
-        await self.go_forward_for(0.15)
-        self.agent.logger.info("Moved forward for 0.15 seconds")
+        # await self.go_forward_for(0.15)
+        # self.logger.info("Moved forward for 0.15 seconds")
 
         # get next surrounding
-        await self.get_next_surrounding()  # add directly to mental state
+        # await self.get_next_surrounding()  # add directly to mental state
 
         # check if we have already seen the surroundings for current cell
         if len(self.surroundings) == 1:
-            self.agent.logger.info("No surroundings in mental state")
+            self.logger.info("No surroundings in mental state")
             return
 
         # get current surroundings and check which directions are open
-        current_surrounding = await self.get_current_surrounding()
+        # current_surrounding = await self.get_current_surrounding()
 
         # check free direction in current surroundings
-        free_directions = [
-            direction for direction, status in current_surrounding if status == "open"
-        ]
+        # free_directions = [
+        #     direction for direction, status in current_surrounding if status == "open"
+        # ]
 
         # TODO: implement logic when check for surroundings implemented
         # if len(free_directions) == 1:
@@ -43,16 +63,25 @@ class MoveBehaviour(CyclicBehaviour):
         #     self.agent.logger.info(f"Moved {free_directions[0]}")
 
         # if len(free_directions) > 1:
-            # self.agent.logger.info(f"Multiple free directions: {free_directions}")
+        # self.agent.logger.info(f"Multiple free directions: {free_directions}")
 
         # ask controller where to go
-        direction = await self.ask_controller()
-        self.agent.logger.info(f"Controller directed to go: {direction}")
+        await self.ask_controller()
+        direction = await self.wait_for_direction(timeout=5.0)
+        if direction is None:
+            self.logger.error("Timed out waiting for direction response")
+            self.agent.add_behaviour(HonkBehaviour())
+            self.agent.add_behaviour(DiscoBehaviour(period=0.5))
+            self.kill()
+            return
+
+        self.logger.info(f"Controller directed to go: {direction}")
         await self.turn_and_go(direction)
-        self.agent.logger.info(f"Moved {direction}")
+        self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
-        self.kill()  # stop the behaviour until next run when it will ask for surroundings again
+        await asyncio.sleep(1)
+        # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     # depending on the free directions, move forward or turn and move forward
     async def go_forward_for(self, seconds: float):
@@ -62,16 +91,30 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def turn_and_go(self, direction: str):
         if direction == "left":
-            self.bot.left()
-            await asyncio.sleep(0.5)
-            self.bot.stop()
+            await self.turn(direction=Direction.Left)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Left)
+            self.logger.info("TURNED LEEEEEEFT")
+            await asyncio.sleep(0.3)
+
         elif direction == "right":
-            self.bot.right()
-            await asyncio.sleep(0.5)
-            self.bot.stop()
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            self.logger.info("TURNED RIGHHHHHHHHT")
+            await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
-        await self.go_forward_for(0.3)
+        await self.go_forward_for(0.7)
+
+    async def turn(self, direction: Direction):
+        angle = self.turning_angle
+        # FIXME: workaround because calibration is not perfect
+        if direction == Direction.Left:
+            angle -= 5
+        behaviour = TurningBehaviour(direction=direction, angle=angle)
+        self.agent.add_behaviour(behaviour)
+        await behaviour.join()
 
     # ask controllor where to go
     async def ask_controller(self):
@@ -79,8 +122,23 @@ class MoveBehaviour(CyclicBehaviour):
         self.agent.add_behaviour(
             BaseSenderBehaviour(req, str(self.agent.controller_jid))
         )
-        direction = "front"
-        return direction
+
+    # wait for controller's response
+    async def wait_for_direction(self, timeout: float) -> Optional[str]:
+        while True:
+            try:
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.logger.error(
+                        "Timed out waiting for direction response message"
+                    )
+                    return None
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, DirectionResponse)
+                return res.direction
+            except Exception as e:
+                self.logger.error(f"Error occurred while waiting for direction: {e}")
+                continue
 
     # ask for surroundings
     # TODO: adapt with actual response
@@ -91,10 +149,10 @@ class MoveBehaviour(CyclicBehaviour):
         return directions
 
     async def get_next_surrounding(self):
-        self.bot.stop(1)  # stop the bot before asking for surroundings
+        self.bot.stop()  # stop the bot before asking for surroundings
         next_surrounding = await self.ask_surroundings()
         if next_surrounding is None:
-            self.agent.logger.error("No response received for surroundings request")
+            self.logger.error("No response received for surroundings request")
             return
         else:
             self.surroundings.append(next_surrounding)
@@ -102,7 +160,7 @@ class MoveBehaviour(CyclicBehaviour):
     # returns list of tuples with direction and status of current surrounding
     async def get_current_surrounding(self):
         if len(self.surroundings) == 1:
-            self.agent.logger.warning(
+            self.logger.warning(
                 "No current current surrounding in mental state"
             )  # should never happen when calling this function
             return None

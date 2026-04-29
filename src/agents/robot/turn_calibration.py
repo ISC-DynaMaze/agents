@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import asyncio
 import datetime
 import json
 import logging
-from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 from spade.behaviour import OneShotBehaviour
@@ -11,15 +13,16 @@ from spade.behaviour import OneShotBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
 from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
+from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
 
-
-class Direction(StrEnum):
-    Left = "left"
-    Right = "right"
+if TYPE_CHECKING:
+    from agents.robot.agent import RobotAgent
 
 
 class AngleCalibrationBehaviour(OneShotBehaviour):
+    agent: RobotAgent
+
     def __init__(self, time=0.1, speed=20, delta_t=0.05):
         super().__init__()
         self.actual_angle = None
@@ -55,7 +58,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
     async def calibrate_direction(self, direction: Direction):
         self.actual_angle = await self.ask_angle()
         if self.actual_angle is None:
-            self.logger.info(f"[Behaviour] No angle given")
+            self.logger.info("[Behaviour] No angle given")
             return
         self.bot.setBothPWM(self.speed)
         angle_history = [self.actual_angle]

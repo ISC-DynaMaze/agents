@@ -19,6 +19,7 @@ from common.models.common import Request, Response
 from common.models.controller import (
     AngleRequest,
     DirectionRequest,
+    DirectionResponse,
     MazeRequest,
     PathRequest,
     PathResponse,
@@ -98,12 +99,21 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.add_behaviour(build_maze)
 
                 if len(self.agent.path_requesters) != 0:
-                    find_path = FindPathBehaviour(
-                        maze=self.agent.maze, output_dir=self.path_dir
-                    )  # type: ignore
-                    self.agent.add_behaviour(find_path)
+                    if self.agent.maze is None: 
+                        self.agent.logger.error("Received path request but maze is not set")
+                        return
+                    else:
+                        find_path = FindPathBehaviour(
+                            maze=self.agent.maze, output_dir=self.path_dir
+                        )  # type: ignore
+                        self.agent.add_behaviour(find_path)
 
             case PathResponse(path=path):
                 print("Received path response")
                 print(f"Path: {path}")
                 self.agent.current_path = path
+
+            case DirectionResponse(direction=direction):
+                print("Received direction response")
+                print(f"Direction: {direction}")
+                self.agent.logger.info(f"Received direction response: {direction}")

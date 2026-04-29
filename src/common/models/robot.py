@@ -1,8 +1,8 @@
+from enum import StrEnum
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from agents.robot.turn_calibration import Direction
 from common.models.base import RequestBase, ResponseBase
 
 
@@ -46,6 +46,11 @@ class CameraStatus(BaseModel):
 class StatusResponse(RobotResponseBase):
     type: Literal["bot-status-res"] = "bot-status-res"  # type: ignore
     camera: CameraStatus
+
+
+class Direction(StrEnum):
+    Left = "left"
+    Right = "right"
 
 
 class TurningRequest(RobotRequestBase):
