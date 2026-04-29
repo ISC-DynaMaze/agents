@@ -18,7 +18,7 @@ class Cell:
         self.col = col
         self.walls = walls if walls is not None else [False, False, False, False]
         self.obstacles = []
-        
+
         # for astar search
         self.f = float("inf")  # Total cost of the cell (g + h)
         self.g = float("inf")  # Cost from start to this cell
@@ -30,10 +30,10 @@ class Cell:
 
     def has_wall(self, position):
         return self.walls[position]
-    
+
     def add_obstacle(self, obstacle):
         self.obstacles.append(obstacle)
-    
+
     def clear_pathfinding_info(self):
         self.f = float("inf")
         self.g = float("inf")
@@ -81,12 +81,12 @@ class Maze:
         else:
             # if cell not valid
             return None
-    
+
     def add_obstacle(self, obstacle):
         self.obstacles.append(obstacle)
         for cell in obstacle.cells:
             cell.add_obstacle(obstacle)
-    
+
     # check if a move is valid (no wall blocking and destination in bounds)
     # move: 0=DOWN, 1=UP, 2=RIGHT, 3=LEFT
     def is_valid_move(self, row, col, move):

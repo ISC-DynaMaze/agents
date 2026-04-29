@@ -1,13 +1,15 @@
-import numpy as np
 import cv2
+import numpy as np
 
-from agents.controller.maze.obstacles import yellowObstacle, redObstacle, greenObstacle
+from agents.controller.maze.obstacles import greenObstacle, redObstacle, yellowObstacle
+
 
 def get_image(image_path):
     img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
     if img is None:
         raise FileNotFoundError(f"Error opening image: {image_path}")
     return img
+
 
 # get a mask for given color
 def get_obstacle_mask(image, obstacle):
@@ -16,13 +18,19 @@ def get_obstacle_mask(image, obstacle):
     # one color range (yellow and green)
     if len(obstacle.color_range) == 1:
         lower, upper = obstacle.color_range[0]
-        mask = cv2.inRange(hsv, np.array(lower, dtype=np.uint8), np.array(upper, dtype=np.uint8))
+        mask = cv2.inRange(
+            hsv, np.array(lower, dtype=np.uint8), np.array(upper, dtype=np.uint8)
+        )
     # red that uses 2 color ranges
     else:
         lower_1, upper_1 = obstacle.color_range[0]
         lower_2, upper_2 = obstacle.color_range[1]
-        mask_1 = cv2.inRange(hsv, np.array(lower_1, dtype=np.uint8), np.array(upper_1, dtype=np.uint8))
-        mask_2 = cv2.inRange(hsv, np.array(lower_2, dtype=np.uint8), np.array(upper_2, dtype=np.uint8))
+        mask_1 = cv2.inRange(
+            hsv, np.array(lower_1, dtype=np.uint8), np.array(upper_1, dtype=np.uint8)
+        )
+        mask_2 = cv2.inRange(
+            hsv, np.array(lower_2, dtype=np.uint8), np.array(upper_2, dtype=np.uint8)
+        )
         mask = cv2.bitwise_or(mask_1, mask_2)
 
     # small cleanup to close gaps in obstacles
@@ -30,14 +38,16 @@ def get_obstacle_mask(image, obstacle):
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
 
-    return mask 
+    return mask
+
 
 # only keep object in the maze rectangle
 def keep_only_maze_rect(mask, rect):
     x, y, w, h = rect
     rect_mask = np.zeros_like(mask, dtype=np.uint8)
-    rect_mask[y:y + h, x:x + w] = 255
+    rect_mask[y : y + h, x : x + w] = 255
     return cv2.bitwise_and(mask, rect_mask)
+
 
 # extract obstacle boxes from the mask
 def extract_obstacle_boxes(mask, min_area=500):
@@ -54,14 +64,17 @@ def extract_obstacle_boxes(mask, min_area=500):
         center_y = int(np.mean(corners[:, 1]))
 
         center = (center_x, center_y)
-        boxes.append({
-            "contour": contour,
-            "corners": corners,
-            "center": center,
-            "area": area,
-        })
+        boxes.append(
+            {
+                "contour": contour,
+                "corners": corners,
+                "center": center,
+                "area": area,
+            }
+        )
 
     return boxes
+
 
 ## get corners of one object contour
 def get_obstacle_corners(contour):
@@ -77,6 +90,7 @@ def get_obstacle_corners(contour):
 
     return corners.astype(np.int32)
 
+
 # create obstacle objects from detected blocks and add them to the maze
 def build_obstacles_from_blocks(blocks, obstacle_cls, maze):
     detected_obstacles = []
@@ -89,6 +103,7 @@ def build_obstacles_from_blocks(blocks, obstacle_cls, maze):
         detected_obstacles.append(obstacle)
 
     return detected_obstacles
+
 
 # detect obstacles in the maze from the image, return dict of detected obstacles by color and their blocks
 def detect_obstacles_in_maze(image, maze, rect, min_area=500):
@@ -114,12 +129,14 @@ def detect_obstacles_in_maze(image, maze, rect, min_area=500):
 
     return detected_by_color, blocks_by_color
 
+
 # clear maze obstacles and their references in cells
 def clear_maze_obstacles(maze):
     maze.obstacles = []
     for row in maze.grid:
         for cell in row:
             cell.obstacles = []
+
 
 # add detected obstacles to maze and link them to their cells
 def add_detected_obstacles_to_maze(maze, detected_by_color):
@@ -157,15 +174,19 @@ def draw_detected_obstacles(image, blocks_by_color):
 
     return highlighted
 
+
 # combine all obstacle blocks into one mask for visualization
 def build_combined_obstacle_mask(image_shape, blocks_by_color):
     combined_mask = np.zeros(image_shape[:2], dtype=np.uint8)
     for blocks in blocks_by_color.values():
         for block in blocks:
-            cv2.drawContours(combined_mask, [block["contour"]], -1, 255, thickness=cv2.FILLED)
+            cv2.drawContours(
+                combined_mask, [block["contour"]], -1, 255, thickness=cv2.FILLED
+            )
     return combined_mask
 
-# print summary of what was detected, kept in a function for debugging 
+
+# print summary of what was detected, kept in a function for debugging
 def print_detection_summary(detected_by_color, maze):
     for color_name, obstacles in detected_by_color.items():
         print(f"{color_name}: {len(obstacles)} obstacle(s)")
@@ -174,6 +195,7 @@ def print_detection_summary(detected_by_color, maze):
             print(f"  #{i} center={obstacle.center} cells={cells}")
 
     print(f"Maze obstacle count: {len(maze.obstacles)}")
+
 
 # main function
 def find_obstacles(image, maze, min_area=500):
