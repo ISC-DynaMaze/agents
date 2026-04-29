@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Optional
 
-from agents.robot.turn import TurningBehaviour
 from spade.behaviour import CyclicBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
-from common.models.robot import Direction
+from agents.robot.disco import DiscoBehaviour
+from agents.robot.honk import HonkBehaviour
+from agents.robot.turn import TurningBehaviour
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
-from common.models.robot import TurningRequest
+from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -33,6 +34,7 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def on_start(self):
         self.surroundings = []  # mental state of what the robot saw
+        self.bot.setBothPWM(20)
 
     async def run(self):
         # await self.go_forward_for(0.15)
@@ -65,9 +67,12 @@ class MoveBehaviour(CyclicBehaviour):
 
         # ask controller where to go
         await self.ask_controller()
-        direction = await self.wait_for_direction(timeout=10.0)
+        direction = await self.wait_for_direction(timeout=5.0)
         if direction is None:
             self.logger.error("Timed out waiting for direction response")
+            self.agent.add_behaviour(HonkBehaviour())
+            self.agent.add_behaviour(DiscoBehaviour(period=0.5))
+            self.kill()
             return
 
         self.logger.info(f"Controller directed to go: {direction}")
@@ -75,7 +80,8 @@ class MoveBehaviour(CyclicBehaviour):
         self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
-        self.kill()  # stop the behaviour until next run when it will ask for surroundings again
+        await asyncio.sleep(1)
+        # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     # depending on the free directions, move forward or turn and move forward
     async def go_forward_for(self, seconds: float):
@@ -86,38 +92,39 @@ class MoveBehaviour(CyclicBehaviour):
     async def turn_and_go(self, direction: str):
         if direction == "left":
             await self.turn(direction=Direction.Left)
-            #await self.turn(direction=Direction.Left)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Left)
             self.logger.info("TURNED LEEEEEEFT")
-            # self.bot.left()
-            # await asyncio.sleep(0.3)
-            self.bot.stop()
+            await asyncio.sleep(0.3)
+
         elif direction == "right":
             await self.turn(direction=Direction.Right)
-            #await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
             self.logger.info("TURNED RIGHHHHHHHHT")
-            # self.bot.right()
-            # await asyncio.sleep(0.3)
-            self.bot.stop()
+            await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
-        await self.go_forward_for(0.2)
+        await self.go_forward_for(0.7)
 
     async def turn(self, direction: Direction):
-        behaviour = TurningBehaviour(direction=direction, angle=self.turning_angle)
+        angle = self.turning_angle
+        # FIXME: workaround because calibration is not perfect
+        if direction == Direction.Left:
+            angle -= 5
+        behaviour = TurningBehaviour(direction=direction, angle=angle)
         self.agent.add_behaviour(behaviour)
         await behaviour.join()
-        #req = TurningRequest(direction=direction, angle=self.turning_angle)
-        #self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
     # ask controllor where to go
     async def ask_controller(self):
         req = DirectionRequest()
-        self.agent.add_behaviour(  
+        self.agent.add_behaviour(
             BaseSenderBehaviour(req, str(self.agent.controller_jid))
         )
 
     # wait for controller's response
-    async def wait_for_direction(self, timeout: float):
+    async def wait_for_direction(self, timeout: float) -> Optional[str]:
         while True:
             try:
                 msg = await self.receive(timeout=timeout)
@@ -125,7 +132,7 @@ class MoveBehaviour(CyclicBehaviour):
                     self.logger.error(
                         "Timed out waiting for direction response message"
                     )
-                    continue
+                    return None
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, DirectionResponse)
                 return res.direction
