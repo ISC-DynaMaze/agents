@@ -2,6 +2,7 @@ from typing import Annotated, Literal, Union
 
 from pydantic import Field
 
+from agents.controller.maze.obstacles import Obstacle
 from common.models.base import RequestBase, ResponseBase
 
 
@@ -37,7 +38,7 @@ class ObstaclesRequest(ControllerRequestBase):
 
 class ObstaclesResponse(ControllerResponseBase):
     type: Literal["ctrl-obstacles-res"] = "ctrl-obstacles-res"  # type: ignore
-    # obstacles: list[tuple[int, int]] may return the cells in which there is an obstacle
+    obstacles: list[Obstacle] #may return the cells in which there is an obstacle
 
 
 class AngleRequest(ControllerRequestBase):

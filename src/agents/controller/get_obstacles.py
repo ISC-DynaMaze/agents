@@ -41,15 +41,12 @@ class ObstaclesBehaviour(OneShotBehaviour):
 
         # request new image
         await self.req_image()
-        self.logger.info("Requested new image from camera agent")
         img = await self.wait_for_new_image(timeout=10.0)
         if img is None:
             self.logger.error("Timed out waiting for camera image")
             return
-        self.logger.info("Received new image from camera agent")
 
         # detect obstacles in maze and update maze
-        self.logger.info("Detecting obstacles in the maze")
         detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
         blocks_by_color = detection["blocks_by_color"]
         maze = detection["maze"]  # maze updated with detected obstacles

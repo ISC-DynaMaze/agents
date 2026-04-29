@@ -66,6 +66,9 @@ class Maze:
         # maze rectangle in source image coordinates: (x, y, w, h)
         self.rect = None
 
+        # list of detected obstacles
+        self.obstacles = []
+
     # check if a cell is within boundaries
     # should return true if valid cell
     def is_valid_cell(self, row, col):
