@@ -273,16 +273,18 @@ class LookAroundBehaviour(OneShotBehaviour):
     def rect_overlaps_plinth(
         self, rect: np.ndarray, segments: list[Segment], max_dist: float
     ) -> bool:
-        center: np.ndarray = np.mean(rect, axis=0)
-        count: int = 0
         total: int = len(segments)
         min_count: int = int(np.ceil(self.MIN_OVERLAP_RATIO * total))
+        if min_count == 0:
+            return True
+        center: np.ndarray = np.mean(rect, axis=0)
+        count: int = 0
 
         for segment in segments:
             d = segment[1] - segment[0]
             n = np.array([-d[1], d[0]]) / np.linalg.norm(d)
             v = center - segment[0]
-            dist = np.dot(n, v)
+            dist = np.abs(np.dot(n, v))
             if dist < max_dist:
                 count += 1
                 if count >= min_count:
