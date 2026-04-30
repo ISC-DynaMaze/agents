@@ -109,6 +109,8 @@ RobotRequest = Annotated[
         TurningCalibrationRequest,
         RepositionRequest,
         LookAroundRequest,
+        BottomIRCalibrationRequest,
+        DistanceCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
