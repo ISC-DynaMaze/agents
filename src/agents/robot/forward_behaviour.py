@@ -17,7 +17,6 @@ class ForwardBehaviour(CyclicBehaviour):
     def __init__(self, speed: int = 20):
         super().__init__()
         self.speed: int = speed
-        self.slow_speed: int = int(round(self.speed * 0.8))
 
     @property
     def bot(self) -> AlphaBot2:
@@ -38,10 +37,10 @@ class ForwardBehaviour(CyclicBehaviour):
                 speed_right = 0
 
             case (False, True):
-                speed_right = self.slow_speed
+                speed_right = 0
 
             case (True, False):
-                speed_left = self.slow_speed
+                speed_left = 0
 
         if speed_left == 0 and speed_right == 0:
             self.bot.stop()
