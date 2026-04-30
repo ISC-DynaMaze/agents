@@ -168,8 +168,8 @@ class LookAroundBehaviour(OneShotBehaviour):
             expected_vec = np.array(
                 [np.cos(np.radians(expected_angle)), np.sin(np.radians(expected_angle))]
             )
-            for _ in range(0, len(linesP)):
-                x1, y1, x2, y2 = linesP[i][0]
+            for j in range(0, len(linesP)):
+                x1, y1, x2, y2 = linesP[j][0]
                 p1 = np.array([x1, y1])
                 p2 = np.array([x2, y2])
                 v = p2 - p1
