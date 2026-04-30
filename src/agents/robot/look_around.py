@@ -236,7 +236,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             ):
                 continue
 
-            if not self.rect_overlaps_plinth(box, plinth_segments, l1):
+            if not self.rect_overlaps_plinth(box, plinth_segments, l1):  # type: ignore
                 continue
             cv2.drawContours(with_cnts, [box], 0, (0, 255, 0), 2)  # type: ignore
             count += 1
