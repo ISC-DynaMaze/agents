@@ -25,14 +25,13 @@ ROBOT_ARM_POSITION = (394,328)
 
 
 class ObstacleRelativePositionBehaviour(OneShotBehaviour):
-    def __init__(self, img : np.darray, obstacles : Obstacle):
+    agent: ControllerAgent
+
+    def __init__(self):
         super().__init__(self)
-        self.img = img
-        self.obstacles = obstacles
         self.logger = logging.getLogger("ObstaclesBehaviour")
     
     async def on_start(self):
-        self.agent: ControllerAgent
         self.obstacle: ObstaclesBehaviour
         self.rel_pos = Path("rel_pos")
 
