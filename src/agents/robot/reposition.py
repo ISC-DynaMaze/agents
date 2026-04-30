@@ -70,7 +70,6 @@ class RepositionBehaviour(OneShotBehaviour):
         # normalize to [0, 360) to make nearest cardinal computation robust
         current_angle = self.actual_angle % 360
         nearest_90 = round(current_angle / 90) * 90
-        nearest_90 %= 360
 
         # signed shortest-angle difference in (-180, 180]
         angle_diff = (nearest_90 - current_angle + 180) % 360 - 180
