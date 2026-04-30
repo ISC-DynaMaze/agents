@@ -30,7 +30,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.logger = logging.getLogger("ObstaclePositionsBehaviour")
     
     async def on_start(self):
@@ -48,12 +48,11 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
         # visualize detected obstacles on image
-        highlighted = self.draw_elements(self.img, blocks_by_color, ROBOT_ARM_POSITION)
-        await self.save_img(highlighted, self.rel_pos)
+        highlighted = self.draw_elements(img, blocks_by_color, ROBOT_ARM_POSITION)
+        await self.obstacle.save_img(highlighted, self.rel_pos)
         self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
     
     def draw_elements(self, img, blocks_by_color, robot_pos):
         highlighted = draw_detected_obstacles(img, blocks_by_color)
         cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (0, 0, 0), -1)
         return highlighted
-
