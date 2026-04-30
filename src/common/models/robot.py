@@ -15,6 +15,14 @@ class RobotResponseBase(ResponseBase):
     pass
 
 
+class BottomIRCalibrationRequest(RobotRequestBase):
+    type: Literal["ir-calib-req"] = "ir-calib-req"
+
+
+class DistanceCalibrationRequest(RobotRequestBase):
+    type: Literal["dist-calib-req"] = "dist-calib-req"
+
+
 class RobotMoveRequest(RobotRequestBase):
     type: Literal["bot-move-req"] = "bot-move-req"  # type: ignore
 
