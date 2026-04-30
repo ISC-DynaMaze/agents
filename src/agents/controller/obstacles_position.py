@@ -14,7 +14,6 @@ from agents.controller.get_obstacles import ObstaclesBehaviour
 from common.models.common import ReqResAdapter
 
 from agents.controller.maze.detect_obstacles import (
-    draw_detected_obstacles,
     find_obstacles,
 )
 
@@ -53,7 +52,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
 
     def draw_elements(self, img, blocks_by_color, robot_pos):
-        highlighted = draw_detected_obstacles(img, blocks_by_color)
+        highlighted = self.draw_detected_obstacles(img, blocks_by_color)
         cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (255, 255, 255), -1)
         return highlighted
 
@@ -84,3 +83,29 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         timestamp = int(time.time())
         img_path = save_dir / f"obstacles_{timestamp}.jpg"
         cv2.imwrite(str(img_path), img)
+    
+    def draw_detected_obstacles(self, image, blocks_by_color):
+        highlighted = image.copy()
+
+        # specific color for each type
+        draw_colors = {
+            "greenObstacle": (0, 255, 0),
+            "yellowObstacle": (0, 255, 255),
+        }
+
+        for color_name, blocks in blocks_by_color.items():
+            line_color = draw_colors.get(color_name, (255, 255, 255))
+
+            for block in blocks:
+                corners = block["corners"].reshape(-1, 1, 2)
+                center = block["center"]
+
+                cv2.polylines(highlighted, [corners], True, line_color, 2)
+
+                for cx, cy in corners.reshape(-1, 2):
+                    cv2.circle(highlighted, (int(cx), int(cy)), 3, (255, 0, 0), -1)
+
+                cv2.circle(highlighted, center, 3, (255, 255, 255), -1)
+                cv2.line(highlighted, ROBOT_ARM_POSITION, (int(cx), int(cy)), (255, 0, 0), -1)
+
+        return highlighted
