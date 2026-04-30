@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from agents.controller.maze.obstacles import greenObstacle, redObstacle, yellowObstacle
+from agents.controller.maze.obstacles import greenObstacle, yellowObstacle
 
 
 def get_image(image_path):
@@ -107,7 +107,7 @@ def build_obstacles_from_blocks(blocks, obstacle_cls, maze):
 
 # detect obstacles in the maze from the image, return dict of detected obstacles by color and their blocks
 def detect_obstacles_in_maze(image, maze, rect, min_area=500):
-    obstacle_classes = [redObstacle, greenObstacle, yellowObstacle]
+    obstacle_classes = [greenObstacle, yellowObstacle]
     detected_by_color = {}
     blocks_by_color = {}
 
@@ -153,7 +153,6 @@ def draw_detected_obstacles(image, blocks_by_color):
 
     # specific color for each type
     draw_colors = {
-        "redObstacle": (0, 0, 255),
         "greenObstacle": (0, 255, 0),
         "yellowObstacle": (0, 255, 255),
     }
