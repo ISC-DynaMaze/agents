@@ -38,6 +38,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.rel_pos = Path("rel_pos")
 
     async def run(self):
+        self.rel_pos.mkdir(parents=True, exist_ok=True)
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
 
@@ -53,7 +54,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
 
     def draw_elements(self, img, blocks_by_color, robot_pos):
         highlighted = draw_detected_obstacles(img, blocks_by_color)
-        cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (0, 0, 0), -1)
+        cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (255, 255, 255), -1)
         return highlighted
 
     async def req_image(self):
