@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Union
 
@@ -49,7 +49,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             SideConfig(-30, 30, 45),
             SideConfig(-35, 35, 45),
             SideConfig(-40, 30, 45),
-        ]
+        ],
     }
 
     RECT_ANGLE_THRESH: float = np.radians(20)
@@ -69,20 +69,21 @@ class LookAroundBehaviour(OneShotBehaviour):
         for side, configs in self.ANGLES.items():
             self.logger.info(f"Looking {side}")
             results: dict[SideType, int] = {}
-            for config in configs:
-                side_type: SideType = await self.look_and_analyse(
-                    config, side
-                )
-                results[side_type] = results.get(side_type, 0) + 1
+            for i, config in enumerate(configs):
+                side_type: SideType = await self.look_and_analyse(config, side, i)
+                if side_type != SideType.UNKNOWN:
+                    results[side_type] = results.get(side_type, 0) + 1
             self.logger.info(f"Side {side} is {side_type}")
-            sorted_results: list[tuple[SideType, int]] = sorted(results.items(), key=lambda p: p[1], reverse=True)
-            sides[side] = sorted_results[0][0]
+            sorted_results: list[tuple[SideType, int]] = sorted(
+                results.items(), key=lambda p: p[1], reverse=True
+            )
+            sides[side] = (
+                sorted_results[0][0] if len(sorted_results) != 0 else SideType.UNKNOWN
+            )
         res: LookAroundResponse = LookAroundResponse(**sides)
         await self.agent.look_around_handler.send_response(res)
 
-    async def look_and_analyse(
-        self, config: SideConfig, side: str
-    ) -> SideType:
+    async def look_and_analyse(self, config: SideConfig, side: str, i: int) -> SideType:
         """Look in the given direction and detect the side type
 
         Args:
@@ -102,10 +103,10 @@ class LookAroundBehaviour(OneShotBehaviour):
         await asyncio.sleep(self.INTERVAL_SEC)
         img: np.ndarray = self.agent.cam.capture_array()
         cv2.imwrite(self.IMG_DIR / f"side_{side}.png", img)
-        return await self.analyse(img, config.expected_angle, side)
+        return await self.analyse(img, config.expected_angle, side, i)
 
     async def analyse(
-        self, img: np.ndarray, expected_angle: float, side: str
+        self, img: np.ndarray, expected_angle: float, side: str, i: int
     ) -> SideType:
         """Analyse the given view and detect the type of side
 
@@ -120,8 +121,8 @@ class LookAroundBehaviour(OneShotBehaviour):
             SideType: the type of side
         """
 
-        is_wall, segments = self.detect_plinth(img, expected_angle, side)
-        is_open = self.detect_opening(img, expected_angle, side, segments)
+        is_wall, segments = self.detect_plinth(img, expected_angle, side, i)
+        is_open = self.detect_opening(img, expected_angle, side, segments, i)
         if is_open:
             return SideType.OPEN
         if is_wall:
@@ -129,7 +130,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         return SideType.UNKNOWN
 
     def detect_plinth(
-        self, img: np.ndarray, expected_angle: float, side: str
+        self, img: np.ndarray, expected_angle: float, side: str, i: int
     ) -> tuple[bool, list[Segment]]:
         """Detect whether there is a wall base on the given side
 
@@ -165,7 +166,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             expected_vec = np.array(
                 [np.cos(np.radians(expected_angle)), np.sin(np.radians(expected_angle))]
             )
-            for i in range(0, len(linesP)):
+            for _ in range(0, len(linesP)):
                 x1, y1, x2, y2 = linesP[i][0]
                 p1 = np.array([x1, y1])
                 p2 = np.array([x2, y2])
@@ -183,7 +184,7 @@ class LookAroundBehaviour(OneShotBehaviour):
                 count += 1
                 segments.append((p1, p2))
         self.logger.debug(f"Detected {count} base wall lines")
-        cv2.imwrite(self.IMG_DIR / f"lines_{side}.png", with_lines)
+        cv2.imwrite(self.IMG_DIR / f"lines_{side}_{i}.png", with_lines)
         return count >= self.MIN_PLINTH_LINES, segments
 
     def detect_opening(
@@ -192,6 +193,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         expected_angle: float,
         side: str,
         plinth_segments: list[Segment],
+        i: int,
     ) -> bool:
         """Detect whether there is an opening on the given side
 
@@ -217,7 +219,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         l, a, b = cv2.split(lab_img)
         l_bin = np.where(l > 150, 255, 0).astype(np.uint8)
         # _, l_bin = cv2.threshold(l, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-        cv2.imwrite(self.IMG_DIR / f"{side}_l_bin.png", l_bin.astype(np.uint8))
+        cv2.imwrite(self.IMG_DIR / f"{side}_l_bin_{i}.png", l_bin.astype(np.uint8))
 
         cnts, hrcy = cv2.findContours(l_bin, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         with_cnts = img.copy()
@@ -265,7 +267,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             cv2.drawContours(with_cnts, [box], 0, (0, 255, 0), 2)  # type: ignore
             count += 1
         self.logger.debug(f"Detected {count} opening rectangles")
-        cv2.imwrite(self.IMG_DIR / f"{side}_rects.png", with_cnts)
+        cv2.imwrite(self.IMG_DIR / f"{side}_rects_{i}.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
 
     def rect_overlaps_plinth(
