@@ -12,9 +12,6 @@ from agents.controller.maze.obstacles import Obstacle
 from agents.controller.get_obstacles import ObstaclesBehaviour
 
 from common.models.common import ReqResAdapter
-from common.models.controller import (
-    ObstaclesResponse,
-)
 
 from agents.controller.maze.detect_obstacles import (
     draw_detected_obstacles,
@@ -26,7 +23,6 @@ from common.sender import BaseSenderBehaviour
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
-
 ROBOT_ARM_POSITION = (394,328)
 
 
@@ -35,10 +31,10 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
 
     def __init__(self):
         super().__init__(self)
-        self.logger = logging.getLogger("ObstaclesBehaviour")
+        self.logger = logging.getLogger("ObstaclePositionsBehaviour")
     
     async def on_start(self):
-        self.obstacle: ObstaclesBehaviour
+        self.obstacle = ObstaclesBehaviour()
         self.rel_pos = Path("rel_pos")
 
     async def run(self):
@@ -57,7 +53,6 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
     
     def draw_elements(self, img, blocks_by_color, robot_pos):
-        
         highlighted = draw_detected_obstacles(img, blocks_by_color)
         cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (0, 0, 0), -1)
         return highlighted
