@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import time
+import numpy as np
 from typing import TYPE_CHECKING
 
 from spade.behaviour import OneShotBehaviour
@@ -40,16 +41,18 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
         was_on_stud = False
         is_on_stud = False
         last_5_frames = []
+        data = []
 
         while True:
             nb_studs = self.detect_black_studs()
             last_5_frames.append(nb_studs)
             last_5_frames = last_5_frames[-5:]
+            data.append(self.bot.bottom_ir.readCalibrated())
             
             mean = sum(last_5_frames) / len(last_5_frames)
             self.logger.info(f"Mean of last 5 frames: {mean}")
 
-            is_on_stud = mean > 1.5  
+            is_on_stud = mean >= 0.4
 
             if not was_on_stud and is_on_stud:
                 if line_count == 0: 
@@ -62,6 +65,8 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
                     elapsed = (time.monotonic() - timer)
                     self.logger.info(f"Second line detected, elapsed time: {elapsed}")
                     self.bot.stop()
+                    data = np.array(data)
+                    np.savetxt("distance_calibration_data.csv", data, delimiter=",")
                     return
                 
             was_on_stud = is_on_stud
