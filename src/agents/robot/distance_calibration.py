@@ -30,20 +30,22 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
 
     async def on_start(self) -> None:
         self.bottom_ir = self.bot.bottom_ir
-        self.timer = 0
+        self.bot.setBothPWM(self.speed)
 
-    # check for black studs every 500ms 
+    # check for black studs every 500ms
     async def run(self) -> None:
-        timer = datetime.datetime.now()
         self.bot.forward()
+        line_count = 0
         while True:
             is_line = await self.detect_black_studs()
-            if is_line:
+            if is_line and line_count == 0:
+                timer = datetime.datetime.now()
+                line_count += 1
+                self.logger.info("First line detected, starting timer")
+            elif is_line and line_count == 1:
+                elapsed = (datetime.datetime.now() - timer).total_seconds()
+                self.logger.info(f"Second line detected, elapsed time: {elapsed}")
                 self.bot.stop()
-                elapsed_time = (datetime.datetime.now() - timer).total_seconds()
-                self.logger.info(
-                    f"Time needed to go through cell: {elapsed_time:.2f} seconds"
-                )
                 return
 
             # Keep polling until the black studs are detected, but avoid hammering the sensor.
