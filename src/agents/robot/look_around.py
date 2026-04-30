@@ -249,9 +249,13 @@ class LookAroundBehaviour(OneShotBehaviour):
             ratio = b / a
             if ratio < 1 or ratio > 10:
                 continue
-            area_ratio = area / img_area
 
-            if area_ratio < 0.003 or area_ratio > 0.02:
+            rect_area_ratio = cv2.contourArea(cnt) / area
+            if rect_area_ratio < 0.7:
+                continue
+
+            total_area_ratio = area / img_area
+            if total_area_ratio < 0.003 or total_area_ratio > 0.05:
                 continue
 
             v = v2 if l1 < l2 else v1
