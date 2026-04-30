@@ -14,7 +14,7 @@ class AlphaBot2(object):
     MAX_TILT_ANGLE = 45
 
     def __init__(
-        self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dr=16, dl=19, buz=4
+        self, ain1=12, ain2=13, ena=6, bin1=20, bin2=21, enb=26, dl=16, dr=19, buz=4
     ):
         self.AIN1 = ain1
         self.AIN2 = ain2
@@ -127,10 +127,10 @@ class AlphaBot2(object):
             self.PWMB.ChangeDutyCycle(0 - left)
 
     def getIRSensorRight(self) -> bool:
-        return GPIO.input(self.DR)
+        return bool(GPIO.input(self.DR))
 
     def getIRSensorLeft(self) -> bool:
-        return GPIO.input(self.DL)
+        return bool(GPIO.input(self.DL))
 
     def setCameraPan(self, angle: float):
         angle = min(self.MAX_PAN_ANGLE, max(self.MIN_PAN_ANGLE, angle))
