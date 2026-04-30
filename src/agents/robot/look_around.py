@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 import os
 from pathlib import Path
@@ -23,13 +24,32 @@ SideStr = Union[Literal["front"], Literal["left"], Literal["right"]]
 Segment = tuple[np.ndarray, np.ndarray]
 
 
+@dataclass
+class SideConfig:
+    pan: float
+    tilt: float
+    expected_angle: float
+
+
 class LookAroundBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
-    ANGLES: dict[SideStr, tuple[float, float, float]] = {
-        "left": (20, 30, 135),
-        "front": (-8, 20, 0),
-        "right": (-20, 30, 45),
+    ANGLES: dict[SideStr, list[SideConfig]] = {
+        "left": [
+            SideConfig(30, 30, 135),
+            SideConfig(25, 35, 135),
+            SideConfig(20, 30, 135),
+        ],
+        "front": [
+            SideConfig(0, 20, 0),
+            SideConfig(0, 25, 0),
+            SideConfig(0, 30, 0),
+        ],
+        "right": [
+            SideConfig(-30, 30, 45),
+            SideConfig(-35, 35, 45),
+            SideConfig(-40, 30, 45),
+        ]
     }
 
     RECT_ANGLE_THRESH: float = np.radians(20)
@@ -46,18 +66,22 @@ class LookAroundBehaviour(OneShotBehaviour):
 
     async def run(self):
         sides: dict[SideStr, SideType] = {}
-        for side, (pan, tilt, expected_angle) in self.ANGLES.items():
+        for side, configs in self.ANGLES.items():
             self.logger.info(f"Looking {side}")
-            side_type: SideType = await self.look_and_analyse(
-                pan, tilt, expected_angle, side
-            )
+            results: dict[SideType, int] = {}
+            for config in configs:
+                side_type: SideType = await self.look_and_analyse(
+                    config, side
+                )
+                results[side_type] = results.get(side_type, 0) + 1
             self.logger.info(f"Side {side} is {side_type}")
-            sides[side] = side_type
+            sorted_results: list[tuple[SideType, int]] = sorted(results.items(), key=lambda p: p[1], reverse=True)
+            sides[side] = sorted_results[0][0]
         res: LookAroundResponse = LookAroundResponse(**sides)
         await self.agent.look_around_handler.send_response(res)
 
     async def look_and_analyse(
-        self, pan: float, tilt: float, expected_angle: float, side: str
+        self, config: SideConfig, side: str
     ) -> SideType:
         """Look in the given direction and detect the side type
 
@@ -73,12 +97,12 @@ class LookAroundBehaviour(OneShotBehaviour):
             SideType: the type of side
         """
 
-        self.agent.bot.setCameraPan(pan)
-        self.agent.bot.setCameraTilt(tilt)
+        self.agent.bot.setCameraPan(config.pan)
+        self.agent.bot.setCameraTilt(config.tilt)
         await asyncio.sleep(self.INTERVAL_SEC)
         img: np.ndarray = self.agent.cam.capture_array()
         cv2.imwrite(self.IMG_DIR / f"side_{side}.png", img)
-        return await self.analyse(img, expected_angle, side)
+        return await self.analyse(img, config.expected_angle, side)
 
     async def analyse(
         self, img: np.ndarray, expected_angle: float, side: str
