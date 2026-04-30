@@ -35,7 +35,7 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
         self.bot.setBothPWM(self.speed)
         self.elapsed_time = 0
         self.output_dir = Path("calibration_data")
-        self.path = Path("distance_calibration_data.json")
+        self.path = "distance_calibration_data.json"
 
     # check for black studs every 500ms
     async def run(self) -> None:
@@ -95,7 +95,7 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
         return black_studs
 
     def save_file(self, data):
-        self.path.mkdir(parents=True, exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         filepath = self.output_dir / self.path
         with open(filepath, "w") as f:
             json.dump(data, f)
