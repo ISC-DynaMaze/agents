@@ -27,10 +27,6 @@ class RepositionRequest(RobotRequestBase):
     type: Literal["bot-repos-req"] = "bot-repos-req"  # type: ignore
 
 
-class RepositionResponse(RobotResponseBase):
-    type: Literal["bot-repos-res"] = "bot-repos-res"  # type: ignore
-
-
 class PanTiltRequest(RobotRequestBase):
     type: Literal["bot-pan-tilt-req"] = "bot-pan-tilt-req"  # type: ignore
     pan: Optional[float] = None
@@ -90,6 +86,6 @@ RobotRequest = Annotated[
 ]
 
 RobotResponse = Annotated[
-    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse, RepositionResponse],
+    Union[CameraPhotoResponse, StatusResponse, RobotMoveResponse],
     Field(discriminator="type"),
 ]
