@@ -17,7 +17,7 @@ import logging
 class DistanceCalibrationBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
-    def __init__(self, speed: int = 20, check_interval: float = 0.5):
+    def __init__(self, speed: int = 20, check_interval: float = 0.1):
         super().__init__()
         self.logger = logging.getLogger("DistanceCalibration")
         self.logger.setLevel(logging.DEBUG)
@@ -36,13 +36,16 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
     async def run(self) -> None:
         self.bot.forward()
         line_count = 0
+        passed_first_line = False
+
         while True:
-            is_line = await self.detect_black_studs()
-            if is_line and line_count == 0:
-                timer = datetime.datetime.now()
+            if not passed_first_line and await self.detect_black_studs() and line_count == 0:
+                passed_first_line = True
                 line_count += 1
+                timer = datetime.datetime.now()
                 self.logger.info("First line detected, starting timer")
-            elif is_line and line_count == 1:
+
+            if passed_first_line and await self.detect_black_studs() and line_count == 1:
                 elapsed = (datetime.datetime.now() - timer).total_seconds()
                 self.logger.info(f"Second line detected, elapsed time: {elapsed}")
                 self.bot.stop()
