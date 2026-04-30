@@ -15,6 +15,12 @@ from common.models.common import ReqResAdapter
 from common.models.controller import (
     ObstaclesResponse,
 )
+
+from agents.controller.maze.detect_obstacles import (
+    draw_detected_obstacles,
+    find_obstacles,
+)
+
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -39,11 +45,9 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         await self.obstacle.req_image()
         img = await self.obstacle.wait_for_new_image(timeout=10.0)
 
-        detection = self.obstacle.find_obstacles(image=img, maze=self.agent.maze, min_area=500)
-
-        detection = self.obstacle.find_obstacles(image=img, maze=self.agent.maze, min_area=500)
+        detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
         blocks_by_color = detection["blocks_by_color"]
-        maze = detection["maze"]  # maze updated with detected obstacles
+        maze = detection["maze"]
         self.agent.maze = maze
         self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
@@ -54,7 +58,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     
     def draw_elements(self, img, blocks_by_color, robot_pos):
         
-        highlighted = self.obstacle.draw_detected_obstacles(img, blocks_by_color)
-        cv2.circle(highlighted, (ROBOT_ARM_POSITION[0], ROBOT_ARM_POSITION[1]), 3, (0, 0, 0), -1)
+        highlighted = draw_detected_obstacles(img, blocks_by_color)
+        cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (0, 0, 0), -1)
         return highlighted
 
