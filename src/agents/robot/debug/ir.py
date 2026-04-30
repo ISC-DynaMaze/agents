@@ -20,7 +20,7 @@ class IRDebugBehaviour(PeriodicBehaviour):
         bot.back_leds.setBrightness(255)
         col_left = (0, 255, 0) if left else (255, 0, 0)
         col_right = (0, 255, 0) if right else (255, 0, 0)
-        colors = [col_left, col_left, col_right, col_right]
+        colors = [col_right, col_right, col_left, col_left]
         for i, col in enumerate(colors):
             bot.back_leds.setPixelColorRGB(i, *col)
         bot.back_leds.show()
