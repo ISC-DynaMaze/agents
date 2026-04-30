@@ -9,6 +9,7 @@ from spade.behaviour import CyclicBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.disco import DiscoBehaviour
 from agents.robot.honk import HonkBehaviour
+from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
@@ -37,6 +38,8 @@ class MoveBehaviour(CyclicBehaviour):
         self.bot.setBothPWM(20)
 
     async def run(self):
+        # reposition bot
+        await self.reposition_to_nearest_cardinal()
         # await self.go_forward_for(0.15)
         # self.logger.info("Moved forward for 0.15 seconds")
 
@@ -113,6 +116,11 @@ class MoveBehaviour(CyclicBehaviour):
         if direction == Direction.Left:
             angle -= 5
         behaviour = TurningBehaviour(direction=direction, angle=angle)
+        self.agent.add_behaviour(behaviour)
+        await behaviour.join()
+
+    async def reposition_to_nearest_cardinal(self):
+        behaviour = RepositionBehaviour()
         self.agent.add_behaviour(behaviour)
         await behaviour.join()
 

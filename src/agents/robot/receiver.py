@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
+from agents.robot.reposition import RepositionBehaviour
 from agents.robot.status import SendStatusBehaviour
 from agents.robot.turn import TurningBehaviour
 from agents.robot.turn_calibration import AngleCalibrationBehaviour
@@ -13,6 +14,7 @@ from common.models.robot import (
     CameraPhotoRequest,
     HonkRequest,
     PanTiltRequest,
+    RepositionRequest,
     RobotMoveRequest,
     TurningCalibrationRequest,
     TurningRequest,
@@ -57,3 +59,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case HonkRequest():
                 self.agent.add_behaviour(HonkBehaviour())
+
+            case RepositionRequest():
+                self.agent.add_behaviour(RepositionBehaviour())

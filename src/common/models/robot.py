@@ -23,6 +23,10 @@ class RobotMoveResponse(RobotResponseBase):
     # directions: list[directions]
 
 
+class RepositionRequest(RobotRequestBase):
+    type: Literal["bot-repos-req"] = "bot-repos-req"  # type: ignore
+
+
 class PanTiltRequest(RobotRequestBase):
     type: Literal["bot-pan-tilt-req"] = "bot-pan-tilt-req"  # type: ignore
     pan: Optional[float] = None
@@ -76,6 +80,7 @@ RobotRequest = Annotated[
         HonkRequest,
         TurningRequest,
         TurningCalibrationRequest,
+        RepositionRequest,
     ],
     Field(discriminator="type"),
 ]
