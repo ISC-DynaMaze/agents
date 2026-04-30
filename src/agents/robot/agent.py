@@ -22,7 +22,7 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
     log.propagate = True
 
 
-class RobotAgent(LogMixin, Agent):
+class RobotAgent(Agent, LogMixin):
     bot: AlphaBot2
     cam: Picamera2
 
