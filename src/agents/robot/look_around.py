@@ -149,12 +149,14 @@ class LookAroundBehaviour(OneShotBehaviour):
         thresh = cv2.adaptiveThreshold(
             gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 5
         )
-        cv2.imwrite(self.IMG_DIR / f"thresh_{side}.png", thresh)
+        kernel = np.ones((3, 3), np.uint8)
+        thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        cv2.imwrite(self.IMG_DIR / f"thresh_{side}_{i}.png", thresh)
         linesP = cv2.HoughLinesP(
             image=thresh,
             rho=1,
             theta=np.pi / 180,
-            threshold=150,
+            threshold=100,
             minLineLength=50,
             maxLineGap=50,
         )
