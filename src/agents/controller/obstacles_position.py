@@ -1,26 +1,23 @@
 from __future__ import annotations
 
+import json
 import logging
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
-import time
+
 import cv2
-import json
 import numpy as np
 from spade.behaviour import OneShotBehaviour
-from common.models.camera import CameraRequest, CameraResponse
 
 from agents.controller.get_obstacles import ObstaclesBehaviour
-
-from common.models.common import ReqResAdapter
-
 from agents.controller.maze.detect_obstacles import (
-    find_obstacles,
     draw_detected_obstacles,
+    find_obstacles,
 )
-
-from agents.controller.maze.wall_detection import get_pink_mask, find_outer_rectangle
-
+from agents.controller.maze.wall_detection import find_outer_rectangle, get_pink_mask
+from common.models.camera import CameraRequest, CameraResponse
+from common.models.common import ReqResAdapter
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -69,11 +66,10 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                 self.logger.info(
                     f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away "
                 )
-                blocks_pos[color].append({
-                    "x" : distance_robot[0],
-                    "y" : distance_robot[1]
-                })
-                
+                blocks_pos[color].append(
+                    {"x": distance_robot[0], "y": distance_robot[1]}
+                )
+
         self.save_obstacle_position(blocks_pos)
 
     def compute_distance(self, img: np.ndarray) -> tuple[float, float]:
