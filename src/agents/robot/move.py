@@ -32,6 +32,8 @@ class MoveBehaviour(CyclicBehaviour):
         self.logger = logging.getLogger("MoveBehaviour")
         self.logger.setLevel(logging.DEBUG)
         self.turning_angle = 45
+        self.speed = 20
+        self.slow_speed = 10
 
     @property
     def bot(self) -> AlphaBot2:
@@ -39,13 +41,11 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def on_start(self):
         self.surroundings = []  # mental state of what the robot saw
-        self.bot.setBothPWM(20)
+        self.bot.setBothPWM(self.speed)
 
     async def run(self):
         # reposition bot
         await self.reposition_to_nearest_cardinal()
-        # await self.go_forward_for(0.15)
-        # self.logger.info("Moved forward for 0.15 seconds")
 
         # get next surrounding
         # await self.get_next_surrounding()  # add directly to mental state
@@ -78,7 +78,7 @@ class MoveBehaviour(CyclicBehaviour):
         if direction is None:
             self.logger.error("Timed out waiting for direction response")
             self.agent.add_behaviour(HonkBehaviour())
-            #self.agent.add_behaviour(DiscoBehaviour(period=0.5))
+            # self.agent.add_behaviour(DiscoBehaviour(period=0.5))
             self.kill()
             return
 
@@ -101,7 +101,7 @@ class MoveBehaviour(CyclicBehaviour):
         self.bot.stop()
 
     async def go_forward_to_cell_center_using_sensors(
-        self, timeout: float = 5.0, threshold: int = 500, fallback: float = 0.35
+        self, threshold: int = 500
     ):
         # read time it took to go across one cell from calib file
         calib_path = Path("calibration_data") / "distance_calibration_data.json"
@@ -114,11 +114,11 @@ class MoveBehaviour(CyclicBehaviour):
         except Exception as e:
             self.logger.warning(f"Could not read calibration file: {e}")
 
-
-        start = time.monotonic()
+        # slower speed so we can really stop at black line
+        self.bot.setBothPWM(self.slow_speed)
         self.bot.forward()
         last_5_frames = []
-        poll_interval = 0.02
+        check_interval = 0.02
 
         while True:
             # read sensor values and check if we are on a black line
@@ -129,32 +129,25 @@ class MoveBehaviour(CyclicBehaviour):
             is_on_stud = sum(last_5_frames) > 0
 
             if is_on_stud:
-                t_to_border = time.monotonic() - start
-                self.logger.info(f"Detected border after {t_to_border}")
+                # TODO: implement here lookaround call
                 self.bot.stop()
+                await asyncio.sleep(5)
+                self.logger.info("Pause at border")
 
-                if cell_timing is not None:
-                    remaining = max(0.0, cell_timing - t_to_border)
-                    self.logger.info(f"Using calibrated cell timing, moving forward for remaining {remaining} seconds")
-                else:
-                    remaining = fallback
-                    self.logger.info(f"No calibrated cell timing, using fallback of {fallback} seconds to move to cell center")
-
+                # go forward to the middle of the cell
+                self.bot.setBothPWM(self.speed)
+                self.bot.forward()
                 forward_behaviour = ForwardBehaviour()
                 self.agent.add_behaviour(forward_behaviour)
-                self.bot.forward()
-                await asyncio.sleep(remaining)
+                self.logger.info("GOING FORWARD TO CENTER OF CELL")
+                # go forward for remaining calculated time
+                await asyncio.sleep(cell_timing / 2 if cell_timing else 0.3)
                 forward_behaviour.kill()
                 await forward_behaviour.join()
                 self.bot.stop()
-                return t_to_border
+                return
 
-            if time.monotonic() - start > timeout:
-                self.logger.error("Timed out waiting for black studs")
-                self.bot.stop()
-                return None
-
-            await asyncio.sleep(poll_interval)
+            await asyncio.sleep(check_interval)
 
     async def turn_and_go(self, direction: str):
         if direction == "left":
