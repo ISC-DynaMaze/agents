@@ -78,7 +78,7 @@ class MoveBehaviour(CyclicBehaviour):
         if direction is None:
             self.logger.error("Timed out waiting for direction response")
             self.agent.add_behaviour(HonkBehaviour())
-            self.agent.add_behaviour(DiscoBehaviour(period=0.5))
+            #self.agent.add_behaviour(DiscoBehaviour(period=0.5))
             self.kill()
             return
 
@@ -135,8 +135,10 @@ class MoveBehaviour(CyclicBehaviour):
 
                 if cell_timing is not None:
                     remaining = max(0.0, cell_timing - t_to_border)
+                    self.logger.info(f"Using calibrated cell timing, moving forward for remaining {remaining} seconds")
                 else:
                     remaining = fallback
+                    self.logger.info(f"No calibrated cell timing, using fallback of {fallback} seconds to move to cell center")
 
                 forward_behaviour = ForwardBehaviour()
                 self.agent.add_behaviour(forward_behaviour)
