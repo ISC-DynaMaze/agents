@@ -45,7 +45,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.agent.add_behaviour(BaseSenderBehaviour(msg, self.agent.controller_jid))
 
         while True:
-            reply = await self.receive(timeout=15)
+            reply = await self.receive(timeout=5)
             try:
                 assert reply is not None
                 res = ReqResAdapter.validate_json(reply.body)
