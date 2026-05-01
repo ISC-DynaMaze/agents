@@ -17,7 +17,12 @@ from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
-from common.models.robot import Direction
+from common.models.robot import (
+    Direction,
+    LookAroundRequest,
+    LookAroundResponse,
+    SideType,
+)
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -47,34 +52,41 @@ class MoveBehaviour(CyclicBehaviour):
         # reposition bot
         await self.reposition_to_nearest_cardinal()
 
-        # get next surrounding
-        # await self.get_next_surrounding()  # add directly to mental state
+        # store next surrounding
+        await self.store_next_surrounding()  # add directly to mental state
 
-        # check if we have already seen the surroundings for current cell
+        # get direction to go
+        # if we dont have info about current surrounding, ask controller
+        # if lookaround gets anything other than exactly one open direction, ask controller
         if len(self.surroundings) == 1:
-            self.logger.info("No surroundings in mental state")
-            return
+            self.logger.info("No surroundings in mental state yet, asking for controller's input")
+            await self.ask_controller()
+            direction = await self.wait_for_direction(timeout=5.0)
+        else:
+            # get current surroundings and check which directions are open
+            current_surrounding = await self.get_current_surrounding()
+            if current_surrounding is None:
+                self.logger.warning("Current surrounding is None")
+                return
 
-        # get current surroundings and check which directions are open
-        # current_surrounding = await self.get_current_surrounding()
+            free_directions = [
+                direction
+                for direction, side in current_surrounding
+                if side == SideType.OPEN
+            ]
 
-        # check free direction in current surroundings
-        # free_directions = [
-        #     direction for direction, status in current_surrounding if status == "open"
-        # ]
+            if len(free_directions) == 1:
+                # get direction from lookaround
+                self.logger.info(f"Lookaround --- Only one free direction: {free_directions[0]}")
+                direction = free_directions[0]
+            else: 
+                # get direction from controller
+                self.logger.warning("Controller --- Get direction from controller because lookaround is not conclusive")
+                await self.ask_controller()
+                direction = await self.wait_for_direction(timeout=5.0)
 
-        # TODO: implement logic when check for surroundings implemented
-        # if len(free_directions) == 1:
-        #     self.agent.logger.info(f"Only one free direction: {free_directions[0]}")
-        #     await self.turn_and_go(free_directions[0])
-        #     self.agent.logger.info(f"Moved {free_directions[0]}")
-
-        # if len(free_directions) > 1:
-        # self.agent.logger.info(f"Multiple free directions: {free_directions}")
-
-        # ask controller where to go
-        await self.ask_controller()
-        direction = await self.wait_for_direction(timeout=5.0)
+        # if there is no new path -- should be at target
+        # FIXME: better way to detect target reached
         if direction is None:
             self.logger.error("Timed out waiting for direction response")
             self.agent.add_behaviour(HonkBehaviour())
@@ -82,12 +94,13 @@ class MoveBehaviour(CyclicBehaviour):
             self.kill()
             return
 
-        self.logger.info(f"Controller directed to go: {direction}")
-        await self.turn_and_go(direction)
-        self.logger.info(f"Moved {direction}")
+        # go to given direction
+        self.logger.info(f"Direction computed: {direction}")
+        # await self.turn_and_go(direction)
+        # self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
-        await asyncio.sleep(1)
+        await asyncio.sleep(10) # wait to test lookaround integration
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
@@ -196,21 +209,40 @@ class MoveBehaviour(CyclicBehaviour):
     # ask for surroundings
     # TODO: adapt with actual response
     async def ask_surroundings(self):
-        # req = SurroundingsRequest()
-        # self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
-        directions = {"left": "wall", "front": "open", "right": "wall"}
-        return directions
+        req = LookAroundRequest()
+        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
-    async def get_next_surrounding(self):
-        self.bot.stop()  # stop the bot before asking for surroundings
-        next_surrounding = await self.ask_surroundings()
-        if next_surrounding is None:
+    async def wait_for_surroundings(self, timeout: float):
+        while True:
+            try:
+                msg = await self.receive(timeout=timeout)
+                if msg is None:
+                    self.logger.error(
+                        "Timed out waiting for surroundings response message"
+                    )
+                    return None
+                res = ReqResAdapter.validate_json(msg.body)
+                assert isinstance(res, LookAroundResponse)
+                return (res.left, res.front, res.right)
+            except Exception as e:
+                self.logger.error(f"Error occurred while waiting for surroundings: {e}")
+                continue
+
+    async def store_next_surrounding(self):
+        self.bot.stop()  # should already be stopped but just in case
+        result = await self.wait_for_surroundings(timeout=5)
+
+        if result is None:
             self.logger.error("No response received for surroundings request")
             return
-        else:
-            self.surroundings.append(next_surrounding)
 
-    # returns list of tuples with direction and status of current surrounding
+        left, front, right = result
+        self.logger.info(
+            f"Received surroundings: left={left}, front={front}, right={right}"
+        )
+        self.surroundings.append((left, front, right))
+
+    # returns surroundings of bot's current cell
     async def get_current_surrounding(self):
         if len(self.surroundings) == 1:
             self.logger.warning(
