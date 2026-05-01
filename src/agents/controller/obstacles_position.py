@@ -44,9 +44,11 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
 
+        self.logger.info(f"[Measure] Start calculating pixel distance and real distance on maze border")
         measure = self.compute_distance(img)
         self.logger.info(f"[Measure] L :{measure[0]}, l : {measure[1]}")
 
+        self.logger.info(f"[Measure] Start calculating pixel distance and real distance on maze border")
         result = find_obstacles(img, self.agent.maze)
         blocks = result["block_by_color"]
         for color, list_of_blocks in blocks.items():
@@ -56,9 +58,11 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                 self.logger.info(f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away ")
 
     def compute_distance(self, img: np.ndarray) -> tuple[float, float] :
+        self.logger.info(f"[Compute distance] Enter function")
         mask = get_pink_mask(img)
+        self.logger.info(f"[Mask] Mask generated")
         sizes = find_outer_rectangle(mask)
-
+        self.logger.info(f"[Measure] Length of sided returned")
         width = sizes[2] #The longest side
         height = sizes[3] #The shortest side
 
