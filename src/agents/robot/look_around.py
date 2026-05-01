@@ -34,6 +34,7 @@ class SideConfig:
     pan: float
     tilt: float
     expected_angle: float
+    cubes_strip: int
 
 
 @dataclass
@@ -48,19 +49,19 @@ class LookAroundBehaviour(OneShotBehaviour):
 
     ANGLES: dict[SideStr, list[SideConfig]] = {
         "left": [
-            SideConfig(30, 30, 135),
-            SideConfig(25, 35, 135),
-            SideConfig(20, 30, 135),
+            SideConfig(30, 30, 135, 0),
+            SideConfig(25, 35, 135, 0),
+            SideConfig(20, 30, 135, 0),
         ],
         "front": [
-            SideConfig(0, 20, 0),
-            SideConfig(0, 25, 0),
-            SideConfig(0, 30, 0),
+            SideConfig(0, 20, 0, 1),
+            SideConfig(0, 25, 0, 1),
+            SideConfig(0, 30, 0, 1),
         ],
         "right": [
-            SideConfig(-30, 30, 45),
-            SideConfig(-35, 35, 45),
-            SideConfig(-40, 30, 45),
+            SideConfig(-30, 30, 45, 2),
+            SideConfig(-35, 35, 45, 2),
+            SideConfig(-40, 30, 45, 2),
         ],
     }
 
@@ -88,17 +89,17 @@ class LookAroundBehaviour(OneShotBehaviour):
 
     async def run(self):
         sides: dict[SideStr, SideType] = {}
-        cubes: CubesResult = CubesResult()
+        cubes: dict[SideStr, bool] = {}
         for side, configs in self.ANGLES.items():
             self.logger.info(f"Looking {side}")
             results: dict[SideType, int] = {}
+            cubes_results: list[bool] = []
             for i, config in enumerate(configs):
-                side_type: SideType = await self.look_and_analyse(config, side, i)
+                side_type, cube = await self.look_and_analyse(config, side, i)
                 if side_type != SideType.UNKNOWN:
                     results[side_type] = results.get(side_type, 0) + 1
+                cubes_results.append(cube)
 
-                if side == "front" and i == 0:
-                    cubes = self.detect_cubes(self.agent.cam.capture_array())
             self.logger.info(f"Side {side} is {side_type}")
             sorted_results: list[tuple[SideType, int]] = sorted(
                 results.items(), key=lambda p: p[1], reverse=True
@@ -106,10 +107,15 @@ class LookAroundBehaviour(OneShotBehaviour):
             sides[side] = (
                 sorted_results[0][0] if len(sorted_results) != 0 else SideType.UNKNOWN
             )
-        res: LookAroundResponse = LookAroundResponse(**sides, cubes=cubes)
+            cubes[side] = cubes_results.count(True) > cubes_results.count(False)
+        res: LookAroundResponse = LookAroundResponse(
+            **sides, cubes=CubesResult(**cubes)
+        )
         await self.agent.look_around_handler.send_response(res)
 
-    async def look_and_analyse(self, config: SideConfig, side: str, i: int) -> SideType:
+    async def look_and_analyse(
+        self, config: SideConfig, side: str, i: int
+    ) -> tuple[SideType, bool]:
         """Look in the given direction and detect the side type
 
         Args:
@@ -129,11 +135,14 @@ class LookAroundBehaviour(OneShotBehaviour):
         await asyncio.sleep(self.INTERVAL_SEC)
         img: np.ndarray = self.agent.cam.capture_array()
         cv2.imwrite(self.IMG_DIR / f"side_{side}.png", img)
-        return await self.analyse(img, config.expected_angle, side, i)
+        side_type, cubes = await self.analyse(
+            img, config.expected_angle, side, config.cubes_strip, i
+        )
+        return side_type, cubes
 
     async def analyse(
-        self, img: np.ndarray, expected_angle: float, side: str, i: int
-    ) -> SideType:
+        self, img: np.ndarray, expected_angle: float, side: str, cube_strip: int, i: int
+    ) -> tuple[SideType, bool]:
         """Analyse the given view and detect the type of side
 
         Args:
@@ -149,11 +158,13 @@ class LookAroundBehaviour(OneShotBehaviour):
 
         is_wall, segments = self.detect_plinth(img, expected_angle, side, i)
         is_open = self.detect_opening(img, expected_angle, side, segments, i)
+        side_type: SideType = SideType.UNKNOWN
         if is_open:
-            return SideType.OPEN
-        if is_wall:
-            return SideType.WALL
-        return SideType.UNKNOWN
+            side_type = SideType.OPEN
+        elif is_wall:
+            side_type = SideType.WALL
+        cubes = self.detect_cubes(img, cube_strip)
+        return side_type, cubes
 
     def detect_plinth(
         self, img: np.ndarray, expected_angle: float, side: str, i: int
@@ -302,7 +313,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         cv2.imwrite(self.IMG_DIR / f"{side}_rects_{i}.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
 
-    def detect_cubes(self, img: np.ndarray) -> CubesResult:
+    def detect_cubes(self, img: np.ndarray, strip: int) -> bool:
         masks = []
         for i, config in enumerate(self.CUBES_CHANNELS):
             mask = self.detect_cubes_in_channel(img, config)
@@ -312,25 +323,11 @@ class LookAroundBehaviour(OneShotBehaviour):
         mean = np.sum(np.array(masks) / 255, axis=0)
         is_cube = mean > 1
 
-        n_strips = 3
-        strips = [False] * n_strips
-        strip_width = int(img.shape[1] / n_strips)
-        for i in range(n_strips):
-            width = (
-                img.shape[1] - strip_width * (n_strips - 1)
-                if i == n_strips - 1
-                else strip_width
-            )
-            is_occupied = (
-                np.mean(is_cube[:, strip_width * i : strip_width * i + width]) > 0.05
-            )
-            strips[i] = bool(is_occupied)
-
-        return CubesResult(
-            left=strips[0],
-            front=strips[1],
-            right=strips[2],
-        )
+        strip_width = int(img.shape[1] / 3)
+        x0 = strip * strip_width
+        x1 = x0 + strip_width
+        is_occupied = np.mean(is_cube[:, x0:x1]) > 0.05
+        return is_occupied
 
     def detect_cubes_in_channel(
         self, img: np.ndarray, config: CubeChannelConfig
