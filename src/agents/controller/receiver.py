@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,6 +35,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self, save_dir: Path, maze_dir: Path, path_dir: Path, obstacles_dir: Path
     ):
         super().__init__()
+        self.logger = logging.getLogger("ReceiverBehaviour")
         self.save_dir: Path = save_dir
         self.maze_dir: Path = maze_dir
         self.path_dir: Path = path_dir
@@ -73,7 +75,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
             case PathRequest():
                 self.agent.path_requesters.append(sender_jid)
                 if not self.agent.maze:
-                    self.agent.logger.error("Received path request but maze is not set")
+                    self.logger.error("Received path request but maze is not set")
+                    self.agent.error("Received path request but maze is not set")
                     return
                 find_path = FindPathBehaviour(
                     maze=self.agent.maze, output_dir=self.path_dir
@@ -110,9 +113,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
                 if len(self.agent.path_requesters) != 0:
                     if self.agent.maze is None:
-                        self.agent.logger.error(
-                            "Received path request but maze is not set"
-                        )
+                        self.logger.error("Received path request but maze is not set")
+                        self.agent.error("Received path request but maze is not set")
                         return
                     else:
                         find_path = FindPathBehaviour(
@@ -125,15 +127,12 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     self.agent.add_behaviour(get_obstacles)
 
             case PathResponse(path=path):
-                print("Received path response")
-                print(f"Path: {path}")
+                self.logger.info(f"Path: {path}")
                 self.agent.current_path = path
 
             case DirectionResponse(direction=direction):
-                print("Received direction response")
-                print(f"Direction: {direction}")
-                self.agent.logger.info(f"Received direction response: {direction}")
+                self.logger.info(f"Received direction response: {direction}")
+
             case ObstaclesResponse(obstacles=obstacles):
-                print("Received obstacles response")
-                print(f"Obstacles: {obstacles}")
+                self.logger.info(f"Obstacles: {obstacles}")
                 self.agent.maze.obstacles = obstacles  # type: ignore

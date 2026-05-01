@@ -10,7 +10,7 @@ from common.sender import BaseSenderBehaviour
 
 class HasAddBehaviourProtocol(Protocol):
     def add_behaviour(
-        self, behaviour: BehaviourType, template: Optional[Template] = None
+        self, behaviour: BehaviourType, template: Optional[Template] = None  # type: ignore
     ):
         pass
 

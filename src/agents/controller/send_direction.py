@@ -35,6 +35,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         # check for maze
         if self.maze is None:
             self.logger.error("Cannot send direction: maze is not initialized")
+            self.agent.error("Cannot send direction: maze is not initialized")
             return
 
         # request new image
@@ -48,6 +49,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         corners, ids, _ = self.maze.detect_aruco_markers(img)
         if ids is None or len(ids) == 0:
             self.logger.error("No markers detected in camera image")
+            self.agent.error("No markers detected in camera image")
             return
 
         self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
@@ -60,6 +62,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         orientation = self.get_bot_orientation(corners, ids, 13)
         if orientation is None:
             self.logger.error("Bot marker not found, cannot infer orientation")
+            self.agent.error("Bot marker not found, cannot infer orientation")
         self.logger.info(f"Bot orientation: {orientation}")
 
         # request new path based on updated bot cell
@@ -67,6 +70,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         path = await self.wait_for_path(timeout=10.0)
         if path is None:
             self.logger.error("Timed out waiting for path response")
+            self.agent.error("Timed out waiting for path response")
 
         self.logger.info(f"New path: {path}")
 
@@ -80,6 +84,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         desired_direction = self.get_direction_from_path_step(path)
         if desired_direction is None:
             self.logger.error("Could not derive desired direction from path")
+            self.agent.error("Could not derive desired direction from path")
             return
 
         # get turn instruction to go from current bot orientation to desired direction
@@ -88,6 +93,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         )
         if turn is None:
             self.logger.error("Could not compute turn instruction")
+            self.agent.error("Could not compute turn instruction")
             return
 
         self.logger.info(

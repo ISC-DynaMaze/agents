@@ -37,13 +37,14 @@ class ObstaclesBehaviour(OneShotBehaviour):
     async def run(self):
         # check for obstacles directory or create it
         self.obstacles_dir.mkdir(parents=True, exist_ok=True)
-        self.logger.info(f"ObstaclesBehaviour")
+        self.logger.info("ObstaclesBehaviour")
 
         # request new image
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
         if img is None:
             self.logger.error("Timed out waiting for camera image")
+            self.agent.error("Timed out waiting for camera image")
             return
 
         # detect obstacles in maze and update maze

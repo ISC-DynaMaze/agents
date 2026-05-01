@@ -42,6 +42,7 @@ services:
       XMPP_JID: "alberto-ctrl@$XMPP_HOST"
       XMPP_PASSWORD: $XMPP_PASSWORD
       CAMERA_JID: "camera@$XMPP_HOST"
+      LOGGER_JID: "logger@$XMPP_HOST"
     volumes:
       - ./:/app
 
