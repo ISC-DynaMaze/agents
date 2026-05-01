@@ -13,6 +13,7 @@ from common.models.common import Request, StopRequest
 from common.models.robot import (
     CameraPhotoRequest,
     HonkRequest,
+    LookAroundRequest,
     PanTiltRequest,
     RepositionRequest,
     RobotMoveRequest,
@@ -62,3 +63,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case RepositionRequest():
                 self.agent.add_behaviour(RepositionBehaviour())
+
+            case LookAroundRequest():
+                await self.agent.look_around_handler.on_request(sender_jid, req)
