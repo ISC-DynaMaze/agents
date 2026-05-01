@@ -55,7 +55,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                 distance_robot = (abs(center[0]-ROBOT_ARM_POSITION[0])*measure[0],abs(center[1]-ROBOT_ARM_POSITION[1])*measure[1])
                 self.logger.info(f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away ")
 
-    def compute_distance(self, img: np.darray) -> tuple[float, float] :
+    def compute_distance(self, img: np.ndarray) -> tuple[float, float] :
         mask = get_pink_mask(img)
         sizes = find_outer_rectangle(mask)
 
@@ -65,12 +65,6 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         ratioW = MAZE_SIZE[0]/width
         ratioH = MAZE_SIZE[1]/height
         return (ratioW, ratioH)
-
-
-    def draw_elements(self, img, blocks_by_color, robot_pos):
-        highlighted = self.draw_detected_obstacles(img, blocks_by_color)
-        cv2.circle(highlighted, (robot_pos[0], robot_pos[1]), 3, (255, 255, 255), -1)
-        return highlighted
 
     async def req_image(self):
         req = CameraRequest()
