@@ -86,6 +86,8 @@ class LookAroundBehaviour(OneShotBehaviour):
         super().__init__()
         self.logger = logging.getLogger("LookAroundBehaviour")
         self.IMG_DIR.mkdir(parents=True, exist_ok=True)
+        self.cubes_dir = self.IMG_DIR / "cubes"
+        self.cubes_dir.mkdir(parents=True, exist_ok=True)
 
     async def run(self):
         sides: dict[SideStr, SideType] = {}
@@ -163,7 +165,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             side_type = SideType.OPEN
         elif is_wall:
             side_type = SideType.WALL
-        cubes = self.detect_cubes(img, cube_strip)
+        cubes = self.detect_cubes(img, cube_strip, side, i)
         return side_type, cubes
 
     def detect_plinth(
@@ -313,11 +315,11 @@ class LookAroundBehaviour(OneShotBehaviour):
         cv2.imwrite(self.IMG_DIR / f"{side}_rects_{i}.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
 
-    def detect_cubes(self, img: np.ndarray, strip: int) -> bool:
+    def detect_cubes(self, img: np.ndarray, strip: int, side: str, i: int) -> bool:
         masks = []
-        for i, config in enumerate(self.CUBES_CHANNELS):
-            mask = self.detect_cubes_in_channel(img, config)
-            cv2.imwrite(self.IMG_DIR / f"cube_mask_{i}.png", mask)
+        for j, config in enumerate(self.CUBES_CHANNELS):
+            mask = self.detect_cubes_in_channel(img, config, side, i, j)
+            cv2.imwrite(self.cubes_dir / f"mask_{side}_{i}_{j}.png", mask)
             masks.append(mask)
 
         mean = np.sum(np.array(masks) / 255, axis=0)
@@ -330,7 +332,7 @@ class LookAroundBehaviour(OneShotBehaviour):
         return is_occupied
 
     def detect_cubes_in_channel(
-        self, img: np.ndarray, config: CubeChannelConfig
+        self, img: np.ndarray, config: CubeChannelConfig, side: str, i: int, j: int
     ) -> np.ndarray:
         channel = cv2.split(cv2.cvtColor(img, config.space))[config.channel]
         thresh_type: int = (
@@ -340,6 +342,8 @@ class LookAroundBehaviour(OneShotBehaviour):
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (17, 17))
         closed = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
         cnts, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.imwrite(self.cubes_dir / f"thresh_{side}_{i}_{j}.png", thresh)
+        cv2.imwrite(self.cubes_dir / f"closed_{side}_{i}_{j}.png", closed)
         mask = np.zeros(channel.shape, dtype=np.uint8)
         total_area = img.shape[0] * img.shape[1]
         for cnt in cnts:
