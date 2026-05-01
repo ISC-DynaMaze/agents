@@ -27,8 +27,8 @@ class CameraResponse(ResponseBase):
         filepath = save_dir / filename
 
         # Save the received image
-        async with aiofiles.open(filepath, "wb") as img_file:
-            await img_file.write(img_data)
+        with open(filepath, "wb") as img_file:
+            img_file.write(img_data)
 
         print(f"Photo saved as '{filepath}'.")
         img: np.ndarray = cv2.imread(str(filepath))  # type: ignore
