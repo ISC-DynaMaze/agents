@@ -44,6 +44,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         img = await self.wait_for_new_image(timeout=10.0)
 
         measure = self.compute_distance(img)
+        self.logger.info(f"[Measure] L :{measure[0]}, l : {measure[1]}")
         '''
         detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
         blocks_by_color = detection["blocks_by_color"]
@@ -56,7 +57,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
         '''
 
-    def compute_distance(self, img: np.darray) :
+    def compute_distance(self, img: np.darray) -> tuple[float, float] :
         mask = get_pink_mask(img)
         sizes = find_outer_rectangle(mask)
 
@@ -65,10 +66,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
 
         ratioW = MAZE_SIZE[0]/width
         ratioH = MAZE_SIZE[1]/height
-        return (ratioW, ratioW)
+        return (ratioW, ratioH)
 
-
-        
 
     def draw_elements(self, img, blocks_by_color, robot_pos):
         highlighted = self.draw_detected_obstacles(img, blocks_by_color)
