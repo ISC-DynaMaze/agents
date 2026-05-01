@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -13,11 +14,10 @@ from agents.robot.AlphaBot2 import AlphaBot2
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
 
-import logging
-
 
 class DistanceCalibrationBehaviour(OneShotBehaviour):
     agent: RobotAgent
+    IR_THRESHOLD = 500
 
     def __init__(self, speed: int = 20, check_interval: float = 0.02):
         super().__init__()
@@ -37,7 +37,6 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
         self.output_dir = Path("calibration_data")
         self.path = "distance_calibration_data.json"
 
-    # check for black studs every 500ms
     async def run(self) -> None:
         self.bot.forward()
         line_count = 0
@@ -86,9 +85,9 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
             self.bot.bottom_ir.readCalibrated()
         )  # list of 5 values in [0,1000]
         for value in sensor_values:
-            if value > 500:
+            if value > self.IR_THRESHOLD:
                 self.logger.info(
-                    f"Sensor value ({value}) above threshold, likely detected black stud"
+                    f"Sensor value ({value}) above threshold ({self.IR_THRESHOLD}), likely detected black stud"
                 )
                 black_studs += 1
 
