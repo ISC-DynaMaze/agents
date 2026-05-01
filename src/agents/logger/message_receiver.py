@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
+from common.models.controller import MazeResponse, PathResponse
 from common.models.logger import LogRequest
 from common.models.robot import CameraPhotoResponse, StatusResponse
 from common.receiver import BaseReceiverBehaviour
@@ -34,3 +35,9 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
 
             case CameraResponse(img=img):
                 await self.agent.send_ws({"type": "maze-img", "img": img})
+
+            case MazeResponse():
+                await self.agent.send_ws({"type": "maze", "maze": res.maze})
+
+            case PathResponse():
+                await self.agent.send_ws({"type": "path", "path": res.path})
