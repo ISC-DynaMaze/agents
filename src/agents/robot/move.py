@@ -49,19 +49,19 @@ class MoveBehaviour(CyclicBehaviour):
         self.bot.setBothPWM(self.speed)
 
     async def run(self):
+
         # reposition bot
         await self.reposition_to_nearest_cardinal()
 
-        # store next surrounding
-        await self.store_next_surrounding()  # add directly to mental state
+        self.logger.info(f"LLLLLLLLLLLLLength of surroundings in mental state: {len(self.surroundings)}")
 
         # get direction to go
         # if we dont have info about current surrounding, ask controller
         # if lookaround gets anything other than exactly one open direction, ask controller
-        if len(self.surroundings) == 1:
+        if len(self.surroundings) < 2:
             self.logger.info("No surroundings in mental state yet, asking for controller's input")
             await self.ask_controller()
-            direction = await self.wait_for_direction(timeout=5.0)
+            direction = await self.wait_for_direction(timeout=3)
         else:
             # get current surroundings and check which directions are open
             current_surrounding = await self.get_current_surrounding()
@@ -83,7 +83,7 @@ class MoveBehaviour(CyclicBehaviour):
                 # get direction from controller
                 self.logger.warning("Controller --- Get direction from controller because lookaround is not conclusive")
                 await self.ask_controller()
-                direction = await self.wait_for_direction(timeout=5.0)
+                direction = await self.wait_for_direction(timeout=3)
 
         # if there is no new path -- should be at target
         # FIXME: better way to detect target reached
@@ -96,12 +96,12 @@ class MoveBehaviour(CyclicBehaviour):
 
         # go to given direction
         self.logger.info(f"Direction computed: {direction}")
-        # await self.turn_and_go(direction)
-        # self.logger.info(f"Moved {direction}")
+        await self.turn_and_go(direction)
+        self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
-        await asyncio.sleep(10) # wait to test lookaround integration
-        # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
+        #await asyncio.sleep(10) # wait to test lookaround integration
+        self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
         # read time it took to go across one cell from calib file
@@ -132,8 +132,13 @@ class MoveBehaviour(CyclicBehaviour):
             if is_on_stud:
                 # TODO: implement here lookaround call
                 self.bot.stop()
-                await asyncio.sleep(5)
+                # scan for surrounfings
+                await self.ask_surroundings()
+                # store next surrounding
+                await self.store_next_surrounding()  # add directly to mental state
+                self.logger.info(f"Length of surroundings when storing: {len(self.surroundings)}")
                 self.logger.info("Pause at border")
+                await asyncio.sleep(1)  
 
                 # go forward to the middle of the cell
                 self.bot.setBothPWM(self.speed)
@@ -230,7 +235,7 @@ class MoveBehaviour(CyclicBehaviour):
 
     async def store_next_surrounding(self):
         self.bot.stop()  # should already be stopped but just in case
-        result = await self.wait_for_surroundings(timeout=5)
+        result = await self.wait_for_surroundings(timeout=15)
 
         if result is None:
             self.logger.error("No response received for surroundings request")
