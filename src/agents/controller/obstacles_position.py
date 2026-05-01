@@ -17,13 +17,15 @@ from agents.controller.maze.detect_obstacles import (
     find_obstacles,
 )
 
+from agents.controller.maze.wall_detection import get_pink_mask, find_outer_rectangle
+
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
 ROBOT_ARM_POSITION = (394, 328)
-
+MAZE_SIZE = (2200,695) #Measured by hand (Width, Height)
 
 class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
@@ -41,6 +43,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
 
+        measure = self.compute_distance(img)
+        '''
         detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
         blocks_by_color = detection["blocks_by_color"]
         maze = detection["maze"]
@@ -48,8 +52,23 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
         highlighted = self.draw_elements(img, blocks_by_color, ROBOT_ARM_POSITION)
-        await self.save_img(highlighted, self.rel_pos)
+        await self.obstacle.save_img(highlighted, self.rel_pos)
         self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
+        '''
+
+    def compute_distance(self, img: np.darray) :
+        mask = get_pink_mask(img)
+        sizes = find_outer_rectangle(mask)
+
+        width = sizes[2] #The longest side
+        height = sizes[3] #The shortest side
+
+        ratioW = MAZE_SIZE[0]/width
+        ratioH = MAZE_SIZE[1]/height
+        return (ratioW, ratioW)
+
+
+        
 
     def draw_elements(self, img, blocks_by_color, robot_pos):
         highlighted = self.draw_detected_obstacles(img, blocks_by_color)
@@ -77,35 +96,3 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                     f"Error occurred while waiting for camera response: {e}"
                 )
                 continue
-
-    async def save_img(self, img: np.ndarray, save_dir: Path) -> None:
-        self.logger.info(f"Saving image to {save_dir}")
-        timestamp = int(time.time())
-        img_path = save_dir / f"obstacles_{timestamp}.jpg"
-        cv2.imwrite(str(img_path), img)
-    
-    def draw_detected_obstacles(self, image, blocks_by_color):
-        highlighted = image.copy()
-
-        # specific color for each type
-        draw_colors = {
-            "greenObstacle": (0, 255, 0),
-            "yellowObstacle": (0, 255, 255),
-        }
-
-        for color_name, blocks in blocks_by_color.items():
-            line_color = draw_colors.get(color_name, (255, 255, 255))
-
-            for block in blocks:
-                corners = block["corners"].reshape(-1, 1, 2)
-                center = block["center"]
-
-                cv2.polylines(highlighted, [corners], True, line_color, 2)
-
-                for cx, cy in corners.reshape(-1, 2):
-                    cv2.circle(highlighted, (int(cx), int(cy)), 3, (255, 0, 0), -1)
-
-                cv2.circle(highlighted, center, 3, (255, 255, 255), -1)
-                cv2.line(highlighted, ROBOT_ARM_POSITION, (int(cx), int(cy)), (255, 0, 0), -1)
-
-        return highlighted
