@@ -59,6 +59,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         blocks = result["blocks_by_color"]
         blocks_pos = dict()
         for color, list_of_blocks in blocks.items():
+            blocks_pos[color] = []
             for block in list_of_blocks:
                 center = block["center"]  # C'est un tuple (x, y)
                 distance_robot = (
@@ -68,8 +69,11 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                 self.logger.info(
                     f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away "
                 )
-                blocks_pos[color]["x"] = distance_robot[0]
-                blocks_pos[color]["y"] = distance_robot[1]
+                blocks_pos[color].append({
+                    "x" : distance_robot[0],
+                    "y" : distance_robot[1]
+                })
+                
         self.save_obstacle_position(blocks_pos)
 
     def compute_distance(self, img: np.ndarray) -> tuple[float, float]:
