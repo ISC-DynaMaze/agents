@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import time
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from spade.behaviour import CyclicBehaviour
@@ -97,6 +100,60 @@ class MoveBehaviour(CyclicBehaviour):
         await forward_behaviour.join()
         self.bot.stop()
 
+    async def go_forward_to_cell_center_using_sensors(
+        self, timeout: float = 5.0, threshold: int = 500, fallback: float = 0.35
+    ):
+        # read time it took to go across one cell from calib file
+        calib_path = Path("calibration_data") / "distance_calibration_data.json"
+        cell_timing = None
+        try:
+            if calib_path.exists():
+                with open(calib_path, "r") as f:
+                    data = json.load(f)
+                    cell_timing = float(data.get("distance_time"))
+        except Exception as e:
+            self.logger.warning(f"Could not read calibration file: {e}")
+
+
+        start = time.monotonic()
+        self.bot.forward()
+        last_5_frames = []
+        poll_interval = 0.02
+
+        while True:
+            # read sensor values and check if we are on a black line
+            sensor_values = self.bot.bottom_ir.readCalibrated()
+            nb_studs = sum(1 for v in sensor_values if v > threshold)
+            last_5_frames.append(nb_studs)
+            last_5_frames = last_5_frames[-5:]
+            is_on_stud = sum(last_5_frames) > 0
+
+            if is_on_stud:
+                t_to_border = time.monotonic() - start
+                self.logger.info(f"Detected border after {t_to_border}")
+                self.bot.stop()
+
+                if cell_timing is not None:
+                    remaining = max(0.0, cell_timing - t_to_border)
+                else:
+                    remaining = fallback
+
+                forward_behaviour = ForwardBehaviour()
+                self.agent.add_behaviour(forward_behaviour)
+                self.bot.forward()
+                await asyncio.sleep(remaining)
+                forward_behaviour.kill()
+                await forward_behaviour.join()
+                self.bot.stop()
+                return t_to_border
+
+            if time.monotonic() - start > timeout:
+                self.logger.error("Timed out waiting for black studs")
+                self.bot.stop()
+                return None
+
+            await asyncio.sleep(poll_interval)
+
     async def turn_and_go(self, direction: str):
         if direction == "left":
             await self.turn(direction=Direction.Left)
@@ -113,7 +170,7 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
-        await self.go_forward_for(0.7)
+        await self.go_forward_to_cell_center_using_sensors()
 
     async def turn(self, direction: Direction):
         angle = self.turning_angle
