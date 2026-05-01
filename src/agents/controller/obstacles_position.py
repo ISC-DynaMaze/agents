@@ -15,6 +15,7 @@ from common.models.common import ReqResAdapter
 
 from agents.controller.maze.detect_obstacles import (
     find_obstacles,
+    draw_detected_obstacles
 )
 
 from agents.controller.maze.wall_detection import get_pink_mask, find_outer_rectangle
@@ -45,17 +46,14 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
 
         measure = self.compute_distance(img)
         self.logger.info(f"[Measure] L :{measure[0]}, l : {measure[1]}")
-        '''
-        detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
-        blocks_by_color = detection["blocks_by_color"]
-        maze = detection["maze"]
-        self.agent.maze = maze
-        self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
-        highlighted = self.draw_elements(img, blocks_by_color, ROBOT_ARM_POSITION)
-        await self.obstacle.save_img(highlighted, self.rel_pos)
-        self.logger.info(f"Saved highlighted obstacles image to {self.rel_pos}")
-        '''
+        result = find_obstacles(img, self.agent.maze)
+        blocks = result["block_by_color"]
+        for color, list_of_blocks in blocks.items():
+            for block in list_of_blocks:
+                center = block["center"]  # C'est un tuple (x, y)
+                distance_robot = (abs(center[0]-ROBOT_ARM_POSITION[0])*measure[0],abs(center[1]-ROBOT_ARM_POSITION[1])*measure[1])
+                self.logger.info(f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away ")
 
     def compute_distance(self, img: np.darray) -> tuple[float, float] :
         mask = get_pink_mask(img)
