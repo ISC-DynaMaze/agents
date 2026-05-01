@@ -84,11 +84,18 @@ class SideType(StrEnum):
     UNKNOWN = "unknown"
 
 
+class CubesResult(BaseModel):
+    left: bool = field(default=False)
+    front: bool = field(default=False)
+    right: bool = field(default=False)
+
+
 class LookAroundResponse(RobotResponseBase):
     type: Literal["bot-look-around-res"] = "bot-look-around-res"  # type: ignore
     left: SideType = field(default=SideType.UNKNOWN)
     right: SideType = field(default=SideType.UNKNOWN)
     front: SideType = field(default=SideType.UNKNOWN)
+    cubes: CubesResult = field(default_factory=CubesResult)
 
 
 RobotRequest = Annotated[

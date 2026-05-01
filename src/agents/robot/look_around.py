@@ -11,7 +11,12 @@ import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
-from common.models.robot import LookAroundRequest, LookAroundResponse, SideType
+from common.models.robot import (
+    CubesResult,
+    LookAroundRequest,
+    LookAroundResponse,
+    SideType,
+)
 from common.request_handler import RequestHandler
 
 if TYPE_CHECKING:
@@ -29,6 +34,13 @@ class SideConfig:
     pan: float
     tilt: float
     expected_angle: float
+
+
+@dataclass
+class CubeChannelConfig:
+    space: int
+    channel: int
+    inverted: bool
 
 
 class LookAroundBehaviour(OneShotBehaviour):
@@ -58,6 +70,16 @@ class LookAroundBehaviour(OneShotBehaviour):
     MIN_OPENING_RECTS: float = 1
     MIN_PLINTH_LINES: float = 1
     MIN_OVERLAP_RATIO: float = 0.5
+    MIN_CUBE_AREA_RATIO: float = 0.01
+    MAX_CUBE_AREA_RATIO: float = 0.05
+
+    CUBES_CHANNELS: list[CubeChannelConfig] = [
+        CubeChannelConfig(cv2.COLOR_BGR2HSV, 1, False),
+        CubeChannelConfig(cv2.COLOR_BGR2HSV, 2, True),
+        CubeChannelConfig(cv2.COLOR_BGR2HLS, 1, True),
+        CubeChannelConfig(cv2.COLOR_BGR2HLS, 2, False),
+        CubeChannelConfig(cv2.COLOR_BGR2LAB, 0, True),
+    ]
 
     def __init__(self):
         super().__init__()
@@ -66,6 +88,7 @@ class LookAroundBehaviour(OneShotBehaviour):
 
     async def run(self):
         sides: dict[SideStr, SideType] = {}
+        cubes: CubesResult = CubesResult()
         for side, configs in self.ANGLES.items():
             self.logger.info(f"Looking {side}")
             results: dict[SideType, int] = {}
@@ -73,6 +96,9 @@ class LookAroundBehaviour(OneShotBehaviour):
                 side_type: SideType = await self.look_and_analyse(config, side, i)
                 if side_type != SideType.UNKNOWN:
                     results[side_type] = results.get(side_type, 0) + 1
+
+                if side == "front" and i == 0:
+                    cubes = self.detect_cubes(self.agent.cam.capture_array())
             self.logger.info(f"Side {side} is {side_type}")
             sorted_results: list[tuple[SideType, int]] = sorted(
                 results.items(), key=lambda p: p[1], reverse=True
@@ -80,7 +106,7 @@ class LookAroundBehaviour(OneShotBehaviour):
             sides[side] = (
                 sorted_results[0][0] if len(sorted_results) != 0 else SideType.UNKNOWN
             )
-        res: LookAroundResponse = LookAroundResponse(**sides)
+        res: LookAroundResponse = LookAroundResponse(**sides, cubes=cubes)
         await self.agent.look_around_handler.send_response(res)
 
     async def look_and_analyse(self, config: SideConfig, side: str, i: int) -> SideType:
@@ -275,6 +301,59 @@ class LookAroundBehaviour(OneShotBehaviour):
         self.logger.debug(f"Detected {count} opening rectangles")
         cv2.imwrite(self.IMG_DIR / f"{side}_rects_{i}.png", with_cnts)
         return count >= self.MIN_OPENING_RECTS
+
+    def detect_cubes(self, img: np.ndarray) -> CubesResult:
+        masks = []
+        for i, config in enumerate(self.CUBES_CHANNELS):
+            mask = self.detect_cubes_in_channel(img, config)
+            cv2.imwrite(self.IMG_DIR / f"cube_mask_{i}.png", mask)
+            masks.append(mask)
+
+        mean = np.sum(np.array(masks) / 255, axis=0)
+        is_cube = mean > 1
+
+        n_strips = 3
+        strips = [False] * n_strips
+        strip_width = int(img.shape[1] / n_strips)
+        for i in range(n_strips):
+            width = (
+                img.shape[1] - strip_width * (n_strips - 1)
+                if i == n_strips - 1
+                else strip_width
+            )
+            is_occupied = (
+                np.mean(is_cube[:, strip_width * i : strip_width * i + width]) > 0.05
+            )
+            strips[i] = bool(is_occupied)
+
+        return CubesResult(
+            left=strips[0],
+            front=strips[1],
+            right=strips[2],
+        )
+
+    def detect_cubes_in_channel(
+        self, img: np.ndarray, config: CubeChannelConfig
+    ) -> np.ndarray:
+        channel = cv2.split(cv2.cvtColor(img, config.space))[config.channel]
+        thresh_type: int = (
+            cv2.THRESH_BINARY_INV if config.inverted else cv2.THRESH_BINARY
+        )
+        _, thresh = cv2.threshold(channel, 0, 255, thresh_type | cv2.THRESH_OTSU)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (17, 17))
+        closed = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+        cnts, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        mask = np.zeros(channel.shape, dtype=np.uint8)
+        total_area = img.shape[0] * img.shape[1]
+        for cnt in cnts:
+            rect = cv2.minAreaRect(cnt)
+            box: np.ndarray = np.intp(cv2.boxPoints(rect))  # type: ignore
+            area = cv2.contourArea(box)
+            area_ratio = area / total_area
+            if not (self.MIN_CUBE_AREA_RATIO < area_ratio < self.MAX_CUBE_AREA_RATIO):
+                continue
+            cv2.drawContours(mask, [box], 0, 255, cv2.FILLED)
+        return mask
 
     def rect_overlaps_plinth(
         self, rect: np.ndarray, segments: list[Segment], max_dist: float
