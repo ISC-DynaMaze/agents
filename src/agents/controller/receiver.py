@@ -95,10 +95,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
-            case CameraResponse(img=encoded_img):
+            case CameraResponse():
                 self.agent.requesting_image = False
 
-                img, filepath = await res.decode_img(encoded_img, self.save_dir)
+                img, filepath = await res.decode_img(self.save_dir)
 
                 if len(self.agent.angle_requesters) != 0:
                     bot_detection = BotDetectionBehaviour(img)

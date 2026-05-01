@@ -16,10 +16,10 @@ class CameraResponse(ResponseBase):
     type: Literal["cam-res"] = "cam-res"  # type: ignore
     img: str
 
-    async def decode_img(self, img, save_dir):
+    async def decode_img(self, save_dir):
         import cv2
         print("Received photo message.")
-        img_data = base64.b64decode(img)
+        img_data = base64.b64decode(self.img)
 
         # Generate filename with timestamp
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

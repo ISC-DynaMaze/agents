@@ -87,7 +87,7 @@ class ObstaclesBehaviour(OneShotBehaviour):
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, CameraResponse)
                 save_dir = Path("photos")
-                img, _ = await res.decode_img(res.img, save_dir)
+                img, _ = await res.decode_img(save_dir)
                 return img
             except Exception as e:
                 self.logger.error(
