@@ -90,19 +90,7 @@ class MoveBehaviour(CyclicBehaviour):
         await asyncio.sleep(1)
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
-    # depending on the free directions, move forward or turn and move forward
-    async def go_forward_for(self, seconds: float):
-        self.bot.forward()
-        forward_behaviour = ForwardBehaviour()
-        self.agent.add_behaviour(forward_behaviour)
-        await asyncio.sleep(seconds)
-        forward_behaviour.kill()
-        await forward_behaviour.join()
-        self.bot.stop()
-
-    async def go_forward_to_cell_center_using_sensors(
-        self, threshold: int = 500
-    ):
+    async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
         # read time it took to go across one cell from calib file
         calib_path = Path("calibration_data") / "distance_calibration_data.json"
         cell_timing = None
