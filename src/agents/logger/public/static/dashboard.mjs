@@ -2,6 +2,7 @@ import { Agent } from "./agent.mjs";
 import { Bookmarks } from "./bookmarks.mjs";
 import { RobotCamera } from "./bot_camera.mjs";
 import { Logger } from "./logger.mjs";
+import { Maze } from "./maze.mjs";
 import { Sender } from "./sender.mjs";
 
 export class Dashboard {

@@ -172,6 +172,7 @@ button.button {
         border: black solid 1px;
         min-height: 1em;
         font-family: monospace;
+        width: 100%;
 
         --col: black;
 
