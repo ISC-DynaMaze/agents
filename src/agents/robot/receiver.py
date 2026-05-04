@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from agents.robot.camera import CameraBehaviour
+from agents.robot.distance_calibration import DistanceCalibrationBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
 from agents.robot.reposition import RepositionBehaviour
@@ -11,7 +12,9 @@ from agents.robot.turn import TurningBehaviour
 from agents.robot.turn_calibration import AngleCalibrationBehaviour
 from common.models.common import Request, StopRequest
 from common.models.robot import (
+    BottomIRCalibrationRequest,
     CameraPhotoRequest,
+    DistanceCalibrationRequest,
     HonkRequest,
     LookAroundRequest,
     PanTiltRequest,
@@ -66,3 +69,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case LookAroundRequest():
                 await self.agent.look_around_handler.on_request(sender_jid, req)
+
+            case BottomIRCalibrationRequest():
+                self.agent.bot.bottom_ir.calibrate()
+
+            case DistanceCalibrationRequest():
+                self.agent.add_behaviour(DistanceCalibrationBehaviour(speed=20))

@@ -15,6 +15,14 @@ class RobotResponseBase(ResponseBase):
     pass
 
 
+class BottomIRCalibrationRequest(RobotRequestBase): 
+    type: Literal["ir-calib-req"] = "ir-calib-req"  # type: ignore
+
+
+class DistanceCalibrationRequest(RobotRequestBase):
+    type: Literal["dist-calib-req"] = "dist-calib-req"  # type: ignore
+
+
 class RobotMoveRequest(RobotRequestBase):
     type: Literal["bot-move-req"] = "bot-move-req"  # type: ignore
 
@@ -101,6 +109,8 @@ RobotRequest = Annotated[
         TurningCalibrationRequest,
         RepositionRequest,
         LookAroundRequest,
+        BottomIRCalibrationRequest,
+        DistanceCalibrationRequest,
     ],
     Field(discriminator="type"),
 ]
