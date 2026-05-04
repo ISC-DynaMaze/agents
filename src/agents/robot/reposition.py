@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from spade.behaviour import OneShotBehaviour
 
@@ -22,27 +22,30 @@ class RepositionBehaviour(OneShotBehaviour):
     def __init__(self, tolerance_deg: float = 2):
         super().__init__()
         self.logger = logging.getLogger("RepositionBehaviour")
-        self.actual_angle = None
         self.tolerance_deg = tolerance_deg
 
     @property
     def bot(self) -> AlphaBot2:
         return self.agent.bot
 
+    @property
+    def bot_id(self) -> int:
+        return self.agent.config.bot_aruco_id
+
     async def run(self):
         self.bot.stop()
 
         # get angle
         await self.ask_angle()
-        self.actual_angle = await self.wait_angle_response(timeout=5)
-        await self.reposition_to_nearest_90_degree()
+        current_angle: Optional[float] = await self.wait_angle_response(timeout=5)
+        if current_angle is None:
+            self.logger.error("Cannot reposition because current angle is none")
+            return
+        await self.reposition_to_nearest_90_degree(current_angle)
 
-    async def wait_angle_response(self, timeout):
+    async def wait_angle_response(self, timeout) -> Optional[float]:
         while True:
             try:
-                # FIXME: to do positioning and calibration, only 1 aruco marker must be in the maze,
-                # when this will be fixed, we will have to update this to get the angle of the aruco id
-                # corresponding to the bot
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
                     self.logger.error(
@@ -51,7 +54,7 @@ class RepositionBehaviour(OneShotBehaviour):
                     return None
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, AngleResponse)
-                return res.angle
+                return res.angles.get(self.bot_id)
             except Exception as e:
                 self.logger.error(f"Error occurred while waiting for angle: {e}")
                 continue
@@ -62,13 +65,9 @@ class RepositionBehaviour(OneShotBehaviour):
             BaseSenderBehaviour(req, str(self.agent.controller_jid))
         )
 
-    async def reposition_to_nearest_90_degree(self):
-        if self.actual_angle is None:
-            self.logger.error("Cannot reposition because actual angle is not set")
-            return
-
+    async def reposition_to_nearest_90_degree(self, current_angle: float):
         # normalize to [0, 360) to make nearest cardinal computation robust
-        current_angle = self.actual_angle % 360
+        current_angle %= 360
         nearest_90 = round(current_angle / 90) * 90
 
         # signed shortest-angle difference in (-180, 180]

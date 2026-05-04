@@ -30,6 +30,10 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.delta_t: float = delta_t
         self.logger = logging.getLogger("AngleCalibrationBehaviour")
 
+    @property
+    def bot_id(self) -> int:
+        return self.agent.config.bot_aruco_id
+
     async def on_start(self):
         self.bot: AlphaBot2 = self.agent.bot
 
@@ -40,8 +44,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         )
         self.agent.calib.save()
 
-    async def ask_angle(self) -> float:
-        self.logger.debug("[Behaviour] Ask controller for actual angle")
+    async def ask_angle(self) -> Optional[float]:
+        self.logger.debug("[Behaviour] Ask controller for current angle")
 
         msg = AngleRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(msg, self.agent.controller_jid))
@@ -52,30 +56,39 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
                 assert reply is not None
                 res = ReqResAdapter.validate_json(reply.body)
                 assert isinstance(res, AngleResponse)
-                break
+                return res.angles.get(self.bot_id)
             except:
                 continue
-        return res.angle
 
     async def calibrate_direction(
         self, direction: Direction
     ) -> Optional[RotationCalibration]:
-        current_angle: float = await self.ask_angle()
+        current_angle: Optional[float] = await self.ask_angle()
+        if current_angle is None:
+            self.logger.error("Could not get current angle")
+            return None
         self.bot.setBothPWM(self.speed)
 
         calibration: RotationCalibration = RotationCalibration(speed=self.speed)
         for i in range(10):
-            measure, current_angle = await self.calibration_sequence(
+            res = await self.calibration_sequence(
                 current_angle, i * self.delta_t, direction
             )
+            if res is None:
+                self.logger.error("Could not get current angle")
+                return
+            measure, current_angle = res
             calibration.add_measure(measure)
 
         calibration.compute_coefficients()
 
         for angle in self.TEST_ANGLES:
             duration: float = calibration.interpolate(angle)
-            test: RotationTest = await self.test_sequence(angle, duration, direction)
-            calibration.add_test(test)
+            test: Optional[RotationTest] = await self.test_sequence(
+                angle, duration, direction
+            )
+            if test is not None:
+                calibration.add_test(test)
 
         return calibration
 
@@ -84,7 +97,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         last_angle: float,
         delta_t: float,
         direction: Direction,
-    ) -> tuple[RotationMeasure, float]:
+    ) -> Optional[tuple[RotationMeasure, float]]:
         timing = self.time + delta_t
         self.logger.info(f"[Behaviour] Robot turn left for {timing} second(s)")
 
@@ -95,7 +108,9 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         await asyncio.sleep(timing)
         self.bot.stop()
         await asyncio.sleep(1)
-        current_angle: float = await self.ask_angle()
+        current_angle: Optional[float] = await self.ask_angle()
+        if current_angle is None:
+            return None
 
         delta = abs(((last_angle - current_angle + 180) % 360) - 180)
         self.logger.info(f"[Time] Time saved : {timing}")
@@ -111,8 +126,11 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
 
     async def test_sequence(
         self, target: float, duration: float, direction: Direction
-    ) -> RotationTest:
-        start_angle: float = await self.ask_angle()
+    ) -> Optional[RotationTest]:
+        start_angle: Optional[float] = await self.ask_angle()
+        if start_angle is None:
+            self.logger.error("Could not get start angle")
+            return None
 
         if direction == Direction.Left:
             self.bot.left()
@@ -122,7 +140,10 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         self.bot.stop()
 
         await asyncio.sleep(1.5)
-        end_angle: float = await self.ask_angle()
+        end_angle: Optional[float] = await self.ask_angle()
+        if end_angle is None:
+            self.logger.error("Could not get end angle")
+            return None
 
         delta: float = abs(((start_angle - end_angle + 180) % 360) - 180)
 
