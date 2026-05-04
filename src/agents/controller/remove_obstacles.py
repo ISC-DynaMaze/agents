@@ -32,5 +32,6 @@ class RemoveBigObstaclesBehaviour(OneShotBehaviour):
         with open("rel_pos/obs_pos.json", "r") as f :
             blocks = json.load(f)
             for block in blocks.items():
-                list_obstacle.append({"pick" : {"x" : block["x"], "y" : block["y"]}, "place": {"x": -0.149, "y": -0.315}})
+                for pos in block[1]:
+                    list_obstacle.append({"pick" : pos, "place" : {"x": -0.149, "y": -0.315}})
         return list_obstacle
