@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 from typing import TYPE_CHECKING
@@ -29,11 +31,11 @@ class PanoBehaviour(OneShotBehaviour):
         tilt_step: float = (self.MAX_TILT - self.MIN_TILT) / mid_i
 
         for i in range(self.IMAGES):
-            pan = self.START_PAN + pan_step
+            pan = self.START_PAN + pan_step * i
             tilt = self.MAX_TILT - abs(i - mid_i) * tilt_step
             self.agent.bot.setCameraPan(pan)
             self.agent.bot.setCameraTilt(tilt)
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.5)
             img = self.agent.cam.capture_array()
             imgs.append(img)
         
