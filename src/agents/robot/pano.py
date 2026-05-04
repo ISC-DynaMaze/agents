@@ -16,7 +16,7 @@ class PanoBehaviour(OneShotBehaviour):
     agent: RobotAgent
     START_PAN = 30
     END_PAN = -30
-    MIN_TILT = -30
+    MIN_TILT = 30
     MAX_TILT = 20
     IMAGES = 7
 
