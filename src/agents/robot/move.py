@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Optional
 from spade.behaviour import CyclicBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
-from agents.robot.disco import DiscoBehaviour
 from agents.robot.forward_behaviour import ForwardBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.reposition import RepositionBehaviour
@@ -49,20 +48,21 @@ class MoveBehaviour(CyclicBehaviour):
         self.bot.setBothPWM(self.speed)
 
     async def run(self):
-
         # reposition bot
         await self.reposition_to_nearest_cardinal()
-
-        self.logger.info(f"LLLLLLLLLLLLLength of surroundings in mental state: {len(self.surroundings)}")
 
         # get direction to go
         # if we dont have info about current surrounding, ask controller
         # if lookaround gets anything other than exactly one open direction, ask controller
         if len(self.surroundings) < 2:
-            self.logger.info("No surroundings in mental state yet, asking for controller's input")
+            self.logger.info(
+                "No surroundings in mental state yet, asking for controller's input"
+            )
             await self.ask_controller()
             direction = await self.wait_for_direction(timeout=3)
-            self.agent.info(f"Moved {direction} --- surroundings not in mental state")
+            self.agent.info(
+                f"Moved {direction} (controller) --- surroundings not in mental state"
+            )
         else:
             # get current surroundings and check which directions are open
             current_surrounding = await self.get_current_surrounding()
@@ -76,19 +76,28 @@ class MoveBehaviour(CyclicBehaviour):
                 if side == SideType.OPEN
             ]
 
-            self.logger.debug(f"LOOKAROUND --- Free directions from lookaround: {free_directions}")
+            unkown_directions = [
+                unkown
+                for unkown, side in current_surrounding
+                if side == SideType.UNKNOWN
+            ]
 
-            if len(free_directions) == 1:
+            self.logger.debug(
+                f"LOOKAROUND --- Free directions from lookaround: {free_directions}"
+            )
+
+            # if there is unkown direction we should not trust lookaround result and ask controller
+            if len(free_directions) == 1 and len(unkown_directions) == 0:
                 # get direction from lookaround
-                self.logger.info(f"Direction from Lookaround --- Only one free direction: {free_directions[0]}")
                 direction = free_directions[0]
-                self.agent.info(f"Moved {direction} --- based on lookaround")
-            else: 
+                self.logger.warning(f"Moved {direction} (lookaround)")
+                self.agent.info(f"Moved {direction} (lookaround)")
+            else:
                 # get direction from controller
-                self.logger.warning("Direction from Controller --- Get direction from controller because lookaround is not conclusive")
                 await self.ask_controller()
                 direction = await self.wait_for_direction(timeout=3)
-                self.agent.info(f"Moved {direction} --- based on controller")
+                self.logger.warning(f"Moved {direction} (controller)")
+                self.agent.info(f"Moved {direction} (controller)")
 
         # if there is no new path -- should be at target
         # FIXME: better way to detect target reached
@@ -100,14 +109,13 @@ class MoveBehaviour(CyclicBehaviour):
             return
 
         # go to given direction
-        self.logger.info(f"Direction computed: {direction}")
         await self.turn_and_go(direction)
         self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
         self.logger.info(f"State of surroundings list after run: {self.surroundings}")
-        await asyncio.sleep(15) # wait to test lookaround integration
-        #self.kill()  # stop the behaviour until next run when it will ask for surroundings again
+        await asyncio.sleep(5)  
+        # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
         # read time it took to go across one cell from calib file
@@ -143,16 +151,16 @@ class MoveBehaviour(CyclicBehaviour):
                 await self.ask_surroundings()
                 # store next surrounding
                 await self.store_next_surrounding()  # add directly to mental state
-                self.logger.info(f"Length of surroundings when storing: {len(self.surroundings)}")
+
                 self.logger.info("Pause at border")
-                await asyncio.sleep(1)  
+                await asyncio.sleep(1)
 
                 # go forward to the middle of the cell
                 self.bot.setBothPWM(self.speed)
                 self.bot.forward()
                 forward_behaviour = ForwardBehaviour()
                 self.agent.add_behaviour(forward_behaviour)
-                self.logger.info("GOING FORWARD TO CENTER OF CELL")
+                self.logger.info("Going to the center of the cell")
                 # go forward for remaining calculated time
                 await asyncio.sleep(cell_timing / 2 if cell_timing else 0.3)
                 forward_behaviour.kill()
@@ -167,14 +175,12 @@ class MoveBehaviour(CyclicBehaviour):
             await self.turn(direction=Direction.Left)
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Left)
-            self.logger.info("TURNED LEEEEEEFT")
             await asyncio.sleep(0.3)
 
         elif direction == "right":
             await self.turn(direction=Direction.Right)
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Right)
-            self.logger.info("TURNED RIGHHHHHHHHT")
             await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
@@ -219,7 +225,6 @@ class MoveBehaviour(CyclicBehaviour):
                 continue
 
     # ask for surroundings
-    # TODO: adapt with actual response
     async def ask_surroundings(self):
         req = LookAroundRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
@@ -266,7 +271,9 @@ class MoveBehaviour(CyclicBehaviour):
             f"LOOKAROUND --- Current surroundings returned: left={current.left}, front={current.front}, right={current.right}"
         )  # -2 because we already stored the surroundings of the next cell in mental state when we entered it
 
-        self.agent.debug(f"Current surroundings: left={current.left}, front={current.front}, right={current.right}")
+        self.agent.debug(
+            f"Current surroundings: left={current.left}, front={current.front}, right={current.right}"
+        )
         return [
             ("left", current.left),
             ("front", current.front),
