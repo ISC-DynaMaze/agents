@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
+from agents.controller.detect_cubes import DetectCubesBehaviour
 from agents.controller.find_path import FindPathBehaviour
 from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.obstacles_position import ObstacleRelativePositionBehaviour
@@ -16,6 +17,7 @@ from common.models.camera import CameraResponse
 from common.models.common import Request, Response
 from common.models.controller import (
     AngleRequest,
+    CubesRequest,
     DirectionRequest,
     DirectionResponse,
     MazeRequest,
@@ -36,7 +38,12 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     agent: ControllerAgent
 
     def __init__(
-        self, save_dir: Path, maze_dir: Path, path_dir: Path, obstacles_dir: Path
+        self,
+        save_dir: Path,
+        maze_dir: Path,
+        path_dir: Path,
+        obstacles_dir: Path,
+        cubes_dir: Path,
     ):
         super().__init__()
         self.logger = logging.getLogger("ReceiverBehaviour")
@@ -44,12 +51,14 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.maze_dir: Path = maze_dir
         self.path_dir: Path = path_dir
         self.obstacles_dir: Path = obstacles_dir
+        self.cubes_dir: Path = cubes_dir
 
     async def on_start(self) -> None:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         self.maze_dir.mkdir(parents=True, exist_ok=True)
         self.path_dir.mkdir(parents=True, exist_ok=True)
         self.obstacles_dir.mkdir(parents=True, exist_ok=True)
+        self.cubes_dir.mkdir(parents=True, exist_ok=True)
         return await super().on_start()
 
     async def request_photo(self):
@@ -71,6 +80,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
+        
+    async def request_cubes(self):
+        detect_cubes = DetectCubesBehaviour()
+        self.agent.add_behaviour(detect_cubes)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
@@ -110,6 +123,11 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstacleRemoveRequest():
                 await self.request_obstacles_rem()
+                
+            case CubesRequest():
+                self.agent.cubes_requesters.append(sender_jid)
+                if not self.agent.requesting_cubes:
+                    await self.request_cubes()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
@@ -143,6 +161,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 if len(self.agent.obstacles_requesters) != 0:
                     get_obstacles = ObstaclesBehaviour()
                     self.agent.add_behaviour(get_obstacles)
+
+                if len(self.agent.cubes_requesters) != 0:
+                    detect_cubes = DetectCubesBehaviour()
+                    self.agent.add_behaviour(detect_cubes)
 
             case PathResponse(path=path):
                 self.logger.info(f"Path: {path}")

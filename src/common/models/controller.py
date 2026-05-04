@@ -39,6 +39,14 @@ class ObstaclesResponse(ControllerResponseBase):
     type: Literal["ctrl-obstacles-res"] = "ctrl-obstacles-res"  # type: ignore
 
 
+class CubesResponse(ControllerResponseBase):
+    type: Literal["ctrl-cubes-res"] = "ctrl-cubes-res"  # type: ignore
+
+
+class CubesRequest(ControllerRequestBase):
+    type: Literal["ctrl-cubes-req"] = "ctrl-cubes-req"  # type: ignore
+
+
 class AngleRequest(ControllerRequestBase):
     type: Literal["ctrl-angle-req"] = "ctrl-angle-req"  # type: ignore
 
@@ -74,12 +82,18 @@ ControllerRequest = Annotated[
         ObstaclesRequest,
         ObstaclePositionRequest,
         ObstacleRemoveRequest,
+        CubesRequest,
     ],
     Field(discriminator="type"),
 ]
 ControllerResponse = Annotated[
     Union[
-        MazeResponse, AngleResponse, PathResponse, DirectionResponse, ObstaclesResponse
+        MazeResponse,
+        AngleResponse,
+        PathResponse,
+        DirectionResponse,
+        ObstaclesResponse,
+        CubesResponse,
     ],
     Field(discriminator="type"),
 ]

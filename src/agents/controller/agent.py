@@ -29,9 +29,11 @@ class ControllerAgent(Agent, LogMixin):
         self.path_requesters: list[str] = []
         self.direction_requesters: list[str] = []
         self.obstacles_requesters: list[str] = []
+        self.cubes_requesters: list[str] = []
         self.requesting_image: bool = False
         self.requesting_direction: bool = False
         self.requesting_obstacles: bool = False
+        self.requesting_cubes: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(
@@ -39,5 +41,6 @@ class ControllerAgent(Agent, LogMixin):
             maze_dir=Path("mazes"),
             path_dir=Path("paths"),
             obstacles_dir=Path("obstacles"),
+            cubes_dir=Path("cubes"),
         )
         self.add_behaviour(receiver_behaviour)
