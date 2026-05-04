@@ -1,11 +1,13 @@
 {
     "properties": {
         "bot_aruco_id": {
+            "description": "ArUco marker id of the robot",
             "title": "Bot Aruco Id",
             "type": "integer"
         },
         "bot_aruco_rot": {
             "default": 0,
+            "description": "ArUco marker rotation on the robot. 0\u00b0 is up facing forward",
             "enum": [
                 0,
                 90,
@@ -16,10 +18,12 @@
             "type": "integer"
         },
         "target_aruco_id": {
+            "description": "ArUco marker id of the target",
             "title": "Target Aruco Id",
             "type": "integer"
         },
         "arm_center_pos": {
+            "description": "Position of the center of the robot arm base on the camera image, in pixels",
             "maxItems": 2,
             "minItems": 2,
             "prefixItems": [
@@ -34,6 +38,7 @@
             "type": "array"
         },
         "maze_real_world_size_m": {
+            "description": "Widht and height of the maze IRL, in meters",
             "maxItems": 2,
             "minItems": 2,
             "prefixItems": [
@@ -49,6 +54,7 @@
         },
         "ir_threshold": {
             "default": 500,
+            "description": "Threshold for IR detection with the bottom sensors",
             "title": "Ir Threshold",
             "type": "integer"
         }
