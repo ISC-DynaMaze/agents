@@ -146,7 +146,8 @@ export class Maze {
             this.abstract.setMaze(msg.maze)
         })
         this.agent.on("path", msg => {
-            this.abstract.setPath(msg.path)
+            const path = msg.path.map(([y, x]) => [x, y])
+            this.abstract.setPath(path)
         })
     }
 
