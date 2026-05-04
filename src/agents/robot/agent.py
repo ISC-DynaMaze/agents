@@ -15,13 +15,13 @@ from common.log_mixin import LogMixin
 
 @dataclass
 class WheelAdjustments:
-    balance: float = 0  # left: >0 | right: <0
+    balance: float = 0  # turn right: >0 | turn left: <0
 
     def more_right(self):
-        self.balance -= 0.1
+        self.balance += 0.1
 
     def more_left(self):
-        self.balance += 0.1
+        self.balance -= 0.1
 
     @property
     def left_factor(self) -> float:
