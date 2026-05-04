@@ -35,6 +35,10 @@ class IRCalibration(BaseModel):
 class DistanceCalibration(BaseModel):
     duration: float
 
+    @property
+    def half_cell(self) -> float:
+        return self.duration / 2
+
 
 class Calibration(BaseModel):
     PATH: ClassVar[Path] = Path("calibration.json")

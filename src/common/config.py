@@ -14,6 +14,7 @@ class Config(BaseModel):
     target_aruco_id: int
     arm_center_pos: tuple[int, int]
     maze_real_world_size_m: tuple[float, float]
+    ir_threshold: int = 500
 
     @staticmethod
     def load() -> Config:

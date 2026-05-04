@@ -121,30 +121,25 @@ class MoveBehaviour(CyclicBehaviour):
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
-        # read time it took to go across one cell from calib file
-        calib_path = Path("calibration_data") / "distance_calibration_data.json"
-        cell_timing = None
-        try:
-            if calib_path.exists():
-                with open(calib_path, "r") as f:
-                    data = json.load(f)
-                    cell_timing = float(data.get("distance_time"))
-        except Exception as e:
-            self.logger.warning(f"Could not read calibration file: {e}")
+        cell_timing: float = 0.3
+        if self.agent.calib.distance is not None:
+            cell_timing = self.agent.calib.distance.half_cell
+        else:
+            self.logger.warning("Distance not calibrated, using fallback value")
 
         # slower speed so we can really stop at black line
         self.bot.setBothPWM(self.slow_speed)
         self.bot.forward()
-        last_5_frames = []
-        check_interval = 0.02
+        last_5_frames: list[int] = []
+        check_interval: float = 0.02
 
         while True:
             # read sensor values and check if we are on a black line
-            sensor_values = self.bot.bottom_ir.readCalibrated()
-            nb_studs = sum(1 for v in sensor_values if v > threshold)
+            sensor_values: list[int] = self.bot.bottom_ir.readCalibrated()
+            nb_studs: int = sum(1 for v in sensor_values if v > threshold)
             last_5_frames.append(nb_studs)
             last_5_frames = last_5_frames[-5:]
-            is_on_stud = sum(last_5_frames) > 0
+            is_on_stud: bool = sum(last_5_frames) > 0
 
             if is_on_stud:
                 self.bot.stop()
@@ -166,7 +161,7 @@ class MoveBehaviour(CyclicBehaviour):
                 self.agent.add_behaviour(forward_behaviour)
                 self.logger.info("Going to the center of the cell")
                 # go forward for remaining calculated time
-                await asyncio.sleep(cell_timing / 2 if cell_timing else 0.3)
+                await asyncio.sleep(cell_timing)
                 forward_behaviour.kill()
                 await forward_behaviour.join()
                 self.bot.stop()
@@ -189,7 +184,9 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
-        await self.go_forward_to_cell_center_using_sensors()
+        await self.go_forward_to_cell_center_using_sensors(
+            threshold=self.agent.config.ir_threshold
+        )
 
     async def turn(self, direction: Direction):
         angle = self.turning_angle

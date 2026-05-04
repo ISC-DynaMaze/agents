@@ -4,6 +4,8 @@ import time
 
 import RPi.GPIO as GPIO
 
+from common.calibration import IRCalibration, IRSensorCalibration
+
 CS = 5
 Clock = 25
 Address = 24
@@ -24,6 +26,24 @@ class TRSensor(object):
         GPIO.setup(CS, GPIO.OUT)
         GPIO.setup(DataOut, GPIO.IN, GPIO.PUD_UP)
         GPIO.setup(Button, GPIO.IN, GPIO.PUD_UP)
+
+    def get_calibration(self) -> IRCalibration:
+        return IRCalibration(
+            sensors=[
+                IRSensorCalibration(min=mn, max=mx)
+                for mn, mx in zip(self.calibratedMin, self.calibratedMax)
+            ]
+        )
+
+    def set_calibration(self, calib: IRCalibration):
+        if len(calib.sensors) != self.numSensors:
+            raise ValueError(
+                f"Wrong number of sensors: {self.numSensors} sensors but {len(calib.sensors)} calibration entries"
+            )
+
+        mins, maxs = zip(*[(sensor.min, sensor.max) for sensor in calib.sensors])
+        self.calibratedMin = mins
+        self.calibratedMax = maxs
 
     """
     Reads the sensor values into an array. There *MUST* be space

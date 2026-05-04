@@ -68,6 +68,12 @@ class RobotAgent(Agent, LogMixin):
         self.cam = Picamera2()
         self.leds = LedsManager(self.bot)
 
+        if self.calib.bottom_ir is not None:
+            self.logger.info("Using existing IR calibration")
+            self.bot.bottom_ir.set_calibration(self.calib.bottom_ir)
+        else:
+            self.logger.info("IR sensors not calibrated")
+
         config = self.cam.create_preview_configuration(
             main={"format": "RGB888", "size": self.camera_res}
         )
