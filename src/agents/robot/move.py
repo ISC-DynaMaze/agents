@@ -173,13 +173,13 @@ class MoveBehaviour(CyclicBehaviour):
             await self.turn(direction=Direction.Left)
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Left)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)
 
         elif direction == "right":
             await self.turn(direction=Direction.Right)
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Right)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)
 
         elif direction == "back":
             await self.turn(direction=Direction.Right)
@@ -189,8 +189,11 @@ class MoveBehaviour(CyclicBehaviour):
             await self.turn(direction=Direction.Right)
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Right)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)
 
+        # repositioning 
+        await self.reposition_to_nearest_cardinal()
+        
         # go forward after turning or if direction is forward
         await self.go_forward_to_cell_center_using_sensors(
             threshold=self.agent.config.ir_threshold
