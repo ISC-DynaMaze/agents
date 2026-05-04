@@ -181,6 +181,16 @@ class MoveBehaviour(CyclicBehaviour):
             await self.turn(direction=Direction.Right)
             await asyncio.sleep(0.3)
 
+        elif direction == "back":
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(0.3)
+
         # go forward after turning or if direction is forward
         await self.go_forward_to_cell_center_using_sensors(
             threshold=self.agent.config.ir_threshold
