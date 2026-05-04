@@ -13,14 +13,24 @@ class RemoveBigObstaclesBehaviour(OneShotBehaviour):
         super().__init__()
     
     async def on_start(self):
-            self.to_agent = "ur-alphabot23-agent@isc-coordinator2.lan"
-            self.logger = logging.getLogger("RemoveBigObstaclesRequest")
+        self.to_agent = "ur-alphabot23-agent@isc-coordinator2.lan"
+        self.logger = logging.getLogger("RemoveBigObstaclesRequest")
             
 
     async def run(self):
-        reply = Message(to=self.to_agent)
-        reply.set_metadata("performative", "request")
-        reply.body = f"pick {self.data}"
-        await self.send(reply)
-            
-        
+        blocks = self.read_file()
+        for b in blocks:
+            msg = Message(to=self.to_agent)
+            msg.set_metadata("performative", "request")
+            msg.body = f"pick {self.b}"
+            await self.send(msg)
+            self.logger.info(f"[Behaviour] Sent request {msg}")
+
+
+    def read_file(self) -> list[dict]:
+        list_obstacle = []
+        with open("rel_pos/obs_pos.json", "r") as f :
+            blocks = json.load(f)
+            for block in blocks.items():
+                list_obstacle.append({"pick" : {"x" : block["x"], "y" : block["y"]}, "place": {"x": -0.149, "y": -0.315}})
+        return list_obstacle
