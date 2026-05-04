@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,7 @@ class BuildMazeBehaviour(OneShotBehaviour):
 
     def __init__(self, photo_path: Path, output_dir: Path):
         super().__init__()
+        self.logger = logging.getLogger("BuildMazeBehaviour")
         self.photo_path = photo_path
         self.output_dir = output_dir
 
@@ -38,7 +40,8 @@ class BuildMazeBehaviour(OneShotBehaviour):
                 wall_thickness=4,
             )
         except Exception as e:
-            self.agent.logger.error(f"Failed to build maze from {self.photo_path}: {e}")
+            self.logger.error(f"Failed to build maze from {self.photo_path}: {e}")
+            self.agent.error(f"Failed to build maze from {self.photo_path}: {e}")
             return
 
         maze = result["maze"]
@@ -50,8 +53,8 @@ class BuildMazeBehaviour(OneShotBehaviour):
         maze_img_path = self.output_dir / f"maze_{self.photo_path.stem}.jpg"
         cv2.imwrite(str(maze_img_path), grid_img)
 
-        self.agent.logger.info(f"Maze built from {self.photo_path}")
-        self.agent.logger.info(f"Debug maze image saved at {maze_img_path}")
+        self.logger.info(f"Maze built from {self.photo_path}")
+        self.logger.info(f"Debug maze image saved at {maze_img_path}")
 
         # send maze to requester
         send_maze = SendMazeBehaviour(maze=maze)

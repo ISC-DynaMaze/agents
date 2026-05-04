@@ -2,6 +2,7 @@ import { Agent } from "./agent.mjs";
 import { Bookmarks } from "./bookmarks.mjs";
 import { RobotCamera } from "./bot_camera.mjs";
 import { Logger } from "./logger.mjs";
+import { Maze } from "./maze.mjs";
 import { Sender } from "./sender.mjs";
 
 export class Dashboard {
@@ -11,6 +12,7 @@ export class Dashboard {
         this.bookmarks = new Bookmarks(this.agent, document.getElementById("saved"))
         this.robotCamera = new RobotCamera(this.agent, document.getElementById("bot-cam"))
         this.logger = new Logger(this.agent, document.getElementById("logger"))
+        this.maze = new Maze(this.agent, document.getElementById("maze"))
 
         this.initListeners()
     }

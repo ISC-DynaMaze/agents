@@ -9,6 +9,7 @@ from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.look_around import LookAroundHandler
 from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
+from common.log_mixin import LogMixin
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,7 +22,7 @@ for log_name in ["spade", "aioxmpp", "xmpp"]:
     log.propagate = True
 
 
-class RobotAgent(Agent):
+class RobotAgent(Agent, LogMixin):
     bot: AlphaBot2
     cam: Picamera2
 
@@ -38,6 +39,9 @@ class RobotAgent(Agent):
         self.controller_jid: str = controller_jid
         self.camera_res: tuple[int, int] = camera_res
         self.logger = logging.getLogger("RobotAgent")
+
+        self.set_logger_jid(self.logger_jid)
+        self.set_sender(str(self.jid))
 
         self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
 

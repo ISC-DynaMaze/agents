@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,7 @@ class FindPathBehaviour(OneShotBehaviour):
     # reciever would be the controller itself
     def __init__(self, maze: Maze, output_dir: Path):
         super().__init__()
+        self.logger = logging.getLogger("FindPathBehaviour")
         self.maze = maze
         self.output_dir = output_dir
 
@@ -32,14 +34,16 @@ class FindPathBehaviour(OneShotBehaviour):
         path_filename = f"path_{timestamp}.jpg"
 
         if self.maze.bot_cell is None or self.maze.target_cell is None:
-            self.agent.logger.error("Bot cell or target cell not set in maze")
+            self.logger.error("Bot cell or target cell not set in maze")
+            self.agent.error("Bot cell or target cell not set in maze")
             return
 
         path = find_path(self.maze)
         if path is None:
-            self.agent.logger.error("No path found from bot to target")
+            self.logger.error("No path found from bot to target")
+            self.agent.error("No path found from bot to target")
             return
-        self.agent.logger.info(f"Path found: {path}")
+        self.logger.info(f"Path found: {path}")
         self.agent.current_path = path
 
         grid_img = self.agent.grid_img.copy()  # type: ignore
@@ -48,7 +52,7 @@ class FindPathBehaviour(OneShotBehaviour):
         )
         grid_img_path = self.output_dir / path_filename
         cv2.imwrite(str(grid_img_path), grid_img_with_path)
-        self.agent.logger.info(f"Path image saved at {grid_img_path}")
+        self.logger.info(f"Path image saved at {grid_img_path}")
 
         await self.send_path_message(path)
 
