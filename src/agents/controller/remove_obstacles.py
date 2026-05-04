@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 
 from agents.controller.agent import ControllerAgent
@@ -5,6 +6,11 @@ import logging
 
 from spade.behaviour import OneShotBehaviour
 from spade.message import Message
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from agents.controller.agent import ControllerAgent
 
 class RemoveBigObstaclesBehaviour(OneShotBehaviour):
     agent : ControllerAgent
@@ -31,7 +37,7 @@ class RemoveBigObstaclesBehaviour(OneShotBehaviour):
         list_obstacle = []
         with open("rel_pos/obs_pos.json", "r") as f :
             blocks = json.load(f)
-            for block in blocks.items():
-                for pos in block[1]:
+            for block in blocks.values():
+                for pos in block:
                     list_obstacle.append({"pick" : pos, "place" : {"x": -0.149, "y": -0.315}})
         return list_obstacle
