@@ -24,7 +24,7 @@ class RemoveObstaclesBehaviour(OneShotBehaviour):
         for b in blocks:
             msg = Message(to=self.to_agent)
             msg.set_metadata("performative", "request")
-            msg.body = f"pick {self.b}"
+            msg.body = f"pick {b}"
             await self.send(msg)
             self.logger.info(f"[Behaviour] Sent request {msg}")
 
