@@ -43,6 +43,7 @@ class DistanceCalibrationBehaviour(OneShotBehaviour):
         was_on_stud = False
         is_on_stud = False
         last_5_frames = []
+        timer = 0
 
         while True:
             # check if at least 1 black stud detected in last 5 frames
