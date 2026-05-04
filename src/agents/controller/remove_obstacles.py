@@ -13,9 +13,6 @@ if TYPE_CHECKING:
 
 class RemoveBigObstaclesBehaviour(OneShotBehaviour):
     agent : ControllerAgent
-
-    async def __init__(self):
-        super().__init__()
     
     async def on_start(self):
         self.to_agent = "ur-alphabot23-agent@isc-coordinator2.lan"
