@@ -15,7 +15,7 @@ class RemoveObstaclesBehaviour(OneShotBehaviour):
     agent : ControllerAgent
     
     async def on_start(self):
-        self.to_agent = "ur-alphabot23-agent@isc-coordinator.lan"
+        self.to_agent = "ur-agent@isc-coordinator.lan"
         self.logger = logging.getLogger("RemoveObstaclesRequest")
             
 
