@@ -98,6 +98,10 @@ class LookAroundResponse(RobotResponseBase):
     cubes: CubesResult = field(default_factory=CubesResult)
 
 
+class PanoRequest(RobotRequestBase):
+    type: Literal["bot-pano-req"] = "bot-pano-req"
+
+
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
@@ -108,6 +112,7 @@ RobotRequest = Annotated[
         TurningCalibrationRequest,
         RepositionRequest,
         LookAroundRequest,
+        PanoRequest,
     ],
     Field(discriminator="type"),
 ]

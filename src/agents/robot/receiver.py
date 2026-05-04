@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from agents.robot.camera import CameraBehaviour
 from agents.robot.honk import HonkBehaviour
 from agents.robot.move import MoveBehaviour
+from agents.robot.pano import PanoBehaviour
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.status import SendStatusBehaviour
 from agents.robot.turn import TurningBehaviour
@@ -15,6 +16,7 @@ from common.models.robot import (
     HonkRequest,
     LookAroundRequest,
     PanTiltRequest,
+    PanoRequest,
     RepositionRequest,
     RobotMoveRequest,
     TurningCalibrationRequest,
@@ -66,3 +68,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case LookAroundRequest():
                 await self.agent.look_around_handler.on_request(sender_jid, req)
+            
+            case PanoRequest():
+                self.agent.add_behaviour(PanoBehaviour())
