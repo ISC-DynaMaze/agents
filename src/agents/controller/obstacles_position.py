@@ -44,7 +44,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(
             f"[Measure] Start calculating pixel distance and real distance on maze border"
         )
-        scale = self.compute_distance(img)
+        scale = self.compute_scale(img)
         self.logger.info(f"[Measure] L :{scale[0]}, l : {scale[1]}")
 
         self.logger.info(
