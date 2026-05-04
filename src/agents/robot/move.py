@@ -62,6 +62,7 @@ class MoveBehaviour(CyclicBehaviour):
             self.logger.info("No surroundings in mental state yet, asking for controller's input")
             await self.ask_controller()
             direction = await self.wait_for_direction(timeout=3)
+            self.agent.info(f"Moved {direction} --- surroundings not in mental state")
         else:
             # get current surroundings and check which directions are open
             current_surrounding = await self.get_current_surrounding()
@@ -81,11 +82,13 @@ class MoveBehaviour(CyclicBehaviour):
                 # get direction from lookaround
                 self.logger.info(f"Direction from Lookaround --- Only one free direction: {free_directions[0]}")
                 direction = free_directions[0]
+                self.agent.info(f"Moved {direction} --- based on lookaround")
             else: 
                 # get direction from controller
                 self.logger.warning("Direction from Controller --- Get direction from controller because lookaround is not conclusive")
                 await self.ask_controller()
                 direction = await self.wait_for_direction(timeout=3)
+                self.agent.info(f"Moved {direction} --- based on controller")
 
         # if there is no new path -- should be at target
         # FIXME: better way to detect target reached
@@ -262,6 +265,8 @@ class MoveBehaviour(CyclicBehaviour):
         self.logger.debug(
             f"LOOKAROUND --- Current surroundings returned: left={current.left}, front={current.front}, right={current.right}"
         )  # -2 because we already stored the surroundings of the next cell in mental state when we entered it
+
+        self.agent.debug(f"Current surroundings: left={current.left}, front={current.front}, right={current.right}")
         return [
             ("left", current.left),
             ("front", current.front),
