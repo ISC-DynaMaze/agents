@@ -40,8 +40,8 @@ class RepositionBehaviour(OneShotBehaviour):
     async def wait_angle_response(self, timeout):
         while True:
             try:
-                # FIXME: to do positioning and calibration, only 1 aruco marker must be in the maze, 
-                # when this will be fixed, we will have to update this to get the angle of the aruco id 
+                # FIXME: to do positioning and calibration, only 1 aruco marker must be in the maze,
+                # when this will be fixed, we will have to update this to get the angle of the aruco id
                 # corresponding to the bot
                 msg = await self.receive(timeout=timeout)
                 if msg is None:
@@ -82,6 +82,10 @@ class RepositionBehaviour(OneShotBehaviour):
 
         direction = Direction.Right if angle_diff > 0 else Direction.Left
         correction_angle = abs(angle_diff)
+        if direction == Direction.Right:
+            self.agent.wheel_adjustements.more_right()
+        else:
+            self.agent.wheel_adjustements.more_left()
 
         self.logger.info(
             f"Repositioning to nearest 90°: current={current_angle:.2f}°, target={nearest_90:.2f}°, correction={correction_angle:.2f}° {direction.value}"
