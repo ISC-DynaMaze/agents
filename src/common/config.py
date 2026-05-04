@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel
 
@@ -10,7 +10,7 @@ class Config(BaseModel):
     PATH: ClassVar[Path] = Path("config.json")
 
     bot_aruco_id: int
-    bot_aruco_rot: int = 0
+    bot_aruco_rot: Literal[0, 90, 180, 270] = 0
     target_aruco_id: int
     arm_center_pos: tuple[int, int]
     maze_real_world_size_m: tuple[float, float]

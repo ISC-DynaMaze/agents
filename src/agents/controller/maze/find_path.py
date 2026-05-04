@@ -180,6 +180,8 @@ def test():
 
     result = build_maze_from_path(
         image_path=image_path,
+        bot_id=13,
+        target_id=2,
         rows=3,
         cols=11,
         kernel_len=25,

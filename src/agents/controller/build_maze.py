@@ -30,6 +30,8 @@ class BuildMazeBehaviour(OneShotBehaviour):
         try:
             result = build_maze_from_path(
                 image_path=self.photo_path,
+                bot_id=self.agent.config.bot_aruco_id,
+                target_id=self.agent.config.target_aruco_id,
                 rows=3,
                 cols=11,
                 kernel_len=25,

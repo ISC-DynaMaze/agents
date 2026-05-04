@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
+from agents.controller.maze.grid import Maze
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
 from common.models.controller import DirectionResponse, PathRequest, PathResponse
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 
 class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
+    maze: Maze
 
     def __init__(self):
         super().__init__()
@@ -54,12 +56,17 @@ class SendDirectionBehaviour(OneShotBehaviour):
 
         self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
         # update bot cell in maze
-        self.maze.set_bot_cell(corners, ids)
+        self.maze.set_bot_cell(corners, ids, self.agent.config.bot_aruco_id)
         self.logger.info(self.maze)
         self.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
 
         # infer bot orientation based on marker corners
-        orientation = self.get_bot_orientation(corners, ids, 13)
+        orientation = self.get_bot_orientation(
+            corners,
+            ids,
+            self.agent.config.bot_aruco_id,
+            self.agent.config.bot_aruco_rot,
+        )
         if orientation is None:
             self.logger.error("Bot marker not found, cannot infer orientation")
             self.agent.error("Bot marker not found, cannot infer orientation")
@@ -155,7 +162,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
                 continue
 
     # infer bot orientation based on position of bot marker corners
-    def get_bot_orientation(self, corners, ids, bot_id):
+    def get_bot_orientation(self, corners, ids, bot_id, aruco_rot):
         if ids is None:
             return None
 
@@ -174,7 +181,13 @@ class SendDirectionBehaviour(OneShotBehaviour):
             dx = float(vec[0])
             dy = float(vec[1])
 
-            # FIXME: bot id 13 dx and dy > 0, for bot id 7, dx and dy < 0
+            if aruco_rot == 90:
+                dx, dy = dy, -dx
+            elif aruco_rot == 180:
+                dx, dy = -dx, -dy
+            elif aruco_rot == 270:
+                dx, dy = -dy, dx
+
             if math.fabs(dx) >= math.fabs(dy):
                 return "right" if dx > 0 else "left"
             return "down" if dy > 0 else "up"
