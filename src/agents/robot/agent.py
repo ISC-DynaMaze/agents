@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 
 from picamera2 import Picamera2
 from spade.agent import Agent
@@ -11,15 +12,23 @@ from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
 from common.log_mixin import LogMixin
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("AlphaBotAgent")
 
-# Enable SPADE and XMPP specific logging
-for log_name in ["spade", "aioxmpp", "xmpp"]:
-    log = logging.getLogger(log_name)
-    log.setLevel(logging.DEBUG)
-    log.propagate = True
+@dataclass
+class WheelAdjustments:
+    left_factor: float = 1
+    right_factor: float = 1
+
+    def more_right(self):
+        if self.right_factor > 0.5:
+            self.right_factor *= 0.98
+        else:
+            self.left_factor *= 1.02
+
+    def more_left(self):
+        if self.left_factor > 0.5:
+            self.left_factor *= 0.98
+        else:
+            self.right_factor *= 1.02
 
 
 class RobotAgent(Agent, LogMixin):
@@ -44,6 +53,8 @@ class RobotAgent(Agent, LogMixin):
         self.set_sender(str(self.jid))
 
         self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
+
+        self.wheel_adjustements: WheelAdjustments = WheelAdjustments()
 
     async def setup(self):
         self.bot = AlphaBot2()
