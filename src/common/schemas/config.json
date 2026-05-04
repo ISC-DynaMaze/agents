@@ -1,0 +1,64 @@
+{
+    "properties": {
+        "bot_aruco_id": {
+            "title": "Bot Aruco Id",
+            "type": "integer"
+        },
+        "bot_aruco_rot": {
+            "default": 0,
+            "enum": [
+                0,
+                90,
+                180,
+                270
+            ],
+            "title": "Bot Aruco Rot",
+            "type": "integer"
+        },
+        "target_aruco_id": {
+            "title": "Target Aruco Id",
+            "type": "integer"
+        },
+        "arm_center_pos": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "integer"
+                }
+            ],
+            "title": "Arm Center Pos",
+            "type": "array"
+        },
+        "maze_real_world_size_m": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "number"
+                }
+            ],
+            "title": "Maze Real World Size M",
+            "type": "array"
+        },
+        "ir_threshold": {
+            "default": 500,
+            "title": "Ir Threshold",
+            "type": "integer"
+        }
+    },
+    "required": [
+        "bot_aruco_id",
+        "target_aruco_id",
+        "arm_center_pos",
+        "maze_real_world_size_m"
+    ],
+    "title": "Config",
+    "type": "object"
+}

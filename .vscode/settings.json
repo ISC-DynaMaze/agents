@@ -1,3 +1,18 @@
 {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/config.json",
+                "/config.template.json"
+            ],
+            "url": "/src/common/schemas/config.json"
+        },
+        {
+            "fileMatch": [
+                "/calibration.json"
+            ],
+            "url": "/src/common/schemas/calibration.json"
+        }
+    ]
 }

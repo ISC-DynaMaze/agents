@@ -1,0 +1,171 @@
+{
+    "$defs": {
+        "DistanceCalibration": {
+            "properties": {
+                "duration": {
+                    "title": "Duration",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "duration"
+            ],
+            "title": "DistanceCalibration",
+            "type": "object"
+        },
+        "IRCalibration": {
+            "properties": {
+                "sensors": {
+                    "items": {
+                        "$ref": "#/$defs/IRSensorCalibration"
+                    },
+                    "title": "Sensors",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "sensors"
+            ],
+            "title": "IRCalibration",
+            "type": "object"
+        },
+        "IRSensorCalibration": {
+            "properties": {
+                "min": {
+                    "title": "Min",
+                    "type": "number"
+                },
+                "max": {
+                    "title": "Max",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "min",
+                "max"
+            ],
+            "title": "IRSensorCalibration",
+            "type": "object"
+        },
+        "RotationCalibration": {
+            "properties": {
+                "speed": {
+                    "title": "Speed",
+                    "type": "number"
+                },
+                "measures": {
+                    "items": {
+                        "$ref": "#/$defs/RotationMeasure"
+                    },
+                    "title": "Measures",
+                    "type": "array"
+                },
+                "tests": {
+                    "items": {
+                        "$ref": "#/$defs/RotationTest"
+                    },
+                    "title": "Tests",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "speed",
+                "measures",
+                "tests"
+            ],
+            "title": "RotationCalibration",
+            "type": "object"
+        },
+        "RotationMeasure": {
+            "properties": {
+                "angle": {
+                    "title": "Angle",
+                    "type": "number"
+                },
+                "time": {
+                    "title": "Time",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "angle",
+                "time"
+            ],
+            "title": "RotationMeasure",
+            "type": "object"
+        },
+        "RotationTest": {
+            "properties": {
+                "target": {
+                    "title": "Target",
+                    "type": "number"
+                },
+                "time": {
+                    "title": "Time",
+                    "type": "number"
+                },
+                "obtained": {
+                    "title": "Obtained",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "target",
+                "time",
+                "obtained"
+            ],
+            "title": "RotationTest",
+            "type": "object"
+        }
+    },
+    "properties": {
+        "rotation_left": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/RotationCalibration"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "rotation_right": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/RotationCalibration"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "bottom_ir": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/IRCalibration"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "distance": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/DistanceCalibration"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        }
+    },
+    "required": [
+        "rotation_left",
+        "rotation_right",
+        "bottom_ir",
+        "distance"
+    ],
+    "title": "Calibration",
+    "type": "object"
+}

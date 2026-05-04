@@ -11,5 +11,5 @@ mazes/
 photos/
 paths/
 tmp/
-config.json
-calibration.json
+/config.json
+/calibration.json

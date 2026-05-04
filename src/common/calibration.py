@@ -43,7 +43,8 @@ class DistanceCalibration(BaseModel):
 class Calibration(BaseModel):
     PATH: ClassVar[Path] = Path("calibration.json")
 
-    rotation: Optional[RotationCalibration]
+    rotation_left: Optional[RotationCalibration]
+    rotation_right: Optional[RotationCalibration]
     bottom_ir: Optional[IRCalibration]
     distance: Optional[DistanceCalibration]
 
