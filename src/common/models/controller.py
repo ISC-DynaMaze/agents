@@ -58,8 +58,19 @@ class DirectionRequest(ControllerRequestBase):
     type: Literal["ctrl-direction-req"] = "ctrl-direction-req"  # type: ignore
 
 
+class ObstaclePositionRequest(ControllerRequestBase):
+    type: Literal["ctrl-obs-pos-req"] = "ctrl-obs-pos-req"  # type: ignore
+
+
 ControllerRequest = Annotated[
-    Union[MazeRequest, AngleRequest, PathRequest, DirectionRequest, ObstaclesRequest],
+    Union[
+        MazeRequest,
+        AngleRequest,
+        PathRequest,
+        DirectionRequest,
+        ObstaclesRequest,
+        ObstaclePositionRequest,
+    ],
     Field(discriminator="type"),
 ]
 ControllerResponse = Annotated[
