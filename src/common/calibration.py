@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import ClassVar, Optional
+
 from pydantic import BaseModel
 
 
@@ -32,6 +37,21 @@ class DistanceCalibration(BaseModel):
 
 
 class Calibration(BaseModel):
-    rotation: RotationCalibration
-    bottom_ir: IRCalibration
-    distance: DistanceCalibration
+    PATH: ClassVar[Path] = Path("calibration.json")
+
+    rotation: Optional[RotationCalibration]
+    bottom_ir: Optional[IRCalibration]
+    distance: Optional[DistanceCalibration]
+
+    @staticmethod
+    def load() -> Calibration:
+        if not Calibration.PATH.exists():
+            raise FileNotFoundError("Calibration not found")
+
+        raw: str = Calibration.PATH.read_text()
+        config: Calibration = Calibration.model_validate_json(raw)
+        return config
+
+    def save(self):
+        raw: str = self.model_dump_json(indent=4)
+        Calibration.PATH.write_text(raw)
