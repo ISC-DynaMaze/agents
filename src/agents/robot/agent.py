@@ -15,20 +15,21 @@ from common.log_mixin import LogMixin
 
 @dataclass
 class WheelAdjustments:
-    left_factor: float = 1
-    right_factor: float = 1
+    balance: float = 0  # left: >0 | right: <0
 
     def more_right(self):
-        if self.right_factor > 0.5:
-            self.right_factor *= 0.98
-        else:
-            self.left_factor *= 1.02
+        self.balance -= 0.1
 
     def more_left(self):
-        if self.left_factor > 0.5:
-            self.left_factor *= 0.98
-        else:
-            self.right_factor *= 1.02
+        self.balance += 0.1
+
+    @property
+    def left_factor(self) -> float:
+        return 1 + self.balance
+
+    @property
+    def right_factor(self) -> float:
+        return 1 - self.balance
 
 
 class RobotAgent(Agent, LogMixin):
