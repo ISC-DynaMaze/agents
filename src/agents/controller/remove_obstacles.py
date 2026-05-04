@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
-class RemoveBigObstaclesBehaviour(OneShotBehaviour):
+class RemoveObstaclesBehaviour(OneShotBehaviour):
     agent : ControllerAgent
     
     async def on_start(self):
         self.to_agent = "ur-alphabot23-agent@isc-coordinator.lan"
-        self.logger = logging.getLogger("RemoveBigObstaclesRequest")
+        self.logger = logging.getLogger("RemoveObstaclesRequest")
             
 
     async def run(self):

@@ -10,7 +10,7 @@ from agents.controller.find_path import FindPathBehaviour
 from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.obstacles_position import ObstacleRelativePositionBehaviour
 from agents.controller.photo import RequestPhotoBehaviour
-from agents.controller.remove_obstacles import RemoveBigObstaclesBehaviour
+from agents.controller.remove_obstacles import RemoveObstaclesBehaviour
 from agents.controller.send_direction import SendDirectionBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
@@ -69,7 +69,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.agent.add_behaviour(get_obstacles_pos)
     
     async def request_obstacles_rem(self):
-        rem_obstacle = RemoveBigObstaclesBehaviour()
+        rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
 
     async def on_request(self, sender_jid: str, req: Request):
