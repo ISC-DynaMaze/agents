@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -114,7 +113,7 @@ class MoveBehaviour(CyclicBehaviour):
 
         self.bot.stop()
         self.logger.info(f"State of surroundings list after run: {self.surroundings}")
-        await asyncio.sleep(5)  
+        await asyncio.sleep(5)
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
@@ -144,7 +143,6 @@ class MoveBehaviour(CyclicBehaviour):
             is_on_stud = sum(last_5_frames) > 0
 
             if is_on_stud:
-                # TODO: implement here lookaround call
                 self.bot.stop()
                 # scan for surroundings
                 await asyncio.sleep(1)  # wait a bit to stabilize
