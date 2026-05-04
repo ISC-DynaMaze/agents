@@ -18,10 +18,10 @@ class WheelAdjustments:
     balance: float = 0  # turn right: >0 | turn left: <0
 
     def more_right(self):
-        self.balance += 0.1
+        self.balance += 0.02
 
     def more_left(self):
-        self.balance -= 0.1
+        self.balance -= 0.02
 
     @property
     def left_factor(self) -> float:
