@@ -1,7 +1,6 @@
 from __future__ import annotations
 import json
 
-from agents.controller.agent import ControllerAgent
 import logging
 
 from spade.behaviour import OneShotBehaviour
