@@ -75,13 +75,15 @@ class MoveBehaviour(CyclicBehaviour):
                 if side == SideType.OPEN
             ]
 
+            self.logger.debug(f"LOOKAROUND --- Free directions from lookaround: {free_directions}")
+
             if len(free_directions) == 1:
                 # get direction from lookaround
-                self.logger.info(f"Lookaround --- Only one free direction: {free_directions[0]}")
+                self.logger.info(f"Direction from Lookaround --- Only one free direction: {free_directions[0]}")
                 direction = free_directions[0]
             else: 
                 # get direction from controller
-                self.logger.warning("Controller --- Get direction from controller because lookaround is not conclusive")
+                self.logger.warning("Direction from Controller --- Get direction from controller because lookaround is not conclusive")
                 await self.ask_controller()
                 direction = await self.wait_for_direction(timeout=3)
 
@@ -100,8 +102,9 @@ class MoveBehaviour(CyclicBehaviour):
         self.logger.info(f"Moved {direction}")
 
         self.bot.stop()
-        #await asyncio.sleep(10) # wait to test lookaround integration
-        self.kill()  # stop the behaviour until next run when it will ask for surroundings again
+        self.logger.info(f"State of surroundings list after run: {self.surroundings}")
+        await asyncio.sleep(15) # wait to test lookaround integration
+        #self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
         # read time it took to go across one cell from calib file
@@ -132,7 +135,8 @@ class MoveBehaviour(CyclicBehaviour):
             if is_on_stud:
                 # TODO: implement here lookaround call
                 self.bot.stop()
-                # scan for surrounfings
+                # scan for surroundings
+                await asyncio.sleep(1)  # wait a bit to stabilize
                 await self.ask_surroundings()
                 # store next surrounding
                 await self.store_next_surrounding()  # add directly to mental state
@@ -228,7 +232,7 @@ class MoveBehaviour(CyclicBehaviour):
                     return None
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, LookAroundResponse)
-                return (res.left, res.front, res.right)
+                return res
             except Exception as e:
                 self.logger.error(f"Error occurred while waiting for surroundings: {e}")
                 continue
@@ -241,17 +245,25 @@ class MoveBehaviour(CyclicBehaviour):
             self.logger.error("No response received for surroundings request")
             return
 
-        left, front, right = result
+        left, front, right = result.left, result.front, result.right
         self.logger.info(
             f"Received surroundings: left={left}, front={front}, right={right}"
         )
-        self.surroundings.append((left, front, right))
+        self.surroundings.append(result)
 
     # returns surroundings of bot's current cell
     async def get_current_surrounding(self):
-        if len(self.surroundings) == 1:
+        if len(self.surroundings) < 2:
             self.logger.warning(
                 "No current current surrounding in mental state"
             )  # should never happen when calling this function
             return None
-        return list(self.surroundings[-2].items())
+        current = self.surroundings[-2]
+        self.logger.debug(
+            f"LOOKAROUND --- Current surroundings returned: left={current.left}, front={current.front}, right={current.right}"
+        )  # -2 because we already stored the surroundings of the next cell in mental state when we entered it
+        return [
+            ("left", current.left),
+            ("front", current.front),
+            ("right", current.right),
+        ]
