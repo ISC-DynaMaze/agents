@@ -11,20 +11,16 @@ import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.get_obstacles import ObstaclesBehaviour
-from agents.controller.maze.detect_obstacles import (
-    draw_detected_obstacles,
-    find_obstacles,
-)
-from agents.controller.maze.wall_detection import find_outer_rectangle, get_pink_mask
+from agents.controller.maze.detect_obstacles import (draw_detected_obstacles,
+                                                     find_obstacles)
+from agents.controller.maze.wall_detection import (find_outer_rectangle,
+                                                   get_pink_mask)
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
-
-ROBOT_ARM_POSITION = (394, 328)
-MAZE_SIZE = (2200, 695)  # Measured by hand (Width, Height)
 
 
 class ObstacleRelativePositionBehaviour(OneShotBehaviour):
@@ -37,6 +33,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     async def on_start(self):
         self.obstacle = ObstaclesBehaviour()
         self.rel_pos = Path("rel_pos")
+        self.robot_arm_position = (394, 328)
+        self.maze_size = (2200, 695)  # Measured by hand (Width, Height)
 
     async def run(self):
         self.rel_pos.mkdir(parents=True, exist_ok=True)
@@ -46,8 +44,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.logger.info(
             f"[Measure] Start calculating pixel distance and real distance on maze border"
         )
-        measure = self.compute_distance(img)
-        self.logger.info(f"[Measure] L :{measure[0]}, l : {measure[1]}")
+        scale = self.compute_distance(img)
+        self.logger.info(f"[Measure] L :{scale[0]}, l : {scale[1]}")
 
         self.logger.info(
             f"[Measure] Start calculating pixel distance and real distance on maze border"
@@ -60,8 +58,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
             for block in list_of_blocks:
                 center = block["center"]  # C'est un tuple (x, y)
                 distance_robot = (
-                    abs(center[0] - ROBOT_ARM_POSITION[0]) * measure[0],
-                    abs(center[1] - ROBOT_ARM_POSITION[1]) * measure[1],
+                    abs(center[0] - self.robot_arm_position[0]) * scale[0],
+                    abs(center[1] - self.robot_arm_position[1]) * scale[1],
                 )
                 self.logger.info(
                     f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away "
@@ -72,7 +70,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
 
         self.save_obstacle_position(blocks_pos)
 
-    def compute_distance(self, img: np.ndarray) -> tuple[float, float]:
+    def compute_scale(self, img: np.ndarray) -> tuple[float, float]:
         self.logger.info(f"[Compute distance] Enter function")
         mask = get_pink_mask(img)
         self.logger.info(f"[Mask] Mask generated")
@@ -81,9 +79,9 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         width = sizes[2]  # The longest side
         height = sizes[3]  # The shortest side
 
-        ratioW = MAZE_SIZE[0] / width
-        ratioH = MAZE_SIZE[1] / height
-        return (ratioW, ratioH)
+        scaleW = self.maze_size[0] / width
+        scaleH = self.maze_size[1] / height
+        return (scaleW, scaleH)
 
     async def req_image(self):
         req = CameraRequest()
