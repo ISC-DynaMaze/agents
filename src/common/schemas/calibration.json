@@ -54,6 +54,7 @@
                     "type": "number"
                 },
                 "measures": {
+                    "default": [],
                     "items": {
                         "$ref": "#/$defs/RotationMeasure"
                     },
@@ -61,17 +62,34 @@
                     "type": "array"
                 },
                 "tests": {
+                    "default": [],
                     "items": {
                         "$ref": "#/$defs/RotationTest"
                     },
                     "title": "Tests",
                     "type": "array"
+                },
+                "coefficients": {
+                    "default": [
+                        1,
+                        0
+                    ],
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "prefixItems": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "title": "Coefficients",
+                    "type": "array"
                 }
             },
             "required": [
-                "speed",
-                "measures",
-                "tests"
+                "speed"
             ],
             "title": "RotationCalibration",
             "type": "object"

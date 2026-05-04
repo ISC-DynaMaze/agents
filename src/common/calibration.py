@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import ClassVar, Optional
 
+import numpy as np
 from pydantic import BaseModel
 
 
@@ -19,8 +20,25 @@ class RotationTest(BaseModel):
 
 class RotationCalibration(BaseModel):
     speed: float
-    measures: list[RotationMeasure]
-    tests: list[RotationTest]
+    measures: list[RotationMeasure] = []
+    tests: list[RotationTest] = []
+    coefficients: tuple[float, float] = (1, 0)
+
+    def add_measure(self, measure: RotationMeasure):
+        self.measures.append(measure)
+
+    def add_test(self, test: RotationTest):
+        self.tests.append(test)
+
+    def compute_coefficients(self):
+        angles: list[float] = [m.angle for m in self.measures]
+        times: list[float] = [m.time for m in self.measures]
+        coefs = np.polyfit(angles, times, 1)
+        self.coefficients = (coefs[0], coefs[1])
+
+    def interpolate(self, angle: float) -> float:
+        poly = np.poly1d(self.coefficients)
+        return poly(angle)
 
 
 class IRSensorCalibration(BaseModel):
