@@ -35,5 +35,5 @@ class RemoveObstaclesBehaviour(OneShotBehaviour):
             blocks = json.load(f)
             for block in blocks.values():
                 for pos in block:
-                    list_obstacle.append({"pick" : pos, "place" : {"x": -0.149, "y": -0.315}})
+                    list_obstacle.append({"pick" : pos})
         return list_obstacle
