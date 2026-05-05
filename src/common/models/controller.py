@@ -60,8 +60,9 @@ class DirectionRequest(ControllerRequestBase):
 class ObstaclePositionRequest(ControllerRequestBase):
     type: Literal["ctrl-obs-pos-req"] = "ctrl-obs-pos-req"  # type: ignore
 
+
 class ObstacleRemoveRequest(ControllerRequestBase):
-    type: Literal["ctrl-obs-rem-req"] = "ctrl-obs-rem-req" # type: ignore
+    type: Literal["ctrl-obs-rem-req"] = "ctrl-obs-rem-req"  # type: ignore
 
 
 ControllerRequest = Annotated[

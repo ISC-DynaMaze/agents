@@ -67,7 +67,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_obstacles_pos(self):
         get_obstacles_pos = ObstacleRelativePositionBehaviour()
         self.agent.add_behaviour(get_obstacles_pos)
-    
+
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)

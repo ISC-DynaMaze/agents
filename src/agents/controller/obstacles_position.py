@@ -53,11 +53,15 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
             for block in list_of_blocks:
                 center = block["center"]  # That's a tuple (x, y)
                 distance_robot = (
-                    -(center[0] - self.robot_arm_position[0]) * scale[0], #Need to invert the x axis, the x axis of the picture and the x axis of the robot arm are not the same
+                    -(center[0] - self.robot_arm_position[0])
+                    * scale[
+                        0
+                    ],  # Need to invert the x axis, the x axis of the picture and the x axis of the robot arm are not the same
                     (center[1] - self.robot_arm_position[1]) * scale[1],
                 )
                 self.logger.info(
-                    f"Obstacle {color} founded at {center}, x: {distance_robot[0]}, y: {distance_robot[1]}")
+                    f"Obstacle {color} founded at {center}, x: {distance_robot[0]}, y: {distance_robot[1]}"
+                )
                 blocks_pos[color].append(
                     {"x": distance_robot[0], "y": distance_robot[1]}
                 )
