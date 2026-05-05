@@ -10,6 +10,7 @@ from agents.controller.find_path import FindPathBehaviour
 from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.obstacles_position import ObstacleRelativePositionBehaviour
 from agents.controller.photo import RequestPhotoBehaviour
+from agents.controller.remove_obstacles import RemoveObstaclesBehaviour
 from agents.controller.send_direction import SendDirectionBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
@@ -21,6 +22,7 @@ from common.models.controller import (
     ObstaclePositionRequest,
     ObstaclesRequest,
     ObstaclesResponse,
+    ObstacleRemoveRequest,
     PathRequest,
     PathResponse,
 )
@@ -66,6 +68,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         get_obstacles_pos = ObstacleRelativePositionBehaviour()
         self.agent.add_behaviour(get_obstacles_pos)
 
+    async def request_obstacles_rem(self):
+        rem_obstacle = RemoveObstaclesBehaviour()
+        self.agent.add_behaviour(rem_obstacle)
+
     async def on_request(self, sender_jid: str, req: Request):
         match req:
             case MazeRequest():
@@ -101,6 +107,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstaclePositionRequest():
                 await self.request_obstacles_pos()
+
+            case ObstacleRemoveRequest():
+                await self.request_obstacles_rem()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:

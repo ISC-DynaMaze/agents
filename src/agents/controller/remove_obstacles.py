@@ -1,0 +1,39 @@
+from __future__ import annotations
+import json
+
+import logging
+
+from spade.behaviour import OneShotBehaviour
+from spade.message import Message
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from agents.controller.agent import ControllerAgent
+
+class RemoveObstaclesBehaviour(OneShotBehaviour):
+    agent : ControllerAgent
+    
+    async def on_start(self):
+        self.to_agent = "ur-agent@isc-coordinator.lan"
+        self.logger = logging.getLogger("RemoveObstaclesRequest")
+            
+
+    async def run(self):
+        blocks = self.read_file()
+        for b in blocks:
+            msg = Message(to=self.to_agent)
+            msg.set_metadata("performative", "request")
+            msg.body = f"pick {json.dumps(b)}"
+            await self.send(msg)
+            self.logger.info(f"[Behaviour] Sent request {msg}")
+
+
+    def read_file(self) -> list[dict]:
+        list_obstacle = []
+        with open("rel_pos/obs_pos.json", "r") as f :
+            blocks = json.load(f)
+            for block in blocks.values():
+                for pos in block:
+                    list_obstacle.append({"pick" : pos})
+        return list_obstacle
