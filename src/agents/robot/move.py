@@ -11,6 +11,7 @@ from spade.behaviour import CyclicBehaviour
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.forward_behaviour import ForwardBehaviour
 from agents.robot.honk import HonkBehaviour
+from agents.robot.leds_manager import State
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
 from common.models.common import ReqResAdapter
@@ -57,6 +58,8 @@ class MoveBehaviour(CyclicBehaviour):
             self.logger.info(
                 "No surroundings in mental state yet, asking for controller's input"
             )
+            self.agent.leds.set_state(State.ASKING_CONTROLLER)
+            await asyncio.sleep(0.5)  # to see the leds
             await self.ask_controller()
             direction = await self.wait_for_direction(timeout=3)
             self.agent.info(
@@ -110,6 +113,7 @@ class MoveBehaviour(CyclicBehaviour):
         # go to given direction
         await self.turn_and_go(direction)
         self.logger.info(f"Moved {direction}")
+        self.agent.leds.set_state(State.IDLE)
 
         self.bot.stop()
         self.logger.info(f"State of surroundings list after run: {self.surroundings}")
@@ -153,6 +157,8 @@ class MoveBehaviour(CyclicBehaviour):
                 self.logger.info("Pause at border")
                 await asyncio.sleep(1)
 
+                self.agent.leds.set_state(State.MOVING)
+
                 # go forward to the middle of the cell
                 self.bot.setBothPWM(self.speed)
                 self.bot.forward()
@@ -169,6 +175,7 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(check_interval)
 
     async def turn_and_go(self, direction: str):
+        self.agent.leds.set_state(State.MOVING)
         if direction == "left":
             await self.turn(direction=Direction.Left)
             await asyncio.sleep(1)
@@ -224,6 +231,7 @@ class MoveBehaviour(CyclicBehaviour):
 
     # ask for surroundings
     async def ask_surroundings(self):
+        self.agent.leds.set_state(State.LOOKING_AROUND)
         req = LookAroundRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
@@ -250,6 +258,8 @@ class MoveBehaviour(CyclicBehaviour):
         if result is None:
             self.logger.error("No response received for surroundings request")
             return
+
+        self.agent.leds.show_surrounding(result)
 
         left, front, right = result.left, result.front, result.right
         self.logger.info(

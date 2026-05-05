@@ -7,6 +7,7 @@ from picamera2 import Picamera2
 from spade.agent import Agent
 
 from agents.robot.AlphaBot2 import AlphaBot2
+from agents.robot.leds_manager import LedsManager
 from agents.robot.look_around import LookAroundHandler
 from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
@@ -35,6 +36,7 @@ class WheelAdjustments:
 class RobotAgent(Agent, LogMixin):
     bot: AlphaBot2
     cam: Picamera2
+    leds: LedsManager
 
     def __init__(
         self,
@@ -60,6 +62,7 @@ class RobotAgent(Agent, LogMixin):
     async def setup(self):
         self.bot = AlphaBot2()
         self.cam = Picamera2()
+        self.leds = LedsManager(self.bot)
 
         config = self.cam.create_preview_configuration(
             main={"format": "RGB888", "size": self.camera_res}
@@ -78,7 +81,7 @@ class RobotAgent(Agent, LogMixin):
         self.bot.disableCameraPan()
         self.bot.disableCameraTilt()
         self.bot.stop()
-        self.bot.back_leds.setBrightness(0)
-        self.bot.back_leds.show()
+        self.leds.off()
+        self.leds.show()
         self.bot.stopBuzzer()
         return await super().stop()
