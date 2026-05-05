@@ -59,6 +59,7 @@ class MoveBehaviour(CyclicBehaviour):
                 "No surroundings in mental state yet, asking for controller's input"
             )
             self.agent.leds.set_state(State.ASKING_CONTROLLER)
+            await asyncio.sleep(0.5)  # to see the leds
             await self.ask_controller()
             direction = await self.wait_for_direction(timeout=3)
             self.agent.info(
