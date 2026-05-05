@@ -15,7 +15,7 @@ class RobotResponseBase(ResponseBase):
     pass
 
 
-class BottomIRCalibrationRequest(RobotRequestBase): 
+class BottomIRCalibrationRequest(RobotRequestBase):
     type: Literal["ir-calib-req"] = "ir-calib-req"  # type: ignore
 
 
@@ -99,6 +99,11 @@ class LookAroundResponse(RobotResponseBase):
     front: SideType = field(default=SideType.UNKNOWN)
 
 
+class PenaltyRequest(RequestBase):
+    type: Literal["penalty"] = "penalty"  # type: ignore
+    duration: float = 5
+
+
 RobotRequest = Annotated[
     Union[
         PanTiltRequest,
@@ -111,6 +116,7 @@ RobotRequest = Annotated[
         LookAroundRequest,
         BottomIRCalibrationRequest,
         DistanceCalibrationRequest,
+        PenaltyRequest,
     ],
     Field(discriminator="type"),
 ]

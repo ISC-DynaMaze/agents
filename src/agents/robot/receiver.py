@@ -18,6 +18,7 @@ from common.models.robot import (
     HonkRequest,
     LookAroundRequest,
     PanTiltRequest,
+    PenaltyRequest,
     RepositionRequest,
     RobotMoveRequest,
     TurningCalibrationRequest,
@@ -75,3 +76,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case DistanceCalibrationRequest():
                 self.agent.add_behaviour(DistanceCalibrationBehaviour(speed=20))
+
+            case PenaltyRequest(duration=duration):
+                self.agent.penalty.add(duration)

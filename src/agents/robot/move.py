@@ -42,14 +42,18 @@ class MoveBehaviour(CyclicBehaviour):
     @property
     def bot(self) -> AlphaBot2:
         return self.agent.bot
+    
+    async def pause_point(self):
+        await self.agent.penalty.pause_point()
 
     async def on_start(self):
         self.surroundings = []  # mental state of what the robot saw
         self.bot.setBothPWM(self.speed)
 
     async def run(self):
-        # reposition bot
+        await self.pause_point()
         await self.reposition_to_nearest_cardinal()
+        await self.pause_point()
 
         # get direction to go
         # if we dont have info about current surrounding, ask controller
@@ -68,6 +72,7 @@ class MoveBehaviour(CyclicBehaviour):
         else:
             # get current surroundings and check which directions are open
             current_surrounding = await self.get_current_surrounding()
+            await self.pause_point()
             if current_surrounding is None:
                 self.logger.warning("Current surrounding is None")
                 return
@@ -95,6 +100,8 @@ class MoveBehaviour(CyclicBehaviour):
                 self.logger.warning(f"Moved {direction} (lookaround)")
                 self.agent.info(f"Moved {direction} (lookaround)")
             else:
+                self.agent.leds.set_state(State.ASKING_CONTROLLER)
+                await asyncio.sleep(0.5)  # to see the leds
                 # get direction from controller
                 await self.ask_controller()
                 direction = await self.wait_for_direction(timeout=3)
@@ -112,6 +119,7 @@ class MoveBehaviour(CyclicBehaviour):
 
         # go to given direction
         await self.turn_and_go(direction)
+        await self.pause_point()
         self.logger.info(f"Moved {direction}")
         self.agent.leds.set_state(State.IDLE)
 
@@ -150,12 +158,14 @@ class MoveBehaviour(CyclicBehaviour):
                 self.bot.stop()
                 # scan for surroundings
                 await asyncio.sleep(1)  # wait a bit to stabilize
+                await self.pause_point()
                 await self.ask_surroundings()
                 # store next surrounding
                 await self.store_next_surrounding()  # add directly to mental state
 
                 self.logger.info("Pause at border")
                 await asyncio.sleep(1)
+                await self.pause_point()
 
                 self.agent.leds.set_state(State.MOVING)
 
@@ -187,6 +197,8 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(1)
             await self.turn(direction=Direction.Right)
             await asyncio.sleep(0.3)
+        
+        await self.pause_point()
 
         # go forward after turning or if direction is forward
         await self.go_forward_to_cell_center_using_sensors()
