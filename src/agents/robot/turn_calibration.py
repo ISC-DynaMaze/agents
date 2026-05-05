@@ -4,7 +4,6 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Optional
 
-import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
@@ -115,14 +114,6 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         delta = abs(((last_angle - current_angle + 180) % 360) - 180)
         self.logger.info(f"[Time] Time saved : {timing}")
         return RotationMeasure(angle=delta, time=timing), current_angle
-
-    def interpolate(self, delta_history: list[list[float]]) -> list[float]:
-        x = []
-        y = []
-        for c in delta_history:
-            x.append(c[0])
-            y.append(c[1])
-        return np.interp([45, 90, 135], x, y)  # type: ignore
 
     async def test_sequence(
         self, target: float, duration: float, direction: Direction
