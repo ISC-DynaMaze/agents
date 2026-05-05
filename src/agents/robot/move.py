@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from spade.behaviour import CyclicBehaviour
@@ -14,7 +12,6 @@ from agents.robot.honk import HonkBehaviour
 from agents.robot.leds_manager import State
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
-from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
 from common.models.robot import (
     Direction,
@@ -23,6 +20,7 @@ from common.models.robot import (
     SideType,
 )
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -121,30 +119,25 @@ class MoveBehaviour(CyclicBehaviour):
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
 
     async def go_forward_to_cell_center_using_sensors(self, threshold: int = 500):
-        # read time it took to go across one cell from calib file
-        calib_path = Path("calibration_data") / "distance_calibration_data.json"
-        cell_timing = None
-        try:
-            if calib_path.exists():
-                with open(calib_path, "r") as f:
-                    data = json.load(f)
-                    cell_timing = float(data.get("distance_time"))
-        except Exception as e:
-            self.logger.warning(f"Could not read calibration file: {e}")
+        cell_timing: float = 0.3
+        if self.agent.calib.distance is not None:
+            cell_timing = self.agent.calib.distance.half_cell
+        else:
+            self.logger.warning("Distance not calibrated, using fallback value")
 
         # slower speed so we can really stop at black line
         self.bot.setBothPWM(self.slow_speed)
         self.bot.forward()
-        last_5_frames = []
-        check_interval = 0.02
+        last_5_frames: list[int] = []
+        check_interval: float = 0.02
 
         while True:
             # read sensor values and check if we are on a black line
-            sensor_values = self.bot.bottom_ir.readCalibrated()
-            nb_studs = sum(1 for v in sensor_values if v > threshold)
+            sensor_values: list[int] = self.bot.bottom_ir.readCalibrated()
+            nb_studs: int = sum(1 for v in sensor_values if v > threshold)
             last_5_frames.append(nb_studs)
             last_5_frames = last_5_frames[-5:]
-            is_on_stud = sum(last_5_frames) > 0
+            is_on_stud: bool = sum(last_5_frames) > 0
 
             if is_on_stud:
                 self.bot.stop()
@@ -166,7 +159,7 @@ class MoveBehaviour(CyclicBehaviour):
                 self.agent.add_behaviour(forward_behaviour)
                 self.logger.info("Going to the center of the cell")
                 # go forward for remaining calculated time
-                await asyncio.sleep(cell_timing / 2 if cell_timing else 0.3)
+                await asyncio.sleep(cell_timing)
                 forward_behaviour.kill()
                 await forward_behaviour.join()
                 self.bot.stop()
@@ -189,7 +182,9 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.3)
 
         # go forward after turning or if direction is forward
-        await self.go_forward_to_cell_center_using_sensors()
+        await self.go_forward_to_cell_center_using_sensors(
+            threshold=self.agent.config.ir_threshold
+        )
 
     async def turn(self, direction: Direction):
         angle = self.turning_angle
@@ -214,20 +209,13 @@ class MoveBehaviour(CyclicBehaviour):
 
     # wait for controller's response
     async def wait_for_direction(self, timeout: float) -> Optional[str]:
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for direction response message"
-                    )
-                    return None
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, DirectionResponse)
-                return res.direction
-            except Exception as e:
-                self.logger.error(f"Error occurred while waiting for direction: {e}")
-                continue
+        res: Optional[DirectionResponse] = await wait_for_response(
+            self, DirectionResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for direction response message")
+            return None
+        return res.direction
 
     # ask for surroundings
     async def ask_surroundings(self):
@@ -235,25 +223,21 @@ class MoveBehaviour(CyclicBehaviour):
         req = LookAroundRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
-    async def wait_for_surroundings(self, timeout: float):
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for surroundings response message"
-                    )
-                    return None
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, LookAroundResponse)
-                return res
-            except Exception as e:
-                self.logger.error(f"Error occurred while waiting for surroundings: {e}")
-                continue
+    async def wait_for_surroundings(
+        self, timeout: float
+    ) -> Optional[LookAroundResponse]:
+        res: Optional[LookAroundResponse] = await wait_for_response(
+            self, LookAroundResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for surroundings response message")
+        return res
 
     async def store_next_surrounding(self):
         self.bot.stop()  # should already be stopped but just in case
-        result = await self.wait_for_surroundings(timeout=15)
+        result: Optional[LookAroundResponse] = await self.wait_for_surroundings(
+            timeout=15
+        )
 
         if result is None:
             self.logger.error("No response received for surroundings request")

@@ -201,6 +201,8 @@ def detect_maze_walls_from_image(image, kernel_len=25, min_length=30):
 # convenient function for behaviours
 def build_maze_from_image(
     image,
+    bot_id,
+    target_id,
     rows=3,
     cols=11,
     kernel_len=25,
@@ -225,8 +227,8 @@ def build_maze_from_image(
 
     ## detect aruco target and bot markers
     corners, ids, rejected = maze.detect_aruco_markers(image)
-    maze.set_target_cell(corners, ids)
-    maze.set_bot_cell(corners, ids)
+    maze.set_target_cell(corners, ids, target_id)
+    maze.set_bot_cell(corners, ids, bot_id)
 
     print(f"Maze target cell: {maze.target_cell}")
     print(f"Maze bot cell: {maze.bot_cell}")
@@ -258,6 +260,8 @@ def build_maze_from_image(
 
 def build_maze_from_path(
     image_path,
+    bot_id,
+    target_id,
     rows=3,
     cols=11,
     kernel_len=25,
@@ -270,6 +274,8 @@ def build_maze_from_path(
     image = get_image(image_path)
     return build_maze_from_image(
         image=image,
+        bot_id=bot_id,
+        target_id=target_id,
         rows=rows,
         cols=cols,
         kernel_len=kernel_len,

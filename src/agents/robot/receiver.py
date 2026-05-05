@@ -72,6 +72,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case BottomIRCalibrationRequest():
                 self.agent.bot.bottom_ir.calibrate()
+                self.agent.calib.bottom_ir = self.agent.bot.bottom_ir.get_calibration()
+                self.agent.calib.save()
 
             case DistanceCalibrationRequest():
                 self.agent.add_behaviour(DistanceCalibrationBehaviour(speed=20))

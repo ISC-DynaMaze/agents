@@ -4,6 +4,7 @@ from pathlib import Path
 from spade.agent import Agent
 
 from agents.controller.receiver import ReceiverBehaviour
+from common.config import Config
 from common.log_mixin import LogMixin
 
 
@@ -16,6 +17,8 @@ class ControllerAgent(Agent, LogMixin):
 
         self.set_logger_jid(self.logger_jid)
         self.set_sender(str(self.jid))
+
+        self.config: Config = Config.load()
 
         self.maze = None
         self.grid_img = None

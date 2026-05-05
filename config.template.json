@@ -1,0 +1,8 @@
+{
+    "bot_aruco_id": 13,
+    "bot_aruco_rot": 0,
+    "target_aruco_id": 2,
+    "arm_center_pos": [394, 328],
+    "maze_real_world_size_m": [2200, 695],
+    "ir_threshold": 500
+}

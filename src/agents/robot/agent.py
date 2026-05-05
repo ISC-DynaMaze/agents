@@ -11,6 +11,8 @@ from agents.robot.leds_manager import LedsManager
 from agents.robot.look_around import LookAroundHandler
 from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
+from common.calibration import Calibration
+from common.config import Config
 from common.log_mixin import LogMixin
 
 
@@ -55,14 +57,22 @@ class RobotAgent(Agent, LogMixin):
         self.set_logger_jid(self.logger_jid)
         self.set_sender(str(self.jid))
 
-        self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
+        self.config: Config = Config.load()
+        self.calib: Calibration = Calibration.load()
 
+        self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
         self.wheel_adjustements: WheelAdjustments = WheelAdjustments()
 
     async def setup(self):
         self.bot = AlphaBot2()
         self.cam = Picamera2()
         self.leds = LedsManager(self.bot)
+
+        if self.calib.bottom_ir is not None:
+            self.logger.info("Using existing IR calibration")
+            self.bot.bottom_ir.set_calibration(self.calib.bottom_ir)
+        else:
+            self.logger.info("IR sensors not calibrated")
 
         config = self.cam.create_preview_configuration(
             main={"format": "RGB888", "size": self.camera_res}

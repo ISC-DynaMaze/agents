@@ -45,8 +45,7 @@ class AngleRequest(ControllerRequestBase):
 
 class AngleResponse(ControllerResponseBase):
     type: Literal["ctrl-angle-res"] = "ctrl-angle-res"  # type: ignore
-    id: int
-    angle: float
+    angles: dict[int, float]
 
 
 class DirectionResponse(ControllerResponseBase):
