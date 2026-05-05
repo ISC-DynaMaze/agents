@@ -182,13 +182,9 @@ class MoveBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.5)
 
         elif direction == "back":
-            await self.turn(direction=Direction.Right)
-            await asyncio.sleep(1)
-            await self.turn(direction=Direction.Right)
-            await asyncio.sleep(1)
-            await self.turn(direction=Direction.Right)
-            await asyncio.sleep(1)
-            await self.turn(direction=Direction.Right)
+            for _ in range(4):
+                await self.turn(direction=Direction.Right)
+                await asyncio.sleep(1)
             await asyncio.sleep(0.5)
 
         # repositioning 
