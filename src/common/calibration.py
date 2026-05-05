@@ -40,6 +40,18 @@ class RotationCalibration(BaseModel):
         poly = np.poly1d(self.coefficients)
         return poly(angle)
 
+    def is_valid(self) -> bool:
+        if len(self.measures) == 0:
+            return False
+
+        a: float = self.measures[0].angle
+        for m in self.measures[1:]:
+            if m.angle < a:
+                return False
+            a = m.angle
+
+        return True
+
 
 class IRSensorCalibration(BaseModel):
     min: float

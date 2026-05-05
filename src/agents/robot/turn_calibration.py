@@ -68,10 +68,14 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
             )
             if res is None:
                 self.logger.error("Could not get current angle")
-                return
+                return None
             measure, current_angle = res
             calibration.add_measure(measure)
 
+        if not calibration.is_valid():
+            self.logger.error(f"Invalid calibration: {calibration.measures}")
+            self.agent.error(f"Invalid calibration: {calibration.measures}")
+            return None
         calibration.compute_coefficients()
 
         for angle in self.TEST_ANGLES:
