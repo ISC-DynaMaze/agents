@@ -25,11 +25,14 @@ class BaseReceiverBehaviour(CyclicBehaviour):
                     await self.on_request(sender_jid, req)  # type: ignore
                 case ResponseBase() as res:
                     await self.on_response(sender_jid, res)  # type: ignore
-        except ValidationError as e:
-            self.logger.warning(f"Ignoring malformed request: {e}")
+        except ValidationError:
+            await self.on_raw(sender_jid, msg)
 
     async def on_request(self, sender_jid: str, req: Request):
         pass
 
     async def on_response(self, sender_jid: str, res: Response):
+        pass
+
+    async def on_raw(self, sender_jid: str, msg: str):
         pass
