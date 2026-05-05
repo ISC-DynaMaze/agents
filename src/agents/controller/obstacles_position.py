@@ -45,24 +45,19 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         )
         scale = self.compute_scale(img)
         self.logger.info(f"[Measure] L :{scale[0]}, l : {scale[1]}")
-
-        self.logger.info(
-            "[Measure] Start calculating pixel distance and real distance on maze border"
-        )
         result = find_obstacles(img, self.agent.maze)
         blocks = result["blocks_by_color"]
         blocks_pos = dict()
         for color, list_of_blocks in blocks.items():
             blocks_pos[color] = []
             for block in list_of_blocks:
-                center = block["center"]  # C'est un tuple (x, y)
+                center = block["center"]  # That's a tuple (x, y)
                 distance_robot = (
-                    abs(center[0] - self.robot_arm_position[0]) * scale[0],
-                    abs(center[1] - self.robot_arm_position[1]) * scale[1],
+                    -(center[0] - self.robot_arm_position[0]) * scale[0], #Need to invert the x axis, the x axis of the picture and the x axis of the robot arm are not the same
+                    (center[1] - self.robot_arm_position[1]) * scale[1],
                 )
                 self.logger.info(
-                    f"Obstacle {color} founded at {center}, {distance_robot[0]} horizontally away and {distance_robot[1]} vertically away "
-                )
+                    f"Obstacle {color} founded at {center}, x: {distance_robot[0]}, y: {distance_robot[1]}")
                 blocks_pos[color].append(
                     {"x": distance_robot[0], "y": distance_robot[1]}
                 )
@@ -70,11 +65,8 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         self.save_obstacle_position(blocks_pos)
 
     def compute_scale(self, img: np.ndarray) -> tuple[float, float]:
-        self.logger.info("[Compute distance] Enter function")
         mask = get_pink_mask(img)
-        self.logger.info("[Mask] Mask generated")
         sizes = find_outer_rectangle(mask)
-        self.logger.info("[Measure] Length of sided returned")
         width = sizes[2]  # The longest side
         height = sizes[3]  # The shortest side
 
