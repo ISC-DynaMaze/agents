@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from spade.behaviour import CyclicBehaviour
@@ -14,7 +12,6 @@ from agents.robot.honk import HonkBehaviour
 from agents.robot.leds_manager import State
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
-from common.models.common import ReqResAdapter
 from common.models.controller import DirectionRequest, DirectionResponse
 from common.models.robot import (
     Direction,
@@ -23,6 +20,7 @@ from common.models.robot import (
     SideType,
 )
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -211,20 +209,13 @@ class MoveBehaviour(CyclicBehaviour):
 
     # wait for controller's response
     async def wait_for_direction(self, timeout: float) -> Optional[str]:
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for direction response message"
-                    )
-                    return None
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, DirectionResponse)
-                return res.direction
-            except Exception as e:
-                self.logger.error(f"Error occurred while waiting for direction: {e}")
-                continue
+        res: Optional[DirectionResponse] = await wait_for_response(
+            self, DirectionResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for direction response message")
+            return None
+        return res.direction
 
     # ask for surroundings
     async def ask_surroundings(self):
@@ -232,25 +223,21 @@ class MoveBehaviour(CyclicBehaviour):
         req = LookAroundRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
 
-    async def wait_for_surroundings(self, timeout: float):
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for surroundings response message"
-                    )
-                    return None
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, LookAroundResponse)
-                return res
-            except Exception as e:
-                self.logger.error(f"Error occurred while waiting for surroundings: {e}")
-                continue
+    async def wait_for_surroundings(
+        self, timeout: float
+    ) -> Optional[LookAroundResponse]:
+        res: Optional[LookAroundResponse] = await wait_for_response(
+            self, LookAroundResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for surroundings response message")
+        return res
 
     async def store_next_surrounding(self):
         self.bot.stop()  # should already be stopped but just in case
-        result = await self.wait_for_surroundings(timeout=15)
+        result: Optional[LookAroundResponse] = await self.wait_for_surroundings(
+            timeout=15
+        )
 
         if result is None:
             self.logger.error("No response received for surroundings request")

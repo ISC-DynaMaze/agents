@@ -8,10 +8,10 @@ from spade.behaviour import OneShotBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from common.calibration import RotationCalibration, RotationMeasure, RotationTest
-from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
 from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -49,15 +49,8 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         msg = AngleRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(msg, self.agent.controller_jid))
 
-        while True:
-            reply = await self.receive(timeout=5)
-            try:
-                assert reply is not None
-                res = ReqResAdapter.validate_json(reply.body)
-                assert isinstance(res, AngleResponse)
-                return res.angles.get(self.bot_id)
-            except:
-                continue
+        res: Optional[AngleResponse] = await wait_for_response(self, AngleResponse, 5)
+        return res.angles.get(self.bot_id) if res is not None else None
 
     async def calibrate_direction(
         self, direction: Direction

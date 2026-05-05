@@ -7,10 +7,10 @@ from spade.behaviour import OneShotBehaviour
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.turn import TurningBehaviour
-from common.models.common import ReqResAdapter
 from common.models.controller import AngleRequest, AngleResponse
 from common.models.robot import Direction
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
@@ -44,20 +44,13 @@ class RepositionBehaviour(OneShotBehaviour):
         await self.reposition_to_nearest_90_degree(current_angle)
 
     async def wait_angle_response(self, timeout) -> Optional[float]:
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error(
-                        "Timed out waiting for direction response message"
-                    )
-                    return None
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, AngleResponse)
-                return res.angles.get(self.bot_id)
-            except Exception as e:
-                self.logger.error(f"Error occurred while waiting for angle: {e}")
-                continue
+        res: Optional[AngleResponse] = await wait_for_response(
+            self, AngleResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for direction response message")
+            return None
+        return res.angles.get(self.bot_id)
 
     async def ask_angle(self):
         req = AngleRequest()

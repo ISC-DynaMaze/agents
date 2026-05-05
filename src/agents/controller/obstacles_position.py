@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from spade.behaviour import OneShotBehaviour
@@ -12,8 +12,8 @@ from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.maze.detect_obstacles import find_obstacles
 from agents.controller.maze.wall_detection import find_outer_rectangle, get_pink_mask
 from common.models.camera import CameraRequest, CameraResponse
-from common.models.common import ReqResAdapter
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -35,7 +35,10 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     async def run(self):
         self.rel_pos.mkdir(parents=True, exist_ok=True)
         await self.req_image()
-        img = await self.wait_for_new_image(timeout=10.0)
+        img: Optional[np.ndarray] = await self.wait_for_new_image(timeout=10.0)
+
+        if img is None:
+            return
 
         self.logger.info(
             "[Measure] Start calculating pixel distance and real distance on maze border"
@@ -83,23 +86,16 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         req = CameraRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.camera_jid)))
 
-    async def wait_for_new_image(self, timeout: float) -> np.ndarray:
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error("Timed out waiting for camera response message")
-                    continue
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, CameraResponse)
-                save_dir = Path("photos")
-                img, _ = await res.decode_img(save_dir)
-                return img
-            except Exception as e:
-                self.logger.error(
-                    f"Error occurred while waiting for camera response: {e}"
-                )
-                continue
+    async def wait_for_new_image(self, timeout: float) -> Optional[np.ndarray]:
+        res: Optional[CameraResponse] = await wait_for_response(
+            self, CameraResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for camera response message")
+            return None
+        save_dir = Path("photos")
+        img, _ = await res.decode_img(save_dir)
+        return img
 
     def save_obstacle_position(self, block_pos: dict):
         filename = self.rel_pos / "obs_pos.json"
