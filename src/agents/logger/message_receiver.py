@@ -41,3 +41,6 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
 
             case PathResponse():
                 await self.agent.send_ws({"type": "path", "path": res.path})
+
+    async def on_raw(self, sender_jid: str, msg: str):
+        await self.agent.send_ws({"type": "raw-msg", "msg": msg, "sender": sender_jid})

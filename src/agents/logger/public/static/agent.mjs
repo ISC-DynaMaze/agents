@@ -71,6 +71,21 @@ export class Agent {
         }))
     }
 
+    /**
+     * @param {String} message
+     * @param {String} recipient
+     */
+    sendRaw(message, recipient) {
+        if (!recipient.includes("@")) {
+            recipient = `${recipient}@${this.host}`
+        }
+        this.ws.send(JSON.stringify({
+            "type": "send-raw",
+            "msg": message,
+            "to": recipient
+        }))
+    }
+
     setHost(host) {
         this.host = host
     }
