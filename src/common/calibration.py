@@ -73,10 +73,10 @@ class DistanceCalibration(BaseModel):
 class Calibration(BaseModel):
     PATH: ClassVar[Path] = Path("calibration.json")
 
-    rotation_left: Optional[RotationCalibration]
-    rotation_right: Optional[RotationCalibration]
-    bottom_ir: Optional[IRCalibration]
-    distance: Optional[DistanceCalibration]
+    rotation_left: Optional[RotationCalibration] = None
+    rotation_right: Optional[RotationCalibration] = None
+    bottom_ir: Optional[IRCalibration] = None
+    distance: Optional[DistanceCalibration] = None
 
     @staticmethod
     def load() -> Calibration:
