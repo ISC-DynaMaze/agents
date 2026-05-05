@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-from rpi_ws281x import Adafruit_NeoPixel
+from rpi_ws281x import RGBW, Adafruit_NeoPixel
 
 from agents.robot.AlphaBot2 import AlphaBot2
 from common.models.robot import LookAroundResponse, SideType
@@ -11,6 +11,7 @@ class State(Enum):
     LOOKING_AROUND = auto()
     MOVING = auto()
     ASKING_CONTROLLER = auto()
+    PENALTY = auto()
 
 
 class LedsManager:
@@ -24,10 +25,12 @@ class LedsManager:
         State.LOOKING_AROUND: (100, 100, 200),
         State.MOVING: (255, 0, 255),
         State.ASKING_CONTROLLER: (255, 200, 100),
+        State.PENALTY: (0, 0, 255),
     }
 
     def __init__(self, bot: AlphaBot2):
         self.bot: AlphaBot2 = bot
+        self.stack: list[list[RGBW]] = []
 
     @property
     def leds(self) -> Adafruit_NeoPixel:
@@ -73,3 +76,16 @@ class LedsManager:
         color: tuple[int, int, int] = self.STATE_COLORS[state]
         self.set_all(color)
         self.show()
+
+    def stash(self):
+        leds: list[RGBW] = []
+        for i in range(self.leds.numPixels()):
+            leds.append(self.leds.getPixelColorRGB(i))
+        self.stack.append(leds)
+
+    def pop(self):
+        if len(self.stack) == 0:
+            return
+        leds: list[RGBW] = self.stack.pop()
+        for i, led in enumerate(leds):
+            self.leds.setPixelColor(i, led)

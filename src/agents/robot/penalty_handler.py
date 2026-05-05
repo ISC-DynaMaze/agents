@@ -4,6 +4,8 @@ import asyncio
 import time
 from typing import TYPE_CHECKING
 
+from agents.robot.leds_manager import State
+
 if TYPE_CHECKING:
     from agents.robot.agent import RobotAgent
 
@@ -30,12 +32,20 @@ class PenaltyHandler:
 
     async def pause_point(self):
         if self._duration != 0:
-            t0 = time.monotonic()
-            await self.sad_noises()
-            t1 = time.monotonic()
-            remaining: float = self._duration - (t1 - t0)
-            await asyncio.sleep(max(0, remaining))
+            await self.sit_out()
             self._duration = 0
+
+    async def sit_out(self):
+        self.agent.leds.stash()
+        self.agent.leds.set_state(State.PENALTY)
+
+        t0 = time.monotonic()
+        await self.sad_noises()
+        t1 = time.monotonic()
+        remaining: float = self._duration - (t1 - t0)
+        await asyncio.sleep(max(0, remaining))
+
+        self.agent.leds.pop()
 
     def add(self, duration: float):
         self._duration += duration
