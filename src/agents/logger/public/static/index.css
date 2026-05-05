@@ -314,6 +314,39 @@ button.button {
     }
 }
 
+#time-keeper {
+    grid-column: 1 / -1;
+
+    .content {
+        display: flex;
+        flex-direction: row;
+        gap: 1em;
+        
+        .actions {
+            display: grid;
+            grid-auto-flow: column;
+            grid-template-rows: auto auto;
+            gap: .5em;
+
+            button {
+                padding: 0.4em 0.6em;
+            }
+        }
+
+        .timer {
+            flex-grow: 1;
+            display: grid;
+            place-items: center;
+
+            .time {
+                display: flex;
+                font-size: 120%;
+                font-weight: bold;
+            }
+        }
+    }
+}
+
 label {
     font-style: italic;
 }
