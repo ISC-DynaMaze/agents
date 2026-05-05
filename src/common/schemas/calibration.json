@@ -145,7 +145,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "default": null
         },
         "rotation_right": {
             "anyOf": [
@@ -155,7 +156,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "default": null
         },
         "bottom_ir": {
             "anyOf": [
@@ -165,7 +167,8 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "default": null
         },
         "distance": {
             "anyOf": [
@@ -175,15 +178,10 @@
                 {
                     "type": "null"
                 }
-            ]
+            ],
+            "default": null
         }
     },
-    "required": [
-        "rotation_left",
-        "rotation_right",
-        "bottom_ir",
-        "distance"
-    ],
     "title": "Calibration",
     "type": "object"
 }

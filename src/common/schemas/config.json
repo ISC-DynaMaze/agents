@@ -38,7 +38,7 @@
             "type": "array"
         },
         "maze_real_world_size_m": {
-            "description": "Widht and height of the maze IRL, in meters",
+            "description": "Width and height of the maze IRL, in meters",
             "maxItems": 2,
             "minItems": 2,
             "prefixItems": [

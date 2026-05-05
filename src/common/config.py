@@ -23,7 +23,7 @@ class Config(BaseModel):
     """Position of the center of the robot arm base on the camera image, in pixels"""
 
     maze_real_world_size_m: tuple[float, float]
-    """Widht and height of the maze IRL, in meters"""
+    """Width and height of the maze IRL, in meters"""
 
     ir_threshold: int = 500
     """Threshold for IR detection with the bottom sensors"""
