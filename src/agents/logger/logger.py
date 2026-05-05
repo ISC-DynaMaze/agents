@@ -69,6 +69,8 @@ class LoggerAgent(Agent):
             case "send":
                 body: str = json.dumps(msg["msg"])
                 self.add_behaviour(SenderBehaviour(body, msg["to"]))
+            case "send-raw":
+                self.add_behaviour(SenderBehaviour(msg["msg"], msg["to"]))
 
     async def send_ws(self, msg: dict):
         for ws in self.ws_clients:
