@@ -306,10 +306,21 @@ button.button {
             height: 1em;
             border: solid black 1px;
 
-            &.top { border-top-color: red; }
-            &.right { border-right-color: red; }
-            &.bottom { border-bottom-color: red; }
-            &.left { border-left-color: red; }
+            &.top {
+                border-top-color: red;
+            }
+
+            &.right {
+                border-right-color: red;
+            }
+
+            &.bottom {
+                border-bottom-color: red;
+            }
+
+            &.left {
+                border-left-color: red;
+            }
         }
     }
 }
@@ -321,7 +332,7 @@ button.button {
         display: flex;
         flex-direction: row;
         gap: 1em;
-        
+
         .actions {
             display: grid;
             grid-auto-flow: column;
@@ -338,10 +349,40 @@ button.button {
             display: grid;
             place-items: center;
 
+            .countdown {
+                display: flex;
+                gap: 1em;
+                justify-content: center;
+
+                .light {
+                    width: 3em;
+                    height: 3em;
+                    border-radius: 50%;
+                    background-color: #c0c0c0;
+
+                    &[data-color="red"] {
+                        background-color: #a80f0f;
+                    }
+
+                    &[data-color="amber"] {
+                        background-color: #db981c;
+                    }
+
+                    &[data-color="green"] {
+                        background-color: #49be12;
+                    }
+                }
+            }
+
             .time {
                 display: flex;
-                font-size: 120%;
+                font-size: 200%;
                 font-weight: bold;
+            }
+
+            .countdown:not(.show),
+            .time:not(.show) {
+                display: none;
             }
         }
     }
