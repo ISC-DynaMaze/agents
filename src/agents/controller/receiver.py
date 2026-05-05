@@ -82,6 +82,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.agent.add_behaviour(rem_obstacle)
         
     async def request_cubes(self):
+        self.agent.requesting_cubes = True
         detect_cubes = DetectCubesBehaviour()
         self.agent.add_behaviour(detect_cubes)
 
@@ -161,10 +162,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 if len(self.agent.obstacles_requesters) != 0:
                     get_obstacles = ObstaclesBehaviour()
                     self.agent.add_behaviour(get_obstacles)
-
-                if len(self.agent.cubes_requesters) != 0:
-                    detect_cubes = DetectCubesBehaviour()
-                    self.agent.add_behaviour(detect_cubes)
 
             case PathResponse(path=path):
                 self.logger.info(f"Path: {path}")

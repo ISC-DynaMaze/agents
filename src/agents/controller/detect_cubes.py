@@ -78,7 +78,7 @@ class DetectCubesBehaviour(OneShotBehaviour):
         self,
         mask: np.ndarray,
         offset: tuple[int, int],
-        min_area: int = 6,
+        min_area: int = 20,
         max_area: int = 400,
     ):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -180,7 +180,7 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
             box_color = (0, 0, 255)
 
-            cv2.rectangle(highlighted, (x, y), (x + w, y + h), box_color, 2)
+            cv2.rectangle(highlighted, (x, y), (x + w, y + h), box_color, 1)
 
         return highlighted
 
