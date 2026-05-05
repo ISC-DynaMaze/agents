@@ -18,6 +18,7 @@ class Cell:
         self.col = col
         self.walls = walls if walls is not None else [False, False, False, False]
         self.obstacles = []
+        self.cubes = []
 
         # for astar search
         self.f = float("inf")  # Total cost of the cell (g + h)
@@ -33,6 +34,12 @@ class Cell:
 
     def add_obstacle(self, obstacle):
         self.obstacles.append(obstacle)
+
+    def add_cube(self, cube):
+        self.cubes.append(cube)
+
+    def clear_cubes(self):
+        self.cubes = []
 
     def clear_pathfinding_info(self):
         self.f = float("inf")
@@ -69,6 +76,8 @@ class Maze:
         # list of detected obstacles
         self.obstacles = []
 
+        self.cubes = []
+
     # check if a cell is within boundaries
     # should return true if valid cell
     def is_valid_cell(self, row, col):
@@ -86,6 +95,20 @@ class Maze:
         self.obstacles.append(obstacle)
         for cell in obstacle.cells:
             cell.add_obstacle(obstacle)
+
+    def clear_cubes(self):
+        self.cubes = []
+
+        for row in self.grid:
+            for cell in row:
+                cell.clear_cubes()
+
+    def add_cube(self, cube):
+        self.cubes.append(cube)
+        cell = self.get_cell(cube["row"], cube["col"])
+
+        if cell is not None:
+            cell.add_cube(cube)
 
     # check if a move is valid (no wall blocking and destination in bounds)
     # move: 0=DOWN, 1=UP, 2=RIGHT, 3=LEFT
