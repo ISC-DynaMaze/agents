@@ -42,8 +42,8 @@ class TRSensor(object):
             )
 
         mins, maxs = zip(*[(sensor.min, sensor.max) for sensor in calib.sensors])
-        self.calibratedMin = mins
-        self.calibratedMax = maxs
+        self.calibratedMin = list(mins)
+        self.calibratedMax = list(maxs)
 
     """
     Reads the sensor values into an array. There *MUST* be space

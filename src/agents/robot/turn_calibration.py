@@ -38,6 +38,7 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
 
     async def run(self):
         self.agent.calib.rotation_left = await self.calibrate_direction(Direction.Left)
+        self.agent.calib.save()
         self.agent.calib.rotation_right = await self.calibrate_direction(
             Direction.Right
         )
@@ -75,7 +76,6 @@ class AngleCalibrationBehaviour(OneShotBehaviour):
         if not calibration.is_valid():
             self.logger.error(f"Invalid calibration: {calibration.measures}")
             self.agent.error(f"Invalid calibration: {calibration.measures}")
-            return None
         calibration.compute_coefficients()
 
         for angle in self.TEST_ANGLES:
