@@ -6,6 +6,16 @@ const COUNTDOWN_MESSAGES = [
 
 const RESULT_TIME_REGEX = new RegExp(/^The race is finished! Your race time is: (.*)s$/)
 
+/**
+ * @enum {string}
+ */
+const Light = {
+    OFF: "off",
+    RED: "red",
+    AMBER: "amber",
+    GREEN: "green",
+}
+
 export class TimeKeeper {
     /**
      * @param {Agent} agent
@@ -18,6 +28,11 @@ export class TimeKeeper {
         this.startBtn = this.node.querySelector("#start-sess-btn")
         this.readyBtn = this.node.querySelector("#ready-btn")
         this.penaltyBtn = this.node.querySelector("#penalty-btn")
+
+        this.countdown = this.node.querySelector(".countdown")
+        this.light1 = this.countdown.querySelector(".light[data-idx='1']")
+        this.light2 = this.countdown.querySelector(".light[data-idx='2']")
+        this.light3 = this.countdown.querySelector(".light[data-idx='3']")
 
         this.timeDisplay = this.node.querySelector(".time")
         this.minSpan = this.timeDisplay.querySelector(".min")
@@ -48,6 +63,7 @@ export class TimeKeeper {
 
     markReady() {
         this.sendTimeKeeper("I'm ready to race !")
+        this.setCountdownLights(Light.RED, Light.RED, Light.RED)
     }
 
     triggerPenalty() {
@@ -77,12 +93,34 @@ export class TimeKeeper {
         }
     }
 
+    /**
+     * @param {Light} col1
+     * @param {Light} col2
+     * @param {Light} col3
+     */
+    setCountdownLights(col1, col2, col3) {
+        this.light1.dataset.color = col1
+        this.light2.dataset.color = col2
+        this.light3.dataset.color = col3
+    }
+
     setCountdown(msg) {
         if (msg === COUNTDOWN_MESSAGES[COUNTDOWN_MESSAGES.length - 1]) {
+            this.setCountdownLights(Light.GREEN, Light.GREEN, Light.GREEN)
             this.startTimer()
+            setTimeout(() => {
+                this.countdown.classList.remove("show")
+                this.timeDisplay.classList.add("show")
+            }, 1000)
             // TODO: Start the robot
+        } else {
+            const n = +msg
+            this.setCountdownLights(
+                Light.AMBER,
+                n <= 2 ? Light.AMBER : Light.OFF,
+                n <= 1 ? Light.AMBER : Light.OFF,
+            )
         }
-        // TODO: show countdown
     }
 
     startTimer() {
