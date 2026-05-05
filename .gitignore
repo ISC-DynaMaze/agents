@@ -10,6 +10,10 @@ images/
 mazes/
 photos/
 paths/
+obstacles/
+rel_pos/
+cubes/
 tmp/
 /config.json
 /calibration.json
+test_*/
