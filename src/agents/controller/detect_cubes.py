@@ -37,6 +37,8 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
         black_mask, cubes = self.detect_cubes(img)
 
+        self.store_cubes_in_maze(cubes)
+
         for cube in cubes:
             self.logger.info(f"Detected black cube: {cube}")
 
@@ -114,16 +116,60 @@ class DetectCubesBehaviour(OneShotBehaviour):
             if not self.agent.maze.is_valid_cell(row, col):
                 continue
 
+            # determine which side of the cell the cube is closest to
+            side = self.get_cube_side_in_cell(
+                center=(center_x, center_y),
+                row=row,
+                col=col,
+            )
+            self.agent.info(f"Cube at cell {row}, {col} is closest to side: {side}")
+
             cubes.append(
                 {
                     "bbox": (offset_x + x, offset_y + y, w, h),
+                    "center": (center_x, center_y),
                     "row": row,
                     "col": col,
+                    "side": side,
                     "area": area,
                 }
             )
 
         return cubes
+
+    def get_cube_side_in_cell(
+        self,
+        center: tuple[int, int],
+        row: int,
+        col: int,
+    ):
+        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+
+        cell_w = rect_w / self.agent.maze.n_cols
+        cell_h = rect_h / self.agent.maze.n_rows
+
+        cx, cy = center
+
+        cell_x1 = rect_x + col * cell_w
+        cell_y1 = rect_y + row * cell_h
+        cell_x2 = cell_x1 + cell_w
+        cell_y2 = cell_y1 + cell_h
+
+        distances = {
+            "up": abs(cy - cell_y1),
+            "right": abs(cell_x2 - cx),
+            "down": abs(cell_y2 - cy),
+            "left": abs(cx - cell_x1),
+        }
+
+        return min(distances, key=distances.get)
+
+    def store_cubes_in_maze(self, cubes: list[dict]):
+        # Store globally on maze.
+        self.agent.maze.clear_cubes()
+
+        for cube in cubes:
+            self.agent.maze.add_cube(cube)
 
     # draw function for visualization
     def draw_cubes(self, img: np.ndarray, cubes: list[dict]):
