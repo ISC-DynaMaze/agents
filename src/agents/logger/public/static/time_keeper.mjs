@@ -6,6 +6,8 @@ const COUNTDOWN_MESSAGES = [
 
 const RESULT_TIME_REGEX = new RegExp(/^The race is finished! Your race time is: (.*)s$/)
 
+const PENALTY_DURATION = 5000
+
 /**
  * @enum {string}
  */
@@ -69,8 +71,16 @@ export class TimeKeeper {
     triggerPenalty() {
         this.agent.send({
             type: "penalty",
-            duration: 5
+            duration: PENALTY_DURATION / 1000
         }, "alberto-robot")
+        this.timeDisplay.animate([
+            { color: "red" },
+            { color: "black" }
+        ], {
+            duration: PENALTY_DURATION,
+            easing: "linear",
+            fill: "both"
+        })
     }
 
     /**
