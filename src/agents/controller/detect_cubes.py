@@ -9,10 +9,9 @@ import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
-from agents.controller.agent import ControllerAgent
-from agents.controller.maze.grid import Maze
 from common.models.camera import CameraRequest, CameraResponse
 from common.models.common import ReqResAdapter
+from common.models.controller import CubesResponse
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:
@@ -32,24 +31,126 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
     async def run(self):
         self.cubes_dir.mkdir(parents=True, exist_ok=True)
+
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
 
-        mask = await self.get_mask(img)
+        black_mask, cubes = self.detect_cubes(img)
 
-        await self.save_img(mask, self.cubes_dir)
+        for cube in cubes:
+            self.logger.info(f"Detected black cube: {cube}")
 
-    async def get_mask(self, img, threshold=200):
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
+        highlighted = self.draw_cubes(img, cubes)
+
+        await self.save_img(black_mask, self.cubes_dir, prefix="cubes_mask")
+        await self.save_img(highlighted, self.cubes_dir, prefix="cubes_detected")
+
+        await self.send_cubes_response()
+
+    def detect_cubes(self, img: np.ndarray):
+        if self.agent.maze.rect is None:
+            raise ValueError("Maze must be built before detecting cubes")
+
+        # crop to maze area
+        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+        maze_img = img[rect_y : rect_y + rect_h, rect_x : rect_x + rect_w]
+
+        gray = cv2.cvtColor(maze_img, cv2.COLOR_BGR2GRAY)
+        black_mask = self.get_black_cube_mask(gray)
+
+        cubes = self.extract_cubes_from_mask(
+            mask=black_mask,
+            offset=(rect_x, rect_y),
+        )
+
+        full_black_mask = np.zeros(img.shape[:2], dtype=np.uint8)
+        full_black_mask[rect_y : rect_y + rect_h, rect_x : rect_x + rect_w] = black_mask
+
+        return full_black_mask, cubes
+
+    def get_black_cube_mask(self, gray: np.ndarray):
+        mask = cv2.inRange(gray, 0, 40)
         return mask
 
-    # request new image from camera agent
+    def extract_cubes_from_mask(
+        self,
+        mask: np.ndarray,
+        offset: tuple[int, int],
+        min_area: int = 6,
+        max_area: int = 400,
+    ):
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        offset_x, offset_y = offset
+        cubes = []
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area < min_area or area > max_area:
+                continue
+
+            x, y, w, h = cv2.boundingRect(contour)
+
+            if w < 3 or h < 3:
+                continue
+
+            if w > 30 or h > 30:
+                continue
+
+            aspect_ratio = w / float(h)
+            if aspect_ratio < 0.45 or aspect_ratio > 2.2:
+                continue
+
+            extent = area / float(w * h)
+            if extent < 0.30:
+                continue
+
+            center_x = offset_x + x + w // 2
+            center_y = offset_y + y + h // 2
+
+            # convert to cell coordinates
+            row, col = self.agent.maze.pixel_to_cell(center_x, center_y)
+            self.agent.info(f"Detected cube at cell : {row}, {col}")
+            if not self.agent.maze.is_valid_cell(row, col):
+                continue
+
+            cubes.append(
+                {
+                    "bbox": (offset_x + x, offset_y + y, w, h),
+                    "row": row,
+                    "col": col,
+                    "area": area,
+                }
+            )
+
+        return cubes
+
+    # draw function for visualization
+    def draw_cubes(self, img: np.ndarray, cubes: list[dict]):
+        highlighted = img.copy()
+
+        for cube in cubes:
+            x, y, w, h = cube["bbox"]
+
+            box_color = (0, 0, 255)
+
+            cv2.rectangle(highlighted, (x, y), (x + w, y + h), box_color, 2)
+
+        return highlighted
+
+    async def send_cubes_response(self):
+        res = CubesResponse()
+
+        for requester in self.agent.cubes_requesters:
+            self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
+
+        self.agent.cubes_requesters = []
+        self.agent.requesting_cubes = False
+
     async def req_image(self):
         req = CameraRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.camera_jid)))
 
-    # wait for a new image file to appear in photo_dir that is not in known_files, then read and return it
     async def wait_for_new_image(self, timeout: float) -> np.ndarray:
         while True:
             try:
@@ -60,7 +161,7 @@ class DetectCubesBehaviour(OneShotBehaviour):
                 res = ReqResAdapter.validate_json(msg.body)
                 assert isinstance(res, CameraResponse)
                 save_dir = Path("photos")
-                img, _ = await res.decode_img(res.img, save_dir)
+                img, _ = await res.decode_img(save_dir)
                 return img
             except Exception as e:
                 self.logger.error(
@@ -68,8 +169,8 @@ class DetectCubesBehaviour(OneShotBehaviour):
                 )
                 continue
 
-    async def save_img(self, img: np.ndarray, save_dir: Path) -> None:
+    async def save_img(self, img: np.ndarray, save_dir: Path, prefix: str) -> None:
         self.logger.info(f"Saving image to {save_dir}")
         timestamp = int(time.time())
-        img_path = save_dir / f"cubes_{timestamp}.jpg"
+        img_path = save_dir / f"{prefix}_{timestamp}.jpg"
         cv2.imwrite(str(img_path), img)
