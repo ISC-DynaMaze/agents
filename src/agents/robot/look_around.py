@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
+from common.config import CameraAnglesConfig
 from common.models.robot import LookAroundRequest, LookAroundResponse, SideType
 from common.request_handler import RequestHandler
 
@@ -34,23 +35,11 @@ class SideConfig:
 class LookAroundBehaviour(OneShotBehaviour):
     agent: RobotAgent
 
-    ANGLES: dict[SideStr, list[SideConfig]] = {
-        "left": [
-            SideConfig(30, 30, 135),
-            SideConfig(25, 35, 135),
-            SideConfig(20, 30, 135),
-        ],
-        "front": [
-            SideConfig(0, 20, 0),
-            SideConfig(0, 25, 0),
-            SideConfig(0, 30, 0),
-        ],
-        "right": [
-            SideConfig(-30, 30, 45),
-            SideConfig(-35, 35, 45),
-            SideConfig(-40, 30, 45),
-        ],
-    }
+    ANGLE_OFFSETS: list[tuple[int, int]] = [
+        (5, -5),
+        (0, 0),
+        (-5, -5),
+    ]
 
     RECT_ANGLE_THRESH: float = np.radians(20)
     IMG_DIR: Path = Path("images")
@@ -64,9 +53,30 @@ class LookAroundBehaviour(OneShotBehaviour):
         self.logger = logging.getLogger("LookAroundBehaviour")
         self.IMG_DIR.mkdir(parents=True, exist_ok=True)
 
+    def get_angle_configs(self) -> dict[SideStr, list[SideConfig]]:
+        config: CameraAnglesConfig = self.agent.config.camera_angles
+        bases: list[tuple[SideStr, tuple[float, float, float]]] = [
+            ("left", config.left),
+            ("front", config.front),
+            ("right", config.right),
+        ]
+        all_configs: dict[SideStr, list[SideConfig]] = {}
+        for name, (pan, tilt, expected_angle) in bases:
+            all_configs[name] = []
+            for pan_offset, tilt_offset in self.ANGLE_OFFSETS:
+                all_configs[name].append(
+                    SideConfig(
+                        pan=pan + pan_offset,
+                        tilt=tilt + tilt_offset,
+                        expected_angle=expected_angle,
+                    )
+                )
+        return all_configs
+
     async def run(self):
         sides: dict[SideStr, SideType] = {}
-        for side, configs in self.ANGLES.items():
+        all_configs: dict[SideStr, list[SideConfig]] = self.get_angle_configs()
+        for side, configs in all_configs.items():
             self.logger.info(f"Looking {side}")
             results: dict[SideType, int] = {}
             for i, config in enumerate(configs):
