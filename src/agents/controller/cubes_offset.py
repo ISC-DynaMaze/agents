@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Optional
 
 from spade.behaviour import OneShotBehaviour
 
-from common.models.controller import CubesOffsetResponse, CubesRequest
+from common.models.controller import CubesOffsetResponse, CubesRequest, CubesResponse
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -24,6 +26,7 @@ class CubesOffsetBehaviour(OneShotBehaviour):
 
     async def run(self):
         await self.refresh_cubes()
+        _ = await self.wait_for_cubes(timeout=10)
         offset = self.get_offset_for_next_cell()
         self.agent.info(f"Calculated cube offset: {offset}")
         await self.send_offset(offset)
@@ -123,6 +126,15 @@ class CubesOffsetBehaviour(OneShotBehaviour):
     async def refresh_cubes(self):
         req = CubesRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
+
+    async def wait_for_cubes(self, timeout: float) -> Optional[str]:
+        res: Optional[CubesResponse] = await wait_for_response(
+            self, CubesResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for cubes response message")
+            return None
+        return res  # type: ignore
 
     async def send_offset(self, offset: CubeOffset):
         res = CubesOffsetResponse(offset=offset)
