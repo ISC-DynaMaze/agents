@@ -6,6 +6,12 @@ from typing import ClassVar, Literal
 from pydantic import BaseModel, ConfigDict
 
 
+class CameraAnglesConfig(BaseModel):
+    left: tuple[float, float, float] = (25, 35, 135)
+    front: tuple[float, float, float] = (0, 25, 0)
+    right: tuple[float, float, float] = (-35, 35, 45)
+
+
 class Config(BaseModel):
     model_config = ConfigDict(use_attribute_docstrings=True)
     PATH: ClassVar[Path] = Path("config.json")
@@ -27,6 +33,9 @@ class Config(BaseModel):
 
     ir_threshold: int = 500
     """Threshold for IR detection with the bottom sensors"""
+
+    camera_angles: CameraAnglesConfig
+    """Base angles for the look around process"""
 
     @staticmethod
     def load() -> Config:

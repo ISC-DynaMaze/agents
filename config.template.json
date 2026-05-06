@@ -4,5 +4,10 @@
     "target_aruco_id": 2,
     "arm_center_pos": [394, 328],
     "maze_real_world_size_m": [2200, 695],
-    "ir_threshold": 500
+    "ir_threshold": 500,
+    "camera_angles": {
+        "left": [25, 35, 135],
+        "front": [0, 25, 0],
+        "right": [-35, 35, 45]
+    }
 }
