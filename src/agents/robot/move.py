@@ -56,7 +56,7 @@ class MoveBehaviour(CyclicBehaviour):
         # get direction to go
         # if we dont have info about current surrounding, ask controller
         # if lookaround gets anything other than exactly one open direction, ask controller
-        if len(self.surroundings) < 2:
+        if len(self.surroundings) < 1:
             self.logger.info(
                 "No surroundings in mental state yet, asking for controller's input"
             )
@@ -273,15 +273,15 @@ class MoveBehaviour(CyclicBehaviour):
 
     # returns surroundings of bot's current cell
     async def get_current_surrounding(self):
-        if len(self.surroundings) < 2:
+        if len(self.surroundings) < 1:
             self.logger.warning(
                 "No current current surrounding in mental state"
             )  # should never happen when calling this function
             return None
-        current = self.surroundings[-2]
+        current = self.surroundings[-1]
         self.logger.debug(
             f"LOOKAROUND --- Current surroundings returned: left={current.left}, front={current.front}, right={current.right}"
-        )  # -2 because we already stored the surroundings of the next cell in mental state when we entered it
+        )
 
         self.agent.debug(
             f"Current surroundings: left={current.left}, front={current.front}, right={current.right}"
