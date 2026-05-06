@@ -112,7 +112,6 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
             # convert to cell coordinates
             row, col = self.agent.maze.pixel_to_cell(center_x, center_y)
-            self.agent.info(f"Detected cube at cell : {row}, {col}")
             if not self.agent.maze.is_valid_cell(row, col):
                 continue
 
@@ -126,9 +125,6 @@ class DetectCubesBehaviour(OneShotBehaviour):
                 center=(center_x, center_y),
                 row=row,
                 col=col,
-            )
-            self.agent.info(
-                f"Cube at cell {row}, {col} is in quadrant: {quadrant}"
             )
 
             cubes.append(
@@ -200,6 +196,9 @@ class DetectCubesBehaviour(OneShotBehaviour):
         self.agent.maze.clear_cubes()
 
         for cube in cubes:
+            self.logger.info(
+                f"Storing cube in cell {cube['row']}, {cube['col']} in quadrant {cube['quadrant']}"
+            )
             self.agent.maze.add_cube(cube)
 
     # draw function for visualization
@@ -214,13 +213,13 @@ class DetectCubesBehaviour(OneShotBehaviour):
             col = cube["col"]
 
             if quadrant == "top_left":
-                box_color = (255, 0, 255) # magenta
+                box_color = (255, 0, 255)  # magenta
             elif quadrant == "top_right":
-                box_color = (0, 255, 255) # yellow
+                box_color = (0, 255, 255)  # yellow
             elif quadrant == "bottom_left":
-                box_color = (255, 255, 0) # cyan
+                box_color = (255, 255, 0)  # cyan
             else:
-                box_color = (0, 0, 255) # red
+                box_color = (0, 0, 255)  # red
 
             cv2.rectangle(highlighted, (x, y), (x + w, y + h), box_color, 1)
             cv2.circle(highlighted, (center_x, center_y), 2, box_color, -1)
