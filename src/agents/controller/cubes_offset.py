@@ -6,7 +6,13 @@ from typing import TYPE_CHECKING, Literal, Optional
 
 from spade.behaviour import OneShotBehaviour
 
-from common.models.controller import CubesOffsetResponse, CubesRequest, CubesResponse
+from common.models.controller import (
+    CubesOffsetResponse,
+    CubesRequest,
+    CubesResponse,
+    PathRequest,
+    PathResponse,
+)
 from common.sender import BaseSenderBehaviour
 from common.utils import wait_for_response
 
@@ -26,7 +32,12 @@ class CubesOffsetBehaviour(OneShotBehaviour):
 
     async def run(self):
         await self.refresh_cubes()
-        _ = await self.wait_for_cubes(timeout=10)
+        _ = await self.wait_for_cubes(timeout=5)
+
+        # recompute path in case robot moved with lookaround behaviour and not the controller
+        await self.req_path()
+        _ = await self.wait_for_path(timeout=5)
+
         offset = self.get_offset_for_next_cell()
         self.agent.info(f"Calculated cube offset: {offset}")
         await self.send_offset(offset)
@@ -144,3 +155,16 @@ class CubesOffsetBehaviour(OneShotBehaviour):
 
         self.agent.cubes_offset_requesters = []
         self.agent.requesting_cubes_offset = False
+
+    async def req_path(self):
+        req = PathRequest()
+        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
+
+    async def wait_for_path(self, timeout: float) -> Optional[list[tuple[int, int]]]:
+        res: Optional[PathResponse] = await wait_for_response(
+            self, PathResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for path response message")
+            return res
+        return res.path
