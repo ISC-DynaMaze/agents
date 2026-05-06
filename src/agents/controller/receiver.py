@@ -133,6 +133,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def on_response(self, sender_jid: str, res: Response):
         match res:
             case CameraResponse():
+                await self.agent.camera.on_receive(res)
                 self.agent.requesting_image = False
 
                 img, filepath = await res.decode_img(self.save_dir)

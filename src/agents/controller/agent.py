@@ -3,6 +3,7 @@ from pathlib import Path
 
 from spade.agent import Agent
 
+from agents.controller.camera_manager import CameraManager
 from agents.controller.receiver import ReceiverBehaviour
 from common.config import Config
 from common.log_mixin import LogMixin
@@ -23,6 +24,8 @@ class ControllerAgent(Agent, LogMixin):
         self.maze = None
         self.grid_img = None
         self.current_path = None
+
+        self.camera: CameraManager = CameraManager(self, self.camera_jid)
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
