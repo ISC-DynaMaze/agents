@@ -9,7 +9,6 @@ import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.maze.grid import Maze
-from common.models.camera import CameraRequest, CameraResponse
 from common.models.controller import DirectionResponse, PathRequest, PathResponse
 from common.sender import BaseSenderBehaviour
 from common.utils import wait_for_response
@@ -41,8 +40,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             return
 
         # request new image
-        await self.req_image()
-        img: Optional[np.ndarray] = await self.wait_for_new_image(timeout=10.0)
+        img: Optional[np.ndarray] = await self.agent.camera.get_img()
         if img is None:
             self.logger.error("Timed out waiting for camera image")
             return
@@ -117,27 +115,10 @@ class SendDirectionBehaviour(OneShotBehaviour):
         self.agent.direction_requesters = []
         self.agent.requesting_direction = False
 
-    # request new image from camera agent
-    async def req_image(self):
-        req = CameraRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.camera_jid)))
-
     # request new path from controller receiver (which will trigger a new path computation with updated bot cell)
     async def req_path(self):
         req = PathRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
-
-    # wait for a new image file to appear in photo_dir that is not in known_files, then read and return it
-    async def wait_for_new_image(self, timeout: float) -> Optional[np.ndarray]:
-        res: Optional[CameraResponse] = await wait_for_response(
-            self, CameraResponse, timeout
-        )
-        if res is None:
-            self.logger.error("Timed out waiting for camera response message")
-            return None
-        save_dir = Path("photos")
-        img, _ = await res.decode_img(save_dir)
-        return img
 
     # Wait for a new path response that is different from agent.current_path
     async def wait_for_path(self, timeout: float) -> Optional[list[tuple[int, int]]]:
