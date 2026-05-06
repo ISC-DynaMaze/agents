@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class PenaltyHandler:
     BPM: float = 180
-    SAD_NOISES_RHYTHM: list[float] = [0.5, 1, 0.5, 2 / 3, 2 / 3, 2 / 3, 1, 1, 1]
+    SAD_NOISES_RHYTHM: list[float] = [0.25, 0.25, 0.25, 1, 1, 1, 0.25, 0.25, 0.25]
 
     def __init__(self, agent: RobotAgent) -> None:
         self.agent: RobotAgent = agent
