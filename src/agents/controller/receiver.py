@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from agents.controller.bot_detection import BotDetectionBehaviour
 from agents.controller.build_maze import BuildMazeBehaviour
+from agents.controller.cubes_offset import CubesOffsetBehaviour
 from agents.controller.detect_cubes import DetectCubesBehaviour
 from agents.controller.find_path import FindPathBehaviour
 from agents.controller.get_obstacles import ObstaclesBehaviour
@@ -17,14 +18,15 @@ from common.models.camera import CameraResponse
 from common.models.common import Request, Response
 from common.models.controller import (
     AngleRequest,
+    CubesOffsetRequest,
     CubesRequest,
     DirectionRequest,
     DirectionResponse,
     MazeRequest,
     ObstaclePositionRequest,
+    ObstacleRemoveRequest,
     ObstaclesRequest,
     ObstaclesResponse,
-    ObstacleRemoveRequest,
     PathRequest,
     PathResponse,
 )
@@ -80,11 +82,16 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
-        
+
     async def request_cubes(self):
         self.agent.requesting_cubes = True
         detect_cubes = DetectCubesBehaviour()
         self.agent.add_behaviour(detect_cubes)
+
+    async def request_cubes_offset(self):
+        self.agent.requesting_cubes_offset = True
+        cubes_offset = CubesOffsetBehaviour()
+        self.agent.add_behaviour(cubes_offset)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
@@ -124,11 +131,16 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstacleRemoveRequest():
                 await self.request_obstacles_rem()
-                
+
             case CubesRequest():
                 self.agent.cubes_requesters.append(sender_jid)
                 if not self.agent.requesting_cubes:
                     await self.request_cubes()
+
+            case CubesOffsetRequest():
+                self.agent.cubes_offset_requesters.append(sender_jid)
+                if not self.agent.requesting_cubes_offset:
+                    await self.request_cubes_offset()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:

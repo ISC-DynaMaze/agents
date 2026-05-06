@@ -30,10 +30,12 @@ class ControllerAgent(Agent, LogMixin):
         self.direction_requesters: list[str] = []
         self.obstacles_requesters: list[str] = []
         self.cubes_requesters: list[str] = []
+        self.cubes_offset_requesters: list[str] = []
         self.requesting_image: bool = False
         self.requesting_direction: bool = False
         self.requesting_obstacles: bool = False
         self.requesting_cubes: bool = False
+        self.requesting_cubes_offset: bool = False
 
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(

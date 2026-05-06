@@ -65,6 +65,15 @@ class DirectionRequest(ControllerRequestBase):
     type: Literal["ctrl-direction-req"] = "ctrl-direction-req"  # type: ignore
 
 
+class CubesOffsetRequest(ControllerRequestBase):
+    type: Literal["ctrl-cubes-offset-req"] = "ctrl-cubes-offset-req"  # type: ignore
+
+
+class CubesOffsetResponse(ControllerResponseBase):
+    type: Literal["ctrl-cubes-offset-res"] = "ctrl-cubes-offset-res"  # type: ignore
+    offset: Literal["none", "left", "right"]
+
+
 class ObstaclePositionRequest(ControllerRequestBase):
     type: Literal["ctrl-obs-pos-req"] = "ctrl-obs-pos-req"  # type: ignore
 
@@ -83,6 +92,7 @@ ControllerRequest = Annotated[
         ObstaclePositionRequest,
         ObstacleRemoveRequest,
         CubesRequest,
+        CubesOffsetRequest,
     ],
     Field(discriminator="type"),
 ]
@@ -94,6 +104,7 @@ ControllerResponse = Annotated[
         DirectionResponse,
         ObstaclesResponse,
         CubesResponse,
+        CubesOffsetResponse,
     ],
     Field(discriminator="type"),
 ]
