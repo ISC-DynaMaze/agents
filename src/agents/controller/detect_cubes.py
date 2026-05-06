@@ -78,8 +78,8 @@ class DetectCubesBehaviour(OneShotBehaviour):
         self,
         mask: np.ndarray,
         offset: tuple[int, int],
-        min_area: int = 20,
-        max_area: int = 400,
+        min_area: int = 10,
+        max_area: int = 600,
     ):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -116,13 +116,20 @@ class DetectCubesBehaviour(OneShotBehaviour):
             if not self.agent.maze.is_valid_cell(row, col):
                 continue
 
-            # determine which side of the cell the cube is closest to
+            # determine where the cube sits inside the cell
             side = self.get_cube_side_in_cell(
                 center=(center_x, center_y),
                 row=row,
                 col=col,
             )
-            self.agent.info(f"Cube at cell {row}, {col} is closest to side: {side}")
+            quadrant = self.get_cube_quadrant_in_cell(
+                center=(center_x, center_y),
+                row=row,
+                col=col,
+            )
+            self.agent.info(
+                f"Cube at cell {row}, {col} is in quadrant: {quadrant}"
+            )
 
             cubes.append(
                 {
@@ -131,6 +138,7 @@ class DetectCubesBehaviour(OneShotBehaviour):
                     "row": row,
                     "col": col,
                     "side": side,
+                    "quadrant": quadrant,
                     "area": area,
                 }
             )
@@ -164,6 +172,29 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
         return min(distances, key=distances.get)
 
+    def get_cube_quadrant_in_cell(
+        self,
+        center: tuple[int, int],
+        row: int,
+        col: int,
+    ):
+        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+
+        cell_w = rect_w / self.agent.maze.n_cols
+        cell_h = rect_h / self.agent.maze.n_rows
+
+        cx, cy = center
+
+        cell_x1 = rect_x + col * cell_w
+        cell_y1 = rect_y + row * cell_h
+        cell_mid_x = cell_x1 + cell_w / 2
+        cell_mid_y = cell_y1 + cell_h / 2
+
+        vertical = "top" if cy < cell_mid_y else "bottom"
+        horizontal = "left" if cx < cell_mid_x else "right"
+
+        return f"{vertical}_{horizontal}"
+
     def store_cubes_in_maze(self, cubes: list[dict]):
         # Store globally on maze.
         self.agent.maze.clear_cubes()
@@ -176,13 +207,57 @@ class DetectCubesBehaviour(OneShotBehaviour):
         highlighted = img.copy()
 
         for cube in cubes:
+            quadrant = cube["quadrant"]
             x, y, w, h = cube["bbox"]
+            center_x, center_y = cube["center"]
+            row = cube["row"]
+            col = cube["col"]
 
-            box_color = (0, 0, 255)
+            if quadrant == "top_left":
+                box_color = (255, 0, 255) # magenta
+            elif quadrant == "top_right":
+                box_color = (0, 255, 255) # yellow
+            elif quadrant == "bottom_left":
+                box_color = (255, 255, 0) # cyan
+            else:
+                box_color = (0, 0, 255) # red
 
             cv2.rectangle(highlighted, (x, y), (x + w, y + h), box_color, 1)
+            cv2.circle(highlighted, (center_x, center_y), 2, box_color, -1)
+
+            cell_x1, cell_y1, cell_x2, cell_y2 = self.get_cell_bounds(row, col)
+            cell_mid_x = int((cell_x1 + cell_x2) / 2)
+            cell_mid_y = int((cell_y1 + cell_y2) / 2)
+
+            cv2.line(
+                highlighted,
+                (cell_mid_x, int(cell_y1)),
+                (cell_mid_x, int(cell_y2)),
+                (255, 0, 0),
+                1,
+            )
+            cv2.line(
+                highlighted,
+                (int(cell_x1), cell_mid_y),
+                (int(cell_x2), cell_mid_y),
+                (255, 0, 0),
+                1,
+            )
 
         return highlighted
+
+    def get_cell_bounds(self, row: int, col: int):
+        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+
+        cell_w = rect_w / self.agent.maze.n_cols
+        cell_h = rect_h / self.agent.maze.n_rows
+
+        cell_x1 = rect_x + col * cell_w
+        cell_y1 = rect_y + row * cell_h
+        cell_x2 = cell_x1 + cell_w
+        cell_y2 = cell_y1 + cell_h
+
+        return cell_x1, cell_y1, cell_x2, cell_y2
 
     async def send_cubes_response(self):
         res = CubesResponse()
