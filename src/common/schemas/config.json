@@ -1,4 +1,78 @@
 {
+    "$defs": {
+        "CameraAnglesConfig": {
+            "properties": {
+                "left": {
+                    "default": [
+                        25,
+                        35,
+                        135
+                    ],
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "prefixItems": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "title": "Left",
+                    "type": "array"
+                },
+                "front": {
+                    "default": [
+                        0,
+                        25,
+                        0
+                    ],
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "prefixItems": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "title": "Front",
+                    "type": "array"
+                },
+                "right": {
+                    "default": [
+                        -35,
+                        35,
+                        45
+                    ],
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "prefixItems": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "number"
+                        }
+                    ],
+                    "title": "Right",
+                    "type": "array"
+                }
+            },
+            "title": "CameraAnglesConfig",
+            "type": "object"
+        }
+    },
     "properties": {
         "bot_aruco_id": {
             "description": "ArUco marker id of the robot",
@@ -57,13 +131,18 @@
             "description": "Threshold for IR detection with the bottom sensors",
             "title": "Ir Threshold",
             "type": "integer"
+        },
+        "camera_angles": {
+            "$ref": "#/$defs/CameraAnglesConfig",
+            "description": "Base angles for the look around process"
         }
     },
     "required": [
         "bot_aruco_id",
         "target_aruco_id",
         "arm_center_pos",
-        "maze_real_world_size_m"
+        "maze_real_world_size_m",
+        "camera_angles"
     ],
     "title": "Config",
     "type": "object"
