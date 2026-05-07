@@ -118,7 +118,7 @@ def a_star_search(maze, src, dest):
         return None
 
 
-def draw_path(maze_img, path, cell_size=140, margin=40, color=(0, 0, 0), thickness=3):
+def draw_path(maze_img, path, maze, cell_size=140, margin=40, color=(0, 0, 0), thickness=3):
     """Draw the path on the maze image.
 
     Args:
@@ -133,6 +133,14 @@ def draw_path(maze_img, path, cell_size=140, margin=40, color=(0, 0, 0), thickne
         return maze_img
 
     img = maze_img.copy()
+
+    s = cell_size * 2 // 5
+    for row in range(maze.n_rows):
+        for col in range(maze.n_cols):
+            if maze.grid[row][col].occupied:
+                px = margin + col * cell_size + cell_size // 2
+                py = margin + row * cell_size + cell_size // 2
+                cv.rectangle(img, (px - s, py - s), (px + s, py + s), (0, 100, 255), 2)
 
     # Draw circles at each cell center
     for row, col in path:
@@ -200,7 +208,7 @@ def test():
     maze_img = result["grid_img"]
     if path:
         maze_img_with_path = draw_path(
-            maze_img, path, cell_size=140, margin=40, color=(0, 0, 0)
+            maze_img, path, maze, cell_size=140, margin=40, color=(0, 0, 0)
         )
     else:
         maze_img_with_path = maze_img
