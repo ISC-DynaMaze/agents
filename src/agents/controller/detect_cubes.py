@@ -3,16 +3,14 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
-from common.models.camera import CameraRequest, CameraResponse
 from common.models.controller import CubesResponse
 from common.sender import BaseSenderBehaviour
-from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -32,8 +30,7 @@ class DetectCubesBehaviour(OneShotBehaviour):
     async def run(self):
         self.cubes_dir.mkdir(parents=True, exist_ok=True)
 
-        await self.req_image()
-        img = await self.wait_for_new_image(timeout=10.0)
+        img = await self.agent.camera.get_img()
         if img is None:
             return
 
@@ -268,21 +265,6 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
         self.agent.cubes_requesters = []
         self.agent.requesting_cubes = False
-
-    async def req_image(self):
-        req = CameraRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.camera_jid)))
-
-    async def wait_for_new_image(self, timeout: float) -> Optional[np.ndarray]:
-        res: Optional[CameraResponse] = await wait_for_response(
-            self, CameraResponse, timeout
-        )
-        if res is None:
-            self.logger.error("Timed out waiting for camera response message")
-            return None
-        save_dir = Path("photos")
-        img, _ = await res.decode_img(save_dir)
-        return img
 
     async def save_img(self, img: np.ndarray, save_dir: Path, prefix: str) -> None:
         self.logger.info(f"Saving image to {save_dir}")
