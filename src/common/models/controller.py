@@ -64,6 +64,9 @@ class ObstaclePositionRequest(ControllerRequestBase):
 class ObstacleRemoveRequest(ControllerRequestBase):
     type: Literal["ctrl-obs-rem-req"] = "ctrl-obs-rem-req"  # type: ignore
 
+class FindAvoidingCellRequest(ControllerRequestBase):
+    type: Literal["ctrl-avoid-cell-req"] = "ctrl-avoid-cell-req" #type: ignore
+
 
 ControllerRequest = Annotated[
     Union[
@@ -74,6 +77,7 @@ ControllerRequest = Annotated[
         ObstaclesRequest,
         ObstaclePositionRequest,
         ObstacleRemoveRequest,
+        FindAvoidingCellRequest,
     ],
     Field(discriminator="type"),
 ]

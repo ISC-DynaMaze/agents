@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
 
-class FindAvoidingCell(OneShotBehaviour):
+class FindAvoidingCellBehaviour(OneShotBehaviour):
     agent: ControllerAgent
     def __init__(self, maze: Maze):
         super().__init__()

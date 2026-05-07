@@ -12,6 +12,7 @@ from agents.controller.obstacles_position import ObstacleRelativePositionBehavio
 from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.remove_obstacles import RemoveObstaclesBehaviour
 from agents.controller.send_direction import SendDirectionBehaviour
+from agents.controller.find_avoiding_cell import FindAvoidingCellBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
 from common.models.controller import (
@@ -25,6 +26,7 @@ from common.models.controller import (
     ObstacleRemoveRequest,
     PathRequest,
     PathResponse,
+    FindAvoidingCellRequest,
 )
 from common.receiver import BaseReceiverBehaviour
 
@@ -71,6 +73,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
+    
+    async def request_avoid_cell(self):
+        avoid_cell = FindAvoidingCellBehaviour(self.agent.maze)
+        self.agent.add_behaviour(avoid_cell)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
@@ -110,6 +116,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstacleRemoveRequest():
                 await self.request_obstacles_rem()
+            
+            case FindAvoidingCellRequest():
+                await self.request_avoid_cell()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
