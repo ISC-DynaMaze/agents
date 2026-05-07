@@ -203,6 +203,7 @@ def build_maze_from_image(
     image,
     bot_id,
     target_id,
+    opponent_target_id,
     rows=3,
     cols=11,
     kernel_len=25,
@@ -227,7 +228,7 @@ def build_maze_from_image(
 
     ## detect aruco target and bot markers
     corners, ids, rejected = maze.detect_aruco_markers(image)
-    maze.set_target_cell(corners, ids, target_id)
+    maze.set_target_cell(corners, ids, target_id, opponent_target_id)
     maze.set_bot_cell(corners, ids, bot_id)
 
     print(f"Maze target cell: {maze.target_cell}")
@@ -262,6 +263,7 @@ def build_maze_from_path(
     image_path,
     bot_id,
     target_id,
+    opponent_target_id,
     rows=3,
     cols=11,
     kernel_len=25,
@@ -276,6 +278,7 @@ def build_maze_from_path(
         image=image,
         bot_id=bot_id,
         target_id=target_id,
+        opponent_target_id=opponent_target_id,
         rows=rows,
         cols=cols,
         kernel_len=kernel_len,

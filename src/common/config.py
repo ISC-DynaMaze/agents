@@ -25,6 +25,9 @@ class Config(BaseModel):
     target_aruco_id: int
     """ArUco marker id of the target"""
 
+    opponent_target_aruco_id: int
+    """ArUco marker id of the opponent target"""
+
     arm_center_pos: tuple[int, int]
     """Position of the center of the robot arm base on the camera image, in pixels"""
 

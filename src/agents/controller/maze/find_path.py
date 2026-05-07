@@ -182,6 +182,7 @@ def test():
         image_path=image_path,
         bot_id=13,
         target_id=2,
+        opponent_target_id=1,
         rows=3,
         cols=11,
         kernel_len=25,

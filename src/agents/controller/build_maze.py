@@ -32,6 +32,7 @@ class BuildMazeBehaviour(OneShotBehaviour):
                 image_path=self.photo_path,
                 bot_id=self.agent.config.bot_aruco_id,
                 target_id=self.agent.config.target_aruco_id,
+                opponent_target_id=self.agent.config.opponent_target_id,
                 rows=3,
                 cols=11,
                 kernel_len=25,

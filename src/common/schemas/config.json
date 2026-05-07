@@ -96,6 +96,11 @@
             "title": "Target Aruco Id",
             "type": "integer"
         },
+        "opponent_target_aruco_id": {
+            "description": "ArUco marker id of the opponent target",
+            "title": "Opponent Target Aruco Id",
+            "type": "integer"
+        },
         "arm_center_pos": {
             "description": "Position of the center of the robot arm base on the camera image, in pixels",
             "maxItems": 2,
@@ -140,6 +145,7 @@
     "required": [
         "bot_aruco_id",
         "target_aruco_id",
+        "opponent_target_aruco_id",
         "arm_center_pos",
         "maze_real_world_size_m",
         "camera_angles"

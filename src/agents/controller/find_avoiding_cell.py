@@ -10,7 +10,6 @@ from spade.behaviour import OneShotBehaviour
 
 from agents.controller.maze.find_path import draw_path, find_path
 from agents.controller.maze.grid import Maze
-from common.models.controller import PathResponse
 from common.sender import BaseSenderBehaviour
 
 if TYPE_CHECKING:

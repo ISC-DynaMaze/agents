@@ -209,7 +209,7 @@ class Maze:
         return corners, ids, rejected
 
     # set target cell as the aruco marker (should stay the same throughout the whole process)
-    def set_target_cell(self, corners, ids, target_id):
+    def set_target_cell(self, corners, ids, target_id, opponent_target_id):
         if ids is None:
             print("No Aruco markers detected, cannot set target cell")
             return
@@ -232,7 +232,7 @@ class Maze:
                 else:
                     print(f"Aruco marker ID {target_id} is out of maze bounds")
                 return
-            elif marker_id != target_id :
+            elif marker_id ==  opponent_target_id:
                 c = corners[i][0]
                 center_x = int(c[:, 0].mean())
                 center_y = int(c[:, 1].mean())
