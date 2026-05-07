@@ -9,9 +9,8 @@ import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.maze.grid import Maze
-from common.models.controller import DirectionResponse, PathRequest, PathResponse
+from common.models.controller import DirectionResponse, MazePath
 from common.sender import BaseSenderBehaviour
-from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -27,7 +26,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
         self.maze: Maze = maze
 
     async def on_start(self):
-        self.path = self.agent.current_path
         self.photo_dir = Path("photos")
 
     async def run(self):
@@ -67,16 +65,15 @@ class SendDirectionBehaviour(OneShotBehaviour):
         self.logger.info(f"Bot orientation: {orientation}")
 
         # request new path based on updated bot cell
-        await self.req_path()
-        path: Optional[list[tuple[int, int]]] = await self.wait_for_path(timeout=10.0)
+        path: Optional[MazePath] = await self.agent.path_manager.get_or_fetch()
         if path is None:
-            self.logger.error("Timed out waiting for path response")
-            self.agent.error("Timed out waiting for path response")
+            self.logger.error("Cannot compute direction because path is not available")
+            self.agent.error("Cannot compute direction because path is not available")
+            return
 
         self.logger.info(f"New path: {path}")
 
-        self.path = path
-        next_cell = await self.get_next_cell()
+        next_cell = self.get_next_cell(path)
         if next_cell is None:
             self.logger.info("Bot is already at destination")
             return
@@ -110,21 +107,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
             self.agent.add_behaviour(BaseSenderBehaviour(res, requester))
         self.agent.direction_requesters = []
         self.agent.requesting_direction = False
-
-    # request new path from controller receiver (which will trigger a new path computation with updated bot cell)
-    async def req_path(self):
-        req = PathRequest()
-        self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.jid)))
-
-    # Wait for a new path response that is different from agent.current_path
-    async def wait_for_path(self, timeout: float) -> Optional[list[tuple[int, int]]]:
-        res: Optional[PathResponse] = await wait_for_response(
-            self, PathResponse, timeout
-        )
-        if res is None:
-            self.logger.error("Timed out waiting for path response message")
-            return res
-        return res.path
 
     # infer bot orientation based on position of bot marker corners
     def get_bot_orientation(self, corners, ids, bot_id, aruco_rot):
@@ -198,8 +180,8 @@ class SendDirectionBehaviour(OneShotBehaviour):
         return "left"
 
     # get next cell in path
-    async def get_next_cell(self):
-        if self.path is None or len(self.path) < 2:
+    def get_next_cell(self, path: MazePath) -> Optional[tuple[int, int]]:
+        if path is None or len(path) < 2:
             self.logger.error("No path available to get next cell")
             return None
-        return self.path[1]  # path[0] is current cell, path[1] is next cell
+        return path[1]  # path[0] is current cell, path[1] is next cell

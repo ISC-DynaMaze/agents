@@ -1,9 +1,11 @@
 import os
+from typing import Optional
 
 import cv2 as cv
 
 from agents.controller.maze.grid import Maze
 from agents.controller.maze.wall_detection import build_maze_from_path
+from common.models.controller import MazePath
 
 DEBUG = os.environ.get("MAZE_DEBUG", "1") != "0"
 
@@ -49,7 +51,7 @@ def print_path(path):
 
 
 # a* search algorithm
-def a_star_search(maze, src, dest):
+def a_star_search(maze: Maze, src: tuple[int, int], dest: tuple[int, int]) -> Optional[MazePath]:
     maze.clear_pathfinding_info()
 
     # Check if the source and destination are valid
@@ -171,7 +173,7 @@ def draw_path(maze_img, path, maze, cell_size=140, margin=40, color=(0, 0, 0), t
 
 
 # main function to find path
-def find_path(maze: Maze):
+def find_path(maze: Maze) -> Optional[MazePath]:
     start = (maze.bot_cell.row, maze.bot_cell.col)
     target = (maze.target_cell.row, maze.target_cell.col)
     print(f"Start: {start}, Target: {target}")

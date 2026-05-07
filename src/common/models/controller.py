@@ -22,13 +22,16 @@ class MazeResponse(ControllerResponseBase):
     maze: dict
 
 
+MazePath = list[tuple[int, int]]
+
+
 class PathRequest(ControllerRequestBase):
     type: Literal["ctrl-path-req"] = "ctrl-path-req"  # type: ignore
 
 
 class PathResponse(ControllerResponseBase):
     type: Literal["ctrl-path-res"] = "ctrl-path-res"  # type: ignore
-    path: list[tuple[int, int]]
+    path: MazePath
 
 
 class ObstaclesRequest(ControllerRequestBase):
