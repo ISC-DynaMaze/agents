@@ -12,7 +12,13 @@ from agents.robot.honk import HonkBehaviour
 from agents.robot.leds_manager import State
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
-from common.models.controller import DirectionRequest, DirectionResponse
+from common.models.controller import (
+    CubeOffset,
+    CubesOffsetRequest,
+    CubesOffsetResponse,
+    DirectionRequest,
+    DirectionResponse,
+)
 from common.models.robot import (
     Direction,
     LookAroundRequest,
@@ -40,18 +46,26 @@ class MoveBehaviour(CyclicBehaviour):
     @property
     def bot(self) -> AlphaBot2:
         return self.agent.bot
-    
+
     async def pause_point(self):
         await self.agent.penalty.pause_point()
 
     async def on_start(self):
         self.surroundings = []  # mental state of what the robot saw
         self.bot.setBothPWM(self.speed)
+        self.current_cube_offset = CubeOffset.NONE
 
     async def run(self):
         await self.pause_point()
         await self.reposition_to_nearest_cardinal()
         await self.pause_point()
+
+        # ask for cubes offset for the next cell
+        await self.ask_cubes_offset()
+        cubes_offset = await self.wait_for_cubes_offset(timeout=5)
+        if cubes_offset is None:
+            self.logger.error("Timed out waiting for cubes offset response message")
+            cubes_offset = CubeOffset.NONE
 
         # get direction to go
         # if we dont have info about current surrounding, ask controller
@@ -116,12 +130,13 @@ class MoveBehaviour(CyclicBehaviour):
             return
 
         # go to given direction
-        await self.turn_and_go(direction)
+        await self.turn_and_go(direction, cubes_offset)
         await self.pause_point()
         self.logger.info(f"Moved {direction}")
         self.agent.leds.set_state(State.IDLE)
 
         self.bot.stop()
+        self.current_cube_offset = cubes_offset
         self.logger.info(f"State of surroundings list after run: {self.surroundings}")
         await asyncio.sleep(5)
         # self.kill()  # stop the behaviour until next run when it will ask for surroundings again
@@ -177,7 +192,7 @@ class MoveBehaviour(CyclicBehaviour):
 
             await asyncio.sleep(check_interval)
 
-    async def turn_and_go(self, direction: str):
+    async def turn_and_go(self, direction: str, cubes_offset: CubeOffset):
         self.agent.leds.set_state(State.MOVING)
         if direction == "left":
             await self.turn(direction=Direction.Left)
@@ -198,9 +213,30 @@ class MoveBehaviour(CyclicBehaviour):
 
         await self.pause_point()
 
-        # repositioning 
+        # repositioning
         await self.reposition_to_nearest_cardinal()
-        
+
+        # calculate cube offset
+        await self.ask_cubes_offset()
+        cubes_offset = await self.wait_for_cubes_offset(timeout=5) # type: ignore
+        if cubes_offset is None:
+            self.logger.error("Timed out waiting for cubes offset response message")
+            cubes_offset = CubeOffset.NONE
+
+        # if there is a cube, position to avoid it
+        # no need to reposition if we are already in the correct offset position
+        if self.current_cube_offset == cubes_offset:
+            self.logger.info(f"Already positioned to cube offset: {cubes_offset}")
+            self.agent.info(f"Already positioned to cube offset: {cubes_offset}")
+        # if we currently are in offset position but next cell has no cube, reposition to middle
+        elif self.current_cube_offset != CubeOffset.NONE and cubes_offset == CubeOffset.NONE:
+            if self.current_cube_offset == CubeOffset.LEFT:
+                await self.position_to_cube_offset(CubeOffset.RIGHT)
+            elif self.current_cube_offset == CubeOffset.RIGHT:
+                await self.position_to_cube_offset(CubeOffset.LEFT)
+        else :
+            await self.position_to_cube_offset(cubes_offset)
+
         # go forward after turning or if direction is forward
         await self.go_forward_to_cell_center_using_sensors(
             threshold=self.agent.config.ir_threshold
@@ -215,12 +251,57 @@ class MoveBehaviour(CyclicBehaviour):
         self.agent.add_behaviour(behaviour)
         await behaviour.join()
 
+    async def position_to_cube_offset(self, offset: CubeOffset):
+        await self.reposition_to_nearest_cardinal()
+        self.agent.debug(f"In position_to_cube_offset with offset: {offset}")
+        self.bot.setBothPWM(self.speed)
+
+        if offset == CubeOffset.NONE:
+            return
+        
+        if offset == CubeOffset.LEFT:
+            await self.turn(direction=Direction.Left)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Left)
+            await asyncio.sleep(0.5)
+
+            self.bot.forward()
+            await asyncio.sleep(0.27)
+            self.bot.stop()
+            await asyncio.sleep(1)
+
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(0.5)
+
+        elif offset == CubeOffset.RIGHT:
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Right)
+            await asyncio.sleep(0.5)
+
+            self.bot.forward()
+            await asyncio.sleep(0.27)
+            self.bot.stop()
+            await asyncio.sleep(1)
+
+            await self.turn(direction=Direction.Left)
+            await asyncio.sleep(1)
+            await self.turn(direction=Direction.Left)
+            await asyncio.sleep(0.5)
+        
+        self.agent.info(f"Positioned to cube offset: {offset}")
+        self.current_cube_offset = offset
+        
+        await self.reposition_to_nearest_cardinal()
+
     async def reposition_to_nearest_cardinal(self):
         behaviour = RepositionBehaviour()
         self.agent.add_behaviour(behaviour)
         await behaviour.join()
 
-    # ask controllor where to go
+    # ask controller where to go
     async def ask_controller(self):
         req = DirectionRequest()
         self.agent.add_behaviour(
@@ -291,3 +372,21 @@ class MoveBehaviour(CyclicBehaviour):
             ("front", current.front),
             ("right", current.right),
         ]
+
+    async def ask_cubes_offset(self):
+        req = CubesOffsetRequest()
+        self.agent.add_behaviour(
+            BaseSenderBehaviour(req, str(self.agent.controller_jid))
+        )
+
+    async def wait_for_cubes_offset(
+        self, timeout: float
+    ) -> Optional[CubeOffset]:
+        res: Optional[CubesOffsetResponse] = await wait_for_response(
+            self, CubesOffsetResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for cubes offset response message")
+            return None
+        return res.offset
+
