@@ -4,6 +4,7 @@ from typing import Optional, TypeVar
 from spade.agent import BehaviourType
 
 from common.models.base import ResponseBase
+from common.models.camera import CameraResponse
 from common.models.common import ReqResAdapter
 
 T = TypeVar("T", bound=ResponseBase)
@@ -27,5 +28,12 @@ async def wait_for_response(
             if isinstance(res, cls):
                 return res
         except:
+            if (
+                reply is not None
+                and cls == CameraResponse
+                and "camera" in str(reply.sender)
+            ):
+                res = CameraResponse(img=reply.body)
+                return res  # type: ignore
             continue
     return None
