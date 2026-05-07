@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
+import cv2
 import numpy as np
 from spade.behaviour import PeriodicBehaviour
 
@@ -50,13 +51,21 @@ class MeetupBehaviour(PeriodicBehaviour):
         )
         self_next_pos: np.ndarray = bot_next_pos[self_id]
 
+        debug_img: np.ndarray = img.copy()
+        too_close: bool = False
         for bot_id, next_pos in bot_next_pos.items():
             if bot_id == self_id:
                 continue
+            p1 = np.array(bot_pos[bot_id]).astype(np.uint8)
+            p2 = np.array(next_pos).astype(np.uint8)
+            cv2.line(debug_img, p1, p2, (0, 0, 0), 2)
+            cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)
+            cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)
             dist: float = self._compute_distance(self_next_pos, next_pos)
             if dist <= self.MIN_DISTANCE:
-                return True
-        return False
+                too_close = True
+        cv2.imwrite("debug_meetup.png", debug_img)
+        return too_close
 
     def _compute_next_pos(
         self, positions: dict[int, tuple[float, float]], angles: dict[int, float]
