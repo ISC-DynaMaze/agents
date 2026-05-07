@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Optional
 
+from common.models.controller import CubeOffset
 from spade.behaviour import OneShotBehaviour
 
 from common.models.controller import (
@@ -18,9 +19,6 @@ from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
-
-
-CubeOffset = Literal["none", "left", "right"]
 
 
 class CubesOffsetBehaviour(OneShotBehaviour):
@@ -45,22 +43,22 @@ class CubesOffsetBehaviour(OneShotBehaviour):
     def get_offset_for_next_cell(self) -> CubeOffset:
         if self.agent.maze is None:
             self.logger.warning("No maze available for cube offset")
-            return "none"
+            return CubeOffset.NONE
 
         if self.agent.current_path is None or len(self.agent.current_path) < 2:
             self.logger.warning("No next path cell available for cube offset")
-            return "none"
+            return CubeOffset.NONE
 
         current_cell = self.agent.current_path[0]
         next_cell = self.agent.current_path[1]
 
         cube = self.get_cube_in_cell(next_cell)
         if cube is None:
-            return "none"
+            return CubeOffset.NONE
 
         heading = self.get_maze_heading(current_cell, next_cell)
         if heading is None:
-            return "none"
+            return CubeOffset.NONE
 
         quadrant = cube.get("quadrant")
         return self.quadrant_to_robot_offset(quadrant, heading)
@@ -104,35 +102,35 @@ class CubesOffsetBehaviour(OneShotBehaviour):
         heading: str,
     ) -> CubeOffset:
         if quadrant is None:
-            return "none"
+            return CubeOffset.NONE
 
         match heading:
             case "up":
                 # example: bot going up, cube in top left or bottom left -> robot should head on its right
                 if quadrant in ("top_left", "bottom_left"):
-                    return "right"
+                    return CubeOffset.RIGHT
                 if quadrant in ("top_right", "bottom_right"):
-                    return "left"
+                    return CubeOffset.LEFT
 
             case "down":
                 if quadrant in ("top_left", "bottom_left"):
-                    return "left"
+                    return CubeOffset.LEFT
                 if quadrant in ("top_right", "bottom_right"):
-                    return "right"
+                    return CubeOffset.RIGHT
 
             case "right":
                 if quadrant in ("top_left", "top_right"):
-                    return "right"
+                    return CubeOffset.RIGHT
                 if quadrant in ("bottom_left", "bottom_right"):
-                    return "left"
+                    return CubeOffset.LEFT
 
             case "left":
                 if quadrant in ("top_left", "top_right"):
-                    return "left"
+                    return CubeOffset.LEFT
                 if quadrant in ("bottom_left", "bottom_right"):
-                    return "right"
+                    return CubeOffset.RIGHT
 
-        return "none"
+        return CubeOffset.NONE
 
     async def refresh_cubes(self):
         req = CubesRequest()

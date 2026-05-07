@@ -1,3 +1,4 @@
+from enum import StrEnum
 from typing import Annotated, Literal, Union
 
 from pydantic import Field
@@ -69,9 +70,15 @@ class CubesOffsetRequest(ControllerRequestBase):
     type: Literal["ctrl-cubes-offset-req"] = "ctrl-cubes-offset-req"  # type: ignore
 
 
+class CubeOffset(StrEnum):
+    NONE = "none"
+    LEFT = "left"
+    RIGHT = "right"
+
+
 class CubesOffsetResponse(ControllerResponseBase):
     type: Literal["ctrl-cubes-offset-res"] = "ctrl-cubes-offset-res"  # type: ignore
-    offset: Literal["none", "left", "right"]
+    offset: CubeOffset
 
 
 class ObstaclePositionRequest(ControllerRequestBase):
