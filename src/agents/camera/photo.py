@@ -41,8 +41,8 @@ class CapturePhotoBehaviour(OneShotBehaviour):
         filename = "photo.jpg"
         cv2.imwrite(filename, frame)
 
-        async with aiofiles.open(filename, "rb") as img_file:
-            img_data = await img_file.read()
+        with open(filename, "rb") as img_file:
+            img_data = img_file.read()
             encoded_img = base64.b64encode(img_data).decode("utf-8")
 
         res = CameraResponse(img=encoded_img)
