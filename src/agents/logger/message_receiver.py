@@ -43,4 +43,7 @@ class MessageReceiverBehaviour(BaseReceiverBehaviour):
                 await self.agent.send_ws({"type": "path", "path": res.path})
 
     async def on_raw(self, sender_jid: str, msg: str):
+        if "camera" in sender_jid:
+            res = CameraResponse(img=msg)
+            return await self.on_response(sender_jid, res)
         await self.agent.send_ws({"type": "raw-msg", "msg": msg, "sender": sender_jid})

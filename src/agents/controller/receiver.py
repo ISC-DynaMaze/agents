@@ -22,9 +22,9 @@ from common.models.controller import (
     DirectionResponse,
     MazeRequest,
     ObstaclePositionRequest,
+    ObstacleRemoveRequest,
     ObstaclesRequest,
     ObstaclesResponse,
-    ObstacleRemoveRequest,
     PathRequest,
     PathResponse,
 )
@@ -173,3 +173,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
             case ObstaclesResponse(obstacles=obstacles):
                 self.logger.info(f"Obstacles: {obstacles}")
                 self.agent.maze.obstacles = obstacles  # type: ignore
+
+    async def on_raw(self, sender_jid: str, msg: str):
+        if "camera" in sender_jid:
+            res = CameraResponse(img=msg)
+            return await self.on_response(sender_jid, res)
+        return await super().on_raw(sender_jid, msg)
