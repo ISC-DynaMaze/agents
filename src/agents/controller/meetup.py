@@ -17,12 +17,13 @@ if TYPE_CHECKING:
 class MeetupBehaviour(PeriodicBehaviour):
     agent: ControllerAgent
 
-    MIN_DISTANCE: float = 32
+    MIN_DISTANCE: float = 100
     NEXT_DISTANCE: float = 32
 
-    def __init__(self, period: float, start_at: datetime | None = None):
+    def __init__(self, period: float, start_at: datetime | None = None, debug: bool = False):
         super().__init__(period, start_at)
         self.logger = logging.getLogger("MeetupBehaviour")
+        self.debug: bool = debug
 
     async def run(self):
         too_close: bool = await self.check_too_close()
@@ -54,17 +55,19 @@ class MeetupBehaviour(PeriodicBehaviour):
         debug_img: np.ndarray = img.copy()
         too_close: bool = False
         for bot_id, next_pos in bot_next_pos.items():
+            if self.debug:
+                p1 = np.array(bot_pos[bot_id]).astype(np.uint8)
+                p2 = np.array(next_pos).astype(np.uint8)
+                cv2.line(debug_img, p1, p2, (0, 0, 0), 2)
+                cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)
+                cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)
             if bot_id == self_id:
                 continue
-            p1 = np.array(bot_pos[bot_id]).astype(np.uint8)
-            p2 = np.array(next_pos).astype(np.uint8)
-            cv2.line(debug_img, p1, p2, (0, 0, 0), 2)
-            cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)
-            cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)
             dist: float = self._compute_distance(self_next_pos, next_pos)
             if dist <= self.MIN_DISTANCE:
                 too_close = True
-        cv2.imwrite("debug_meetup.png", debug_img)
+        if self.debug:
+            cv2.imwrite("debug_meetup.png", debug_img)
         return too_close
 
     def _compute_next_pos(
