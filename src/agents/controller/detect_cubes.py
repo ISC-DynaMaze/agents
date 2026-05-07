@@ -3,16 +3,16 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from common.models.camera import CameraRequest, CameraResponse
-from common.models.common import ReqResAdapter
 from common.models.controller import CubesResponse
 from common.sender import BaseSenderBehaviour
+from common.utils import wait_for_response
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -34,6 +34,8 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
         await self.req_image()
         img = await self.wait_for_new_image(timeout=10.0)
+        if img is None:
+            return
 
         black_mask, cubes = self.detect_cubes(img)
 
@@ -271,23 +273,16 @@ class DetectCubesBehaviour(OneShotBehaviour):
         req = CameraRequest()
         self.agent.add_behaviour(BaseSenderBehaviour(req, str(self.agent.camera_jid)))
 
-    async def wait_for_new_image(self, timeout: float) -> np.ndarray:
-        while True:
-            try:
-                msg = await self.receive(timeout=timeout)
-                if msg is None:
-                    self.logger.error("Timed out waiting for camera response message")
-                    continue
-                res = ReqResAdapter.validate_json(msg.body)
-                assert isinstance(res, CameraResponse)
-                save_dir = Path("photos")
-                img, _ = await res.decode_img(save_dir)
-                return img
-            except Exception as e:
-                self.logger.error(
-                    f"Error occurred while waiting for camera response: {e}"
-                )
-                continue
+    async def wait_for_new_image(self, timeout: float) -> Optional[np.ndarray]:
+        res: Optional[CameraResponse] = await wait_for_response(
+            self, CameraResponse, timeout
+        )
+        if res is None:
+            self.logger.error("Timed out waiting for camera response message")
+            return None
+        save_dir = Path("photos")
+        img, _ = await res.decode_img(save_dir)
+        return img
 
     async def save_img(self, img: np.ndarray, save_dir: Path, prefix: str) -> None:
         self.logger.info(f"Saving image to {save_dir}")
