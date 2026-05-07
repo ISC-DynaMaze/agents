@@ -26,26 +26,32 @@ class MeetupBehaviour(PeriodicBehaviour):
         self.debug: bool = debug
 
     async def run(self):
-        too_close: bool = await self.check_too_close()
-        if too_close:
-            self.logger.info("Robot is close to someone else")
+        too_close: list[tuple[float, float]] = await self.check_too_close()
+        if self.agent.maze is None:
+            return
+        self.agent.maze.clear_occupied()
+        if len(too_close) != 0:
+            self.logger.info(f"Robot is close to someone else: {too_close}")
+            for px, py in too_close:
+                row, col = self.agent.maze.pixel_to_cell(px, py)
+                self.agent.maze.mark_occupied(row, col)
 
-    async def check_too_close(self) -> bool:
+    async def check_too_close(self) -> list[tuple[float, float]]:
         img: Optional[np.ndarray] = await self.agent.camera.get_img()
         if img is None:
             self.logger.error("Could not get image from camera")
-            return False
+            return []
         detector: BotDetector = BotDetector(img)
         bot_pos: dict[int, tuple[float, float]] = detector.get_positions()
         bot_angles: dict[int, float] = detector.get_angles()
         self_id: int = self.agent.config.bot_aruco_id
         if self_id not in bot_pos:
             self.logger.error("Robot not detected")
-            return False
+            return []
 
         if len(bot_pos) == 1:
             self.logger.warning("No other robot detected")
-            return False
+            return []
 
         bot_next_pos: dict[int, np.ndarray] = self._compute_next_pos(
             bot_pos, bot_angles
@@ -53,7 +59,7 @@ class MeetupBehaviour(PeriodicBehaviour):
         self_next_pos: np.ndarray = bot_next_pos[self_id]
 
         debug_img: np.ndarray = img.copy()
-        too_close: bool = False
+        too_close: list[tuple[float, float]] = []
         for bot_id, next_pos in bot_next_pos.items():
             if self.debug:
                 p1 = np.array(bot_pos[bot_id]).astype(np.uint8)
@@ -65,7 +71,7 @@ class MeetupBehaviour(PeriodicBehaviour):
                 continue
             dist: float = self._compute_distance(self_next_pos, next_pos)
             if dist <= self.MIN_DISTANCE:
-                too_close = True
+                too_close.append(bot_pos[bot_id])
         if self.debug:
             cv2.imwrite("debug_meetup.png", debug_img)
         return too_close

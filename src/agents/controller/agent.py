@@ -1,9 +1,11 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 from spade.agent import Agent
 
 from agents.controller.camera_manager import CameraManager
+from agents.controller.maze.grid import Maze
 from agents.controller.meetup import MeetupBehaviour
 from agents.controller.receiver import ReceiverBehaviour
 from common.config import Config
@@ -22,7 +24,7 @@ class ControllerAgent(Agent, LogMixin):
 
         self.config: Config = Config.load()
 
-        self.maze = None
+        self.maze: Optional[Maze] = None
         self.grid_img = None
         self.current_path = None
 
