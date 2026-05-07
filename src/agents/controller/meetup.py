@@ -9,6 +9,7 @@ import numpy as np
 from spade.behaviour import PeriodicBehaviour
 
 from agents.controller.bot_detection import BotDetector
+from agents.controller.maze.grid import Maze
 
 if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
@@ -20,21 +21,24 @@ class MeetupBehaviour(PeriodicBehaviour):
     MIN_DISTANCE: float = 100
     NEXT_DISTANCE: float = 32
 
-    def __init__(self, period: float, start_at: datetime | None = None, debug: bool = False):
+    def __init__(
+        self, period: float, start_at: datetime | None = None, debug: bool = False
+    ):
         super().__init__(period, start_at)
         self.logger = logging.getLogger("MeetupBehaviour")
         self.debug: bool = debug
 
     async def run(self):
         too_close: list[tuple[float, float]] = await self.check_too_close()
-        if self.agent.maze is None:
+        maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+        if maze is None:
             return
-        self.agent.maze.clear_occupied()
+        maze.clear_occupied()
         if len(too_close) != 0:
             self.logger.info(f"Robot is close to someone else: {too_close}")
             for px, py in too_close:
-                row, col = self.agent.maze.pixel_to_cell(px, py)
-                self.agent.maze.mark_occupied(row, col)
+                row, col = maze.pixel_to_cell(px, py)
+                maze.mark_occupied(row, col)
 
     async def check_too_close(self) -> list[tuple[float, float]]:
         img: Optional[np.ndarray] = await self.agent.camera.get_img()

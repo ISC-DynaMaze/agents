@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from agents.controller.bot_detection import BotDetectionBehaviour
-from agents.controller.build_maze import BuildMazeBehaviour
 from agents.controller.detect_cubes import DetectCubesBehaviour
 from agents.controller.find_path import FindPathBehaviour
 from agents.controller.get_obstacles import ObstaclesBehaviour
+from agents.controller.maze.grid import Maze
 from agents.controller.obstacles_position import ObstacleRelativePositionBehaviour
 from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.remove_obstacles import RemoveObstaclesBehaviour
@@ -40,7 +40,6 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     def __init__(
         self,
         save_dir: Path,
-        maze_dir: Path,
         path_dir: Path,
         obstacles_dir: Path,
         cubes_dir: Path,
@@ -48,50 +47,66 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         super().__init__()
         self.logger = logging.getLogger("ReceiverBehaviour")
         self.save_dir: Path = save_dir
-        self.maze_dir: Path = maze_dir
         self.path_dir: Path = path_dir
         self.obstacles_dir: Path = obstacles_dir
         self.cubes_dir: Path = cubes_dir
 
     async def on_start(self) -> None:
         self.save_dir.mkdir(parents=True, exist_ok=True)
-        self.maze_dir.mkdir(parents=True, exist_ok=True)
         self.path_dir.mkdir(parents=True, exist_ok=True)
         self.obstacles_dir.mkdir(parents=True, exist_ok=True)
         self.cubes_dir.mkdir(parents=True, exist_ok=True)
         return await super().on_start()
+
+    def error(self, msg: str):
+        self.logger.error(msg)
+        self.agent.error(msg)
 
     async def request_photo(self):
         ask_photo = RequestPhotoBehaviour(self.agent.camera_jid)
         self.agent.add_behaviour(ask_photo)
 
     async def request_direction(self):
-        ask_direction = SendDirectionBehaviour()
+        maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+        if maze is None:
+            self.error("Cannot compute direction, maze is not available")
+            return
+        ask_direction = SendDirectionBehaviour(maze)
         self.agent.add_behaviour(ask_direction)
 
     async def request_obstacles(self):
-        get_obstacles = ObstaclesBehaviour()
+        maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+        if maze is None:
+            self.error("Cannot find obstacles, maze is not available")
+            return
+        get_obstacles = ObstaclesBehaviour(maze)
         self.agent.add_behaviour(get_obstacles)
 
     async def request_obstacles_pos(self):
-        get_obstacles_pos = ObstacleRelativePositionBehaviour()
+        maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+        if maze is None:
+            self.error("Cannot compute obstacle positions, maze is not available")
+            return
+        get_obstacles_pos = ObstacleRelativePositionBehaviour(maze)
         self.agent.add_behaviour(get_obstacles_pos)
 
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
-        
+
     async def request_cubes(self):
+        maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+        if maze is None:
+            self.error("Cannot detect cubes, maze is not available")
+            return
         self.agent.requesting_cubes = True
-        detect_cubes = DetectCubesBehaviour()
+        detect_cubes = DetectCubesBehaviour(maze)
         self.agent.add_behaviour(detect_cubes)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
             case MazeRequest():
-                self.agent.maze_requesters.append(sender_jid)
-                if not self.agent.requesting_image:
-                    await self.request_photo()
+                await self.agent.maze_manager.on_request(sender_jid, req)
 
             case AngleRequest():
                 self.agent.angle_requesters.append(sender_jid)
@@ -100,13 +115,12 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case PathRequest():
                 self.agent.path_requesters.append(sender_jid)
-                if not self.agent.maze:
-                    self.logger.error("Received path request but maze is not set")
-                    self.agent.error("Received path request but maze is not set")
+                maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+                if maze is None:
+                    self.logger.error("Received path request but maze is not available")
+                    self.agent.error("Received path request but maze is not available")
                     return
-                find_path = FindPathBehaviour(
-                    maze=self.agent.maze, output_dir=self.path_dir
-                )  # type: ignore
+                find_path = FindPathBehaviour(maze=maze, output_dir=self.path_dir)
                 self.agent.add_behaviour(find_path)
 
             case DirectionRequest():
@@ -124,7 +138,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstacleRemoveRequest():
                 await self.request_obstacles_rem()
-                
+
             case CubesRequest():
                 self.agent.cubes_requesters.append(sender_jid)
                 if not self.agent.requesting_cubes:
@@ -142,26 +156,22 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                     bot_detection = BotDetectionBehaviour(img)
                     self.agent.add_behaviour(bot_detection)
 
-                if len(self.agent.maze_requesters) != 0:
-                    build_maze = BuildMazeBehaviour(
-                        photo_path=filepath,
-                        output_dir=self.maze_dir,
-                    )
-                    self.agent.add_behaviour(build_maze)
-
                 if len(self.agent.path_requesters) != 0:
-                    if self.agent.maze is None:
-                        self.logger.error("Received path request but maze is not set")
-                        self.agent.error("Received path request but maze is not set")
+                    maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+                    if maze is None:
+                        self.error(
+                            "Received path request but maze is not available"
+                        )
                         return
-                    else:
-                        find_path = FindPathBehaviour(
-                            maze=self.agent.maze, output_dir=self.path_dir
-                        )  # type: ignore
-                        self.agent.add_behaviour(find_path)
+                    find_path = FindPathBehaviour(maze=maze, output_dir=self.path_dir)
+                    self.agent.add_behaviour(find_path)
 
                 if len(self.agent.obstacles_requesters) != 0:
-                    get_obstacles = ObstaclesBehaviour()
+                    maze: Optional[Maze] = await self.agent.maze_manager.get_or_fetch()
+                    if maze is None:
+                        self.error("Received obstacle request but maze is not available")
+                        return
+                    get_obstacles = ObstaclesBehaviour(maze)
                     self.agent.add_behaviour(get_obstacles)
 
             case PathResponse(path=path):

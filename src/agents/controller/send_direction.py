@@ -21,12 +21,12 @@ class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
     maze: Maze
 
-    def __init__(self):
+    def __init__(self, maze: Maze):
         super().__init__()
         self.logger = logging.getLogger("SendDirectionBehaviour")
+        self.maze: Maze = maze
 
     async def on_start(self):
-        self.maze = self.agent.maze
         self.path = self.agent.current_path
         self.photo_dir = Path("photos")
 
@@ -34,10 +34,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
         # check for photo directory or create it
         self.photo_dir.mkdir(parents=True, exist_ok=True)
         # check for maze
-        if self.maze is None:
-            self.logger.error("Cannot send direction: maze is not initialized")
-            self.agent.error("Cannot send direction: maze is not initialized")
-            return
 
         # request new image
         img: Optional[np.ndarray] = await self.agent.camera.get_img()

@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from spade.behaviour import OneShotBehaviour
 
+from agents.controller.maze.grid import Maze
 from common.models.controller import CubesResponse
 from common.sender import BaseSenderBehaviour
 
@@ -19,9 +20,10 @@ if TYPE_CHECKING:
 class DetectCubesBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    def __init__(self):
+    def __init__(self, maze: Maze):
         super().__init__()
         self.logger = logging.getLogger("DetectCubesBehaviour")
+        self.maze: Maze = maze
 
     async def on_start(self):
         self.logger = self.agent.logger
@@ -49,11 +51,11 @@ class DetectCubesBehaviour(OneShotBehaviour):
         await self.send_cubes_response()
 
     def detect_cubes(self, img: np.ndarray):
-        if self.agent.maze.rect is None:
+        if self.maze.rect is None:
             raise ValueError("Maze must be built before detecting cubes")
 
         # crop to maze area
-        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+        rect_x, rect_y, rect_w, rect_h = self.maze.rect
         maze_img = img[rect_y : rect_y + rect_h, rect_x : rect_x + rect_w]
 
         gray = cv2.cvtColor(maze_img, cv2.COLOR_BGR2GRAY)
@@ -110,8 +112,8 @@ class DetectCubesBehaviour(OneShotBehaviour):
             center_y = offset_y + y + h // 2
 
             # convert to cell coordinates
-            row, col = self.agent.maze.pixel_to_cell(center_x, center_y)
-            if not self.agent.maze.is_valid_cell(row, col):
+            row, col = self.maze.pixel_to_cell(center_x, center_y)
+            if not self.maze.is_valid_cell(row, col):
                 continue
 
             # determine where the cube sits inside the cell
@@ -146,10 +148,10 @@ class DetectCubesBehaviour(OneShotBehaviour):
         row: int,
         col: int,
     ):
-        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+        rect_x, rect_y, rect_w, rect_h = self.maze.rect
 
-        cell_w = rect_w / self.agent.maze.n_cols
-        cell_h = rect_h / self.agent.maze.n_rows
+        cell_w = rect_w / self.maze.n_cols
+        cell_h = rect_h / self.maze.n_rows
 
         cx, cy = center
 
@@ -173,10 +175,10 @@ class DetectCubesBehaviour(OneShotBehaviour):
         row: int,
         col: int,
     ):
-        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+        rect_x, rect_y, rect_w, rect_h = self.maze.rect
 
-        cell_w = rect_w / self.agent.maze.n_cols
-        cell_h = rect_h / self.agent.maze.n_rows
+        cell_w = rect_w / self.maze.n_cols
+        cell_h = rect_h / self.maze.n_rows
 
         cx, cy = center
 
@@ -192,13 +194,13 @@ class DetectCubesBehaviour(OneShotBehaviour):
 
     def store_cubes_in_maze(self, cubes: list[dict]):
         # Store globally on maze.
-        self.agent.maze.clear_cubes()
+        self.maze.clear_cubes()
 
         for cube in cubes:
             self.logger.info(
                 f"Storing cube in cell {cube['row']}, {cube['col']} in quadrant {cube['quadrant']}"
             )
-            self.agent.maze.add_cube(cube)
+            self.maze.add_cube(cube)
 
     # draw function for visualization
     def draw_cubes(self, img: np.ndarray, cubes: list[dict]):
@@ -245,10 +247,10 @@ class DetectCubesBehaviour(OneShotBehaviour):
         return highlighted
 
     def get_cell_bounds(self, row: int, col: int):
-        rect_x, rect_y, rect_w, rect_h = self.agent.maze.rect
+        rect_x, rect_y, rect_w, rect_h = self.maze.rect
 
-        cell_w = rect_w / self.agent.maze.n_cols
-        cell_h = rect_h / self.agent.maze.n_rows
+        cell_w = rect_w / self.maze.n_cols
+        cell_h = rect_h / self.maze.n_rows
 
         cell_x1 = rect_x + col * cell_w
         cell_y1 = rect_y + row * cell_h

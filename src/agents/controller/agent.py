@@ -1,11 +1,10 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 from spade.agent import Agent
 
 from agents.controller.camera_manager import CameraManager
-from agents.controller.maze.grid import Maze
+from agents.controller.managers.maze import MazeManager
 from agents.controller.meetup import MeetupBehaviour
 from agents.controller.receiver import ReceiverBehaviour
 from common.config import Config
@@ -24,11 +23,10 @@ class ControllerAgent(Agent, LogMixin):
 
         self.config: Config = Config.load()
 
-        self.maze: Optional[Maze] = None
-        self.grid_img = None
         self.current_path = None
 
         self.camera: CameraManager = CameraManager(self, self.camera_jid)
+        self.maze_manager: MazeManager = MazeManager(self, Path("mazes"))
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
@@ -44,7 +42,6 @@ class ControllerAgent(Agent, LogMixin):
     async def setup(self):
         receiver_behaviour = ReceiverBehaviour(
             save_dir=Path("photos"),
-            maze_dir=Path("mazes"),
             path_dir=Path("paths"),
             obstacles_dir=Path("obstacles"),
             cubes_dir=Path("cubes"),

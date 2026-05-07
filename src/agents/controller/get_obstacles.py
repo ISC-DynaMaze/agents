@@ -13,6 +13,7 @@ from agents.controller.maze.detect_obstacles import (
     draw_detected_obstacles,
     find_obstacles,
 )
+from agents.controller.maze.grid import Maze
 from common.models.controller import ObstaclesResponse
 from common.sender import BaseSenderBehaviour
 
@@ -23,9 +24,10 @@ if TYPE_CHECKING:
 class ObstaclesBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    def __init__(self):
+    def __init__(self, maze: Maze):
         super().__init__()
         self.logger = logging.getLogger("ObstaclesBehaviour")
+        self.maze: Maze = maze
 
     async def on_start(self):
         self.obstacles_dir = Path("obstacles")
@@ -42,10 +44,10 @@ class ObstaclesBehaviour(OneShotBehaviour):
             return
 
         # detect obstacles in maze and update maze
-        detection = find_obstacles(image=img, maze=self.agent.maze, min_area=500)
+        detection = find_obstacles(image=img, maze=self.maze, min_area=500)
         blocks_by_color = detection["blocks_by_color"]
         maze = detection["maze"]  # maze updated with detected obstacles
-        self.agent.maze = maze
+        self.maze = maze
         self.logger.info(f"Updated maze with detected obstacles: {maze.obstacles}")
 
         # visualize detected obstacles on image
@@ -54,7 +56,7 @@ class ObstaclesBehaviour(OneShotBehaviour):
         self.logger.info(f"Saved highlighted obstacles image to {self.obstacles_dir}")
 
         # returns list of obstacles
-        obstacles = self.agent.maze.obstacles
+        obstacles = self.maze.obstacles
         self.logger.info(f"Detected {len(obstacles)} obstacles in the maze")
         await self.send_obstacles_message()
 

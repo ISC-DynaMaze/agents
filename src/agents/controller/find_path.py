@@ -46,13 +46,16 @@ class FindPathBehaviour(OneShotBehaviour):
         self.logger.info(f"Path found: {path}")
         self.agent.current_path = path
 
-        grid_img = self.agent.grid_img.copy()  # type: ignore
-        grid_img_with_path = draw_path(
-            grid_img, path, cell_size=140, margin=40, color=(0, 0, 0)
-        )
-        grid_img_path = self.output_dir / path_filename
-        cv2.imwrite(str(grid_img_path), grid_img_with_path)
-        self.logger.info(f"Path image saved at {grid_img_path}")
+        try:
+            grid_img = self.agent.maze_manager.grid_img.copy()  # type: ignore
+            grid_img_with_path = draw_path(
+                grid_img, path, self.maze, cell_size=140, margin=40, color=(0, 0, 0)
+            )
+            grid_img_path = self.output_dir / path_filename
+            cv2.imwrite(str(grid_img_path), grid_img_with_path)
+            self.logger.info(f"Path image saved at {grid_img_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to draw path: {e}")
 
         await self.send_path_message(path)
 

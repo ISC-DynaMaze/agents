@@ -10,6 +10,7 @@ from spade.behaviour import OneShotBehaviour
 
 from agents.controller.get_obstacles import ObstaclesBehaviour
 from agents.controller.maze.detect_obstacles import find_obstacles
+from agents.controller.maze.grid import Maze
 from agents.controller.maze.wall_detection import find_outer_rectangle, get_pink_mask
 
 if TYPE_CHECKING:
@@ -19,12 +20,13 @@ if TYPE_CHECKING:
 class ObstacleRelativePositionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
-    def __init__(self):
+    def __init__(self, maze: Maze):
         super().__init__()
         self.logger = logging.getLogger("ObstaclePositionsBehaviour")
+        self.maze: Maze = maze
 
     async def on_start(self):
-        self.obstacle = ObstaclesBehaviour()
+        self.obstacle = ObstaclesBehaviour(self.maze)
         self.rel_pos = Path("rel_pos")
         self.robot_arm_position = self.agent.config.arm_center_pos
         self.maze_size = self.agent.config.maze_real_world_size_m
@@ -40,7 +42,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         )
         scale = self.compute_scale(img)
         self.logger.info(f"[Measure] L :{scale[0]}, l : {scale[1]}")
-        result = find_obstacles(img, self.agent.maze)
+        result = find_obstacles(img, self.maze)
         blocks = result["blocks_by_color"]
         blocks_pos = dict()
         for color, list_of_blocks in blocks.items():
