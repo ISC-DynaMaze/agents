@@ -24,26 +24,22 @@ class SendDirectionBehaviour(OneShotBehaviour):
         super().__init__()
         self.logger = logging.getLogger("SendDirectionBehaviour")
         self.maze: Maze = maze
-
-    async def on_start(self):
-        self.photo_dir = Path("photos")
+    
+    def error(self, msg: str):
+        self.logger.error(msg)
+        self.agent.error(msg)
 
     async def run(self):
-        # check for photo directory or create it
-        self.photo_dir.mkdir(parents=True, exist_ok=True)
-        # check for maze
-
         # request new image
         img: Optional[np.ndarray] = await self.agent.camera.get_img()
         if img is None:
-            self.logger.error("Timed out waiting for camera image")
+            self.error("Timed out waiting for camera image")
             return
 
         # detect aruco marker and update bot cell in maze
         corners, ids, _ = self.maze.detect_aruco_markers(img)
         if ids is None or len(ids) == 0:
-            self.logger.error("No markers detected in camera image")
-            self.agent.error("No markers detected in camera image")
+            self.error("No markers detected in camera image")
             return
 
         self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
@@ -60,15 +56,14 @@ class SendDirectionBehaviour(OneShotBehaviour):
             self.agent.config.bot_aruco_rot,
         )
         if orientation is None:
-            self.logger.error("Bot marker not found, cannot infer orientation")
-            self.agent.error("Bot marker not found, cannot infer orientation")
+            self.error("Bot marker not found, cannot infer orientation")
+            return
         self.logger.info(f"Bot orientation: {orientation}")
 
         # request new path based on updated bot cell
         path: Optional[MazePath] = await self.agent.path_manager.get_or_fetch()
         if path is None:
-            self.logger.error("Cannot compute direction because path is not available")
-            self.agent.error("Cannot compute direction because path is not available")
+            self.error("Cannot compute direction because path is not available")
             return
 
         self.logger.info(f"New path: {path}")
@@ -81,8 +76,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
         # direction to the next cell in the path (from maze perspective)
         desired_direction = self.get_direction_from_path_step(path)
         if desired_direction is None:
-            self.logger.error("Could not derive desired direction from path")
-            self.agent.error("Could not derive desired direction from path")
+            self.error("Could not derive desired direction from path")
             return
 
         # get turn instruction to go from current bot orientation to desired direction
@@ -90,8 +84,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             current_heading=orientation, target_heading=desired_direction
         )
         if turn is None:
-            self.logger.error("Could not compute turn instruction")
-            self.agent.error("Could not compute turn instruction")
+            self.error("Could not compute turn instruction")
             return
 
         self.logger.info(
@@ -182,6 +175,6 @@ class SendDirectionBehaviour(OneShotBehaviour):
     # get next cell in path
     def get_next_cell(self, path: MazePath) -> Optional[tuple[int, int]]:
         if path is None or len(path) < 2:
-            self.logger.error("No path available to get next cell")
+            self.error("No path available to get next cell")
             return None
         return path[1]  # path[0] is current cell, path[1] is next cell
