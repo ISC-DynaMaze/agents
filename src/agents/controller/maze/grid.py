@@ -55,6 +55,7 @@ class Maze:
         # bot and target cells
         self.bot_cell = self.grid[0][0]
         self.target_cell = self.grid[rows - 1][cols - 1]
+        self.opponent_target_cell = self.grid[0][0]
 
         # explicit wall maps
         # horizontal walls: (rows + 1) x cols
@@ -226,11 +227,26 @@ class Maze:
                 if self.is_valid_cell(row, col):
                     self.target_cell = self.grid[row][col]
                     print(
-                        f"Set target cell to {self.target_cell} based on Aruco marker ID {target_id}"
+                        f"Set opponent target cell to {self.opponent_target_cell} based on Aruco marker ID {marker_id}"
                     )
                 else:
                     print(f"Aruco marker ID {target_id} is out of maze bounds")
                 return
+            elif marker_id != target_id :
+                c = corners[i][0]
+                center_x = int(c[:, 0].mean())
+                center_y = int(c[:, 1].mean())
+
+                # convert pixel coordinates to cell coordinates
+                row, col = self.pixel_to_cell(center_x, center_y)
+
+                if self.is_valid_cell(row, col):
+                    self.opponent_target_cell = self.grid[row][col]
+                    print(
+                        f"Set target cell to {self.opponent_target_cell} based on Aruco marker ID {target_id}"
+                    )
+                else:
+                    print("No other Aruco code found, mono robot phase")
 
         print(f"Aruco marker ID {target_id} not found, cannot set target cell")
 

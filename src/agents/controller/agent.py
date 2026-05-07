@@ -23,6 +23,8 @@ class ControllerAgent(Agent, LogMixin):
         self.maze = None
         self.grid_img = None
         self.current_path = None
+        self.opponent_target = None
+        self.opponent_path = None
 
         self.maze_requesters: list[str] = []
         self.angle_requesters: list[str] = []
