@@ -11,6 +11,14 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
+# quadrant indices
+QUADRANT_INDEX = {
+    "top_left": 0,
+    "top_right": 1,
+    "bottom_right": 2,
+    "bottom_left": 3,
+}
+
 
 class Cell:
     def __init__(self, row, col, walls=None):
@@ -18,6 +26,10 @@ class Cell:
         self.col = col
         self.walls = walls if walls is not None else [False, False, False, False]
         self.obstacles = []
+
+        # 1 if there is cube, 0 if no cube
+        # [TL, TR, BR, BL]
+        self.quadrant = [0, 0, 0, 0]
 
         # for astar search
         self.f = float("inf")  # Total cost of the cell (g + h)
@@ -33,6 +45,21 @@ class Cell:
 
     def add_obstacle(self, obstacle):
         self.obstacles.append(obstacle)
+
+    def add_cube_in_quadrant(self, quadrant):
+        index = QUADRANT_INDEX.get(quadrant)
+
+        if index is not None:
+            self.quadrant[index] = 1
+
+    def contains_cubes(self):
+        if self.quadrant == [0, 0, 0, 0]:
+            return False
+        else:
+            return True
+
+    def clear_cubes(self):
+        self.quadrant = [0, 0, 0, 0]
 
     def clear_pathfinding_info(self):
         self.f = float("inf")
@@ -69,6 +96,8 @@ class Maze:
         # list of detected obstacles
         self.obstacles = []
 
+        self.cubes = []
+
     # check if a cell is within boundaries
     # should return true if valid cell
     def is_valid_cell(self, row, col):
@@ -86,6 +115,20 @@ class Maze:
         self.obstacles.append(obstacle)
         for cell in obstacle.cells:
             cell.add_obstacle(obstacle)
+
+    def clear_cubes(self):
+        self.cubes = []
+
+        for row in self.grid:
+            for cell in row:
+                cell.clear_cubes()
+
+    def add_cube(self, cube):
+        self.cubes.append(cube)
+        cell = self.get_cell(cube["row"], cube["col"])
+        quadrant = cube.get("quadrant")
+        if quadrant is not None and cell is not None:
+            cell.add_cube_in_quadrant(quadrant)
 
     # check if a move is valid (no wall blocking and destination in bounds)
     # move: 0=DOWN, 1=UP, 2=RIGHT, 3=LEFT
