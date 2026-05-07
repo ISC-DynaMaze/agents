@@ -32,6 +32,7 @@ class BotDetector:
         self.detected_ids = list(map(int, ids.flatten()))
 
     def get_angles(self) -> dict[int, float]:
+        # TODO: consider aruco marker rotation offset
         bot_angles: dict[int, float] = {}
         if len(self.detected_corners) > 0:
             bot_angles = {

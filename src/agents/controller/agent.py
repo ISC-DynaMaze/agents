@@ -4,6 +4,7 @@ from pathlib import Path
 from spade.agent import Agent
 
 from agents.controller.camera_manager import CameraManager
+from agents.controller.meetup import MeetupBehaviour
 from agents.controller.receiver import ReceiverBehaviour
 from common.config import Config
 from common.log_mixin import LogMixin
@@ -47,3 +48,5 @@ class ControllerAgent(Agent, LogMixin):
             cubes_dir=Path("cubes"),
         )
         self.add_behaviour(receiver_behaviour)
+        meetup_behaviour = MeetupBehaviour(2)
+        self.add_behaviour(meetup_behaviour)
