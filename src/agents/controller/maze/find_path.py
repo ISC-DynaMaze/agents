@@ -166,7 +166,8 @@ def draw_path(maze_img, path, cell_size=140, margin=40, color=(0, 0, 0), thickne
 def find_path(maze: Maze):
     start = (maze.bot_cell.row, maze.bot_cell.col)
     target = (maze.target_cell.row, maze.target_cell.col)
-    print(f"Start: {start}, Target: {target}")
+    opponent_target = (maze.opponent_target_cell.row, maze.opponent_target_cell.col)
+    print(f"Start: {start}, Target: {target}, Opponent Target: {opponent_target}")
 
     # A* search to find path
     path = a_star_search(maze, start, target)
