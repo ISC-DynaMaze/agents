@@ -1,6 +1,6 @@
 from spade.behaviour import OneShotBehaviour
 
-from common.models.controller import MazeRequest, PathRequest
+from common.models.controller import MazeRequest, PathRequest, ObstaclePositionRequest, ObstacleRemoveRequest
 from common.models.robot import RobotMoveRequest
 from typing import TYPE_CHECKING
 
@@ -23,10 +23,14 @@ class AutoStartBehaviour(OneShotBehaviour):
         maze_req = MazeRequest()
         path_req = PathRequest()
         move = RobotMoveRequest()
+        obs_pos = ObstaclePositionRequest()
+        obs_rem = ObstacleRemoveRequest()
         self.agent.info("[Request] Maze request sent")
         self.agent.add_behaviour(maze_req)
         self.agent.info("[Request] Path Request sent")
         self.agent.add_behaviour(path_req)
         self.agent.info("[Request] Move request sent")
         self.robot.add_behaviour(move)
+        self.agent.add_behaviour(obs_pos)
+        self.agent.add_behaviour(obs_rem)
 
