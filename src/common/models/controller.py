@@ -72,6 +72,9 @@ class ObstaclePositionRequest(ControllerRequestBase):
 class ObstacleRemoveRequest(ControllerRequestBase):
     type: Literal["ctrl-obs-rem-req"] = "ctrl-obs-rem-req"  # type: ignore
 
+class AutoStartRequest(ControllerRequestBase):
+    type: Literal["ctrl-auto-start-req"] = "ctrl-auto-start-req" # type: ignore
+
 
 ControllerRequest = Annotated[
     Union[

@@ -13,10 +13,12 @@ from agents.controller.obstacles_position import ObstacleRelativePositionBehavio
 from agents.controller.photo import RequestPhotoBehaviour
 from agents.controller.remove_obstacles import RemoveObstaclesBehaviour
 from agents.controller.send_direction import SendDirectionBehaviour
+from agents.controller.auto_start import AutoStartBehaviour
 from common.models.camera import CameraResponse
 from common.models.common import Request, Response
 from common.models.controller import (
     AngleRequest,
+    AutoStartRequest,
     CubesRequest,
     DirectionRequest,
     DirectionResponse,
@@ -27,6 +29,7 @@ from common.models.controller import (
     ObstaclesResponse,
     PathRequest,
     PathResponse,
+    
 )
 from common.receiver import BaseReceiverBehaviour
 
@@ -85,6 +88,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.agent.requesting_cubes = True
         detect_cubes = DetectCubesBehaviour()
         self.agent.add_behaviour(detect_cubes)
+    
+    async def request_auto_start(self):
+        auto_start = AutoStartBehaviour()
+        self.agent.add_behaviour(auto_start)
 
     async def on_request(self, sender_jid: str, req: Request):
         match req:
@@ -129,6 +136,9 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 self.agent.cubes_requesters.append(sender_jid)
                 if not self.agent.requesting_cubes:
                     await self.request_cubes()
+            
+            case AutoStartRequest():
+                await self.request_auto_start()
 
     async def on_response(self, sender_jid: str, res: Response):
         match res:
