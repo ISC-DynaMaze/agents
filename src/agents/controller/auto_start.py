@@ -5,6 +5,7 @@ from common.models.robot import RobotMoveRequest
 from typing import TYPE_CHECKING
 
 import logging
+import asyncio
 
 
 
@@ -19,7 +20,7 @@ class AutoStartBehaviour(OneShotBehaviour):
     def __init__(self):
         self.logger = logging.getLogger("AutoStartBehaviour")
 
-    def run(self):
+    async def run(self):
         maze_req = MazeRequest()
         path_req = PathRequest()
         move = RobotMoveRequest()
@@ -27,10 +28,15 @@ class AutoStartBehaviour(OneShotBehaviour):
         obs_rem = ObstacleRemoveRequest()
         self.agent.info("[Request] Maze request sent")
         self.agent.add_behaviour(maze_req)
+        await asyncio.sleep(2)
         self.agent.info("[Request] Path Request sent")
         self.agent.add_behaviour(path_req)
+        await asyncio.sleep(2)
         self.agent.info("[Request] Move request sent")
         self.robot.add_behaviour(move)
+        await asyncio.sleep(2)
         self.agent.add_behaviour(obs_pos)
+        await asyncio.sleep(2)
         self.agent.add_behaviour(obs_rem)
+        await asyncio.sleep(2)
 
