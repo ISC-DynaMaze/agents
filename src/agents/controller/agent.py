@@ -9,11 +9,13 @@ from common.log_mixin import LogMixin
 
 
 class ControllerAgent(Agent, LogMixin):
-    def __init__(self, *args, camera_jid: str, logger_jid: str, **kwargs):
+    def __init__(self, *args, jid: str, camera_jid: str, logger_jid: str, robot_jid: str, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerAgent")
         self.camera_jid: str = camera_jid
         self.logger_jid: str = logger_jid
+        self.robot_jid: str = robot_jid
+        self.jid: str = jid
 
         self.set_logger_jid(self.logger_jid)
         self.set_sender(str(self.jid))

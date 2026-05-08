@@ -90,7 +90,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         self.agent.add_behaviour(detect_cubes)
     
     async def request_auto_start(self):
-        auto_start = AutoStartBehaviour()
+        auto_start = AutoStartBehaviour(self.agent.camera_jid, self.agent.robot_jid, self.agent.jid)
         self.agent.add_behaviour(auto_start)
 
     async def on_request(self, sender_jid: str, req: Request):

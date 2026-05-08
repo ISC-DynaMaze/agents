@@ -12,6 +12,7 @@ async def main():
             "password": ("XMPP_PASSWORD", "top_secret"),
             "camera_jid": ("CAMERA_JID", "camera@isc-coordinator.lan"),
             "logger_jid": ("LOGGER_JID", "logger@isc-coordinator.lan"),
+            "robot_jid": ("ROBOT_JID", "alberto-robot@isc-coordinator.lan"),
         },
         debug_loggers=["spade", "aioxmpp", "xmpp"],
     )
