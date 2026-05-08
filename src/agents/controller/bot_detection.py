@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -14,41 +14,67 @@ if TYPE_CHECKING:
     from agents.controller.agent import ControllerAgent
 
 
+class BotDetector:
+    def __init__(self, img: np.ndarray):
+        self.img: np.ndarray = img
+        self.logger = logging.getLogger("BotDetector")
+        self.dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
+        self.params = cv2.aruco.DetectorParameters()
+        self.detector = cv2.aruco.ArucoDetector(self.dict, self.params)
+        self.detected_corners: list[np.ndarray] = []
+        self.detected_ids: list[int] = []
+
+        self.detect()
+
+    def detect(self):
+        corners, ids, rejected = self.detector.detectMarkers(self.img)
+        self.detected_corners = list(corners)
+        self.detected_ids = list(map(int, ids.flatten()))
+
+    def get_angles(self) -> dict[int, float]:
+        # TODO: consider aruco marker rotation offset
+        bot_angles: dict[int, float] = {}
+        if len(self.detected_corners) > 0:
+            bot_angles = {
+                bot_id: self._get_angle_from_marker(corner)
+                for bot_id, corner in zip(self.detected_ids, self.detected_corners)
+            }
+        return bot_angles
+
+    def get_positions(self) -> dict[int, tuple[float, float]]:
+        bot_pos: dict[int, tuple[float, float]] = {}
+
+        if len(self.detected_corners) > 0:
+            bot_pos = {
+                bot_id: self._get_pos_from_marker(corner)
+                for bot_id, corner in zip(self.detected_ids, self.detected_corners)
+            }
+        return bot_pos
+
+    def _get_angle_from_marker(self, corners: np.ndarray) -> float:
+        tl, tr, br, bl = corners[0]
+        v: np.ndarray = bl - tl
+        angle = np.atan2(v[1], v[0])
+        return float(np.degrees(angle))
+
+    def _get_pos_from_marker(self, corners: np.ndarray) -> tuple[float, float]:
+        center: np.ndarray = np.mean(corners[0], axis=0)
+        cx: float = float(center[0])
+        cy: float = float(center[1])
+        return cx, cy
+
+
 class BotDetectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
 
     def __init__(self, img: np.ndarray):
         super().__init__()
-        self.img: np.ndarray = img
         self.logger = logging.getLogger("BotDetection")
-
-    async def on_start(self) -> None:
-        self.dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
-        self.params = cv2.aruco.DetectorParameters()
-        self.detector = cv2.aruco.ArucoDetector(self.dict, self.params)
+        self.detector: BotDetector = BotDetector(img)
 
     async def run(self) -> None:
-        corners, ids, rejected = self.detector.detectMarkers(self.img)
-
-        bot_angles: dict[int, float] = {}
-        if len(corners) > 0:
-            # img2 = self.img.copy()
-            # cv2.aruco.drawDetectedMarkers(img2, corners, ids)
-            # cv2.imwrite("marker.png", img2)
-            ids = ids.flatten()
-            bot_angles = self.get_angles_from_markers(corners, ids)
+        bot_angles: dict[int, float] = self.detector.get_angles()
 
         res: AngleResponse = AngleResponse(angles=bot_angles)
         self.agent.add_behaviour(MultiSenderBehaviour(res, self.agent.angle_requesters))
         self.agent.angle_requesters = []
-
-    def get_angles_from_markers(
-        self, corners: Sequence[np.ndarray], ids: np.ndarray
-    ) -> dict[int, float]:
-        angles: list[tuple[int, float]] = []
-        for corner, id in zip(corners, ids):
-            tl, tr, br, bl = corner[0]
-            v: np.ndarray = bl - tl
-            angle = np.atan2(v[1], v[0])
-            angles.append((int(id), float(np.degrees(angle))))
-        return dict(angles)

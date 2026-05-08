@@ -1,5 +1,6 @@
 import base64
 import datetime
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -15,10 +16,9 @@ class CameraResponse(ResponseBase):
     type: Literal["cam-res"] = "cam-res"  # type: ignore
     img: str
 
-    async def decode_img(self, save_dir):
+    async def decode_img(self, save_dir: Path) -> tuple[np.ndarray, Path]:
         import cv2
 
-        print("Received photo message.")
         img_data = base64.b64decode(self.img)
 
         # Generate filename with timestamp
@@ -30,7 +30,6 @@ class CameraResponse(ResponseBase):
         with open(filepath, "wb") as img_file:
             img_file.write(img_data)
 
-        print(f"Photo saved as '{filepath}'.")
         img: np.ndarray = cv2.imread(str(filepath))  # type: ignore
 
         return img, filepath

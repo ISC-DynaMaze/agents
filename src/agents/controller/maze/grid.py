@@ -26,6 +26,7 @@ class Cell:
         self.col = col
         self.walls = walls if walls is not None else [False, False, False, False]
         self.obstacles = []
+        self.occupied: bool = False
 
         # 1 if there is cube, 0 if no cube
         # [TL, TR, BR, BL]
@@ -162,6 +163,10 @@ class Maze:
         if current_cell.has_wall(wall_direction):
             return False
 
+        new_cell: Cell = self.grid[new_row][new_col]
+        if new_cell.occupied:
+            return False
+
         return True
 
     # add a wall to the cell and update neighboring cell's wall as well
@@ -209,6 +214,15 @@ class Maze:
         for row in range(self.n_rows):
             for col in range(self.n_cols):
                 self.grid[row][col].walls = [False, False, False, False]
+    
+    def mark_occupied(self, row: int, col: int):
+        if self.is_valid_cell(row, col):
+            self.grid[row][col].occupied = True
+
+    def clear_occupied(self):
+        for row in self.grid:
+            for cell in row:
+                cell.occupied = False
 
     # add outer border walls to the maze
     def add_outer_border(self):
