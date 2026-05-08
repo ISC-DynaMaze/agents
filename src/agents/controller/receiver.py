@@ -65,8 +65,8 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
         ask_photo = RequestPhotoBehaviour(self.agent.camera_jid)
         self.agent.add_behaviour(ask_photo)
 
-    async def request_direction(self):
-        ask_direction = SendDirectionBehaviour()
+    async def request_direction(self, pos_offset: tuple[int, int], rot_offset: int):
+        ask_direction = SendDirectionBehaviour(pos_offset, rot_offset)
         self.agent.add_behaviour(ask_direction)
 
     async def request_obstacles(self):
@@ -80,7 +80,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
     async def request_obstacles_rem(self):
         rem_obstacle = RemoveObstaclesBehaviour()
         self.agent.add_behaviour(rem_obstacle)
-        
+
     async def request_cubes(self):
         self.agent.requesting_cubes = True
         detect_cubes = DetectCubesBehaviour()
@@ -109,10 +109,10 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
                 )  # type: ignore
                 self.agent.add_behaviour(find_path)
 
-            case DirectionRequest():
+            case DirectionRequest(pos_offset=pos_offset, rot_offset=rot_offset):
                 self.agent.direction_requesters.append(sender_jid)
                 if not self.agent.requesting_direction:
-                    await self.request_direction()
+                    await self.request_direction(pos_offset, rot_offset)
 
             case ObstaclesRequest():
                 self.agent.obstacles_requesters.append(sender_jid)
@@ -124,7 +124,7 @@ class ReceiverBehaviour(BaseReceiverBehaviour):
 
             case ObstacleRemoveRequest():
                 await self.request_obstacles_rem()
-                
+
             case CubesRequest():
                 self.agent.cubes_requesters.append(sender_jid)
                 if not self.agent.requesting_cubes:

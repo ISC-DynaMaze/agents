@@ -228,7 +228,11 @@ def build_maze_from_image(
     ## detect aruco target and bot markers
     corners, ids, rejected = maze.detect_aruco_markers(image)
     maze.set_target_cell(corners, ids, target_id)
-    maze.set_bot_cell(corners, ids, bot_id)
+    pos = maze.get_aruco_cell(corners, ids, bot_id)
+    if pos is not None:
+        maze.set_bot_cell(pos[0], pos[1])
+    else:
+        print("Could not set bot cell")
 
     print(f"Maze target cell: {maze.target_cell}")
     print(f"Maze bot cell: {maze.bot_cell}")

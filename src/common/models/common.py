@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from enum import StrEnum
 from typing import Annotated, Literal, Union
 
 from pydantic import Field, TypeAdapter
@@ -11,6 +14,13 @@ from common.models.robot import RobotRequest, RobotResponse
 
 class StopRequest(RequestBase):
     type: Literal["stop"] = "stop"  # type: ignore
+
+
+class RelativeDirection(StrEnum):
+    FRONT = "front"
+    BACK = "back"
+    LEFT = "left"
+    RIGHT = "right"
 
 
 Request = Annotated[

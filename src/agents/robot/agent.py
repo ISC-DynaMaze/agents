@@ -9,6 +9,7 @@ from spade.agent import Agent
 from agents.robot.AlphaBot2 import AlphaBot2
 from agents.robot.leds_manager import LedsManager
 from agents.robot.look_around import LookAroundHandler
+from agents.robot.memory import Memory
 from agents.robot.penalty_handler import PenaltyHandler
 from agents.robot.receiver import ReceiverBehaviour
 from agents.robot.status import StatusBehaviour
@@ -60,6 +61,7 @@ class RobotAgent(Agent, LogMixin):
 
         self.config: Config = Config.load()
         self.calib: Calibration = Calibration.load()
+        self.memory: Memory = Memory()
 
         self.look_around_handler: LookAroundHandler = LookAroundHandler(self)
         self.wheel_adjustements: WheelAdjustments = WheelAdjustments()

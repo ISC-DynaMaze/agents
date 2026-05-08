@@ -12,7 +12,8 @@ from agents.robot.honk import HonkBehaviour
 from agents.robot.leds_manager import State
 from agents.robot.reposition import RepositionBehaviour
 from agents.robot.turn import TurningBehaviour
-from common.models.controller import DirectionRequest, DirectionResponse
+from common.models.common import RelativeDirection
+from common.models.controller import DirectionRequest, DirectionResponse, Orientation
 from common.models.robot import (
     Direction,
     LookAroundRequest,
@@ -40,7 +41,7 @@ class MoveBehaviour(CyclicBehaviour):
     @property
     def bot(self) -> AlphaBot2:
         return self.agent.bot
-    
+
     async def pause_point(self):
         await self.agent.penalty.pause_point()
 
@@ -116,7 +117,7 @@ class MoveBehaviour(CyclicBehaviour):
             return
 
         # go to given direction
-        await self.turn_and_go(direction)
+        await self.turn_and_go(direction)  # type: ignore
         await self.pause_point()
         self.logger.info(f"Moved {direction}")
         self.agent.leds.set_state(State.IDLE)
@@ -177,7 +178,7 @@ class MoveBehaviour(CyclicBehaviour):
 
             await asyncio.sleep(check_interval)
 
-    async def turn_and_go(self, direction: str):
+    async def turn_and_go(self, direction: Orientation):
         self.agent.leds.set_state(State.MOVING)
         if direction == "left":
             await self.turn(direction=Direction.Left)
@@ -198,13 +199,15 @@ class MoveBehaviour(CyclicBehaviour):
 
         await self.pause_point()
 
-        # repositioning 
+        # repositioning
         await self.reposition_to_nearest_cardinal()
-        
+
         # go forward after turning or if direction is forward
         await self.go_forward_to_cell_center_using_sensors(
             threshold=self.agent.config.ir_threshold
         )
+
+        self.agent.memory.move(RelativeDirection(direction))
 
     async def turn(self, direction: Direction):
         angle = self.turning_angle
@@ -222,7 +225,11 @@ class MoveBehaviour(CyclicBehaviour):
 
     # ask controllor where to go
     async def ask_controller(self):
-        req = DirectionRequest()
+        req = DirectionRequest(
+            pos_offset=self.agent.memory.pos_offset,
+            rot_offset=self.agent.memory.rot_offset,
+        )
+        self.agent.memory.reset()
         self.agent.add_behaviour(
             BaseSenderBehaviour(req, str(self.agent.controller_jid))
         )

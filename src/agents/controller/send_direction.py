@@ -9,7 +9,12 @@ import numpy as np
 from spade.behaviour import OneShotBehaviour
 
 from agents.controller.maze.grid import Maze
-from common.models.controller import DirectionResponse, PathRequest, PathResponse
+from common.models.controller import (
+    DirectionResponse,
+    Orientation,
+    PathRequest,
+    PathResponse,
+)
 from common.sender import BaseSenderBehaviour
 from common.utils import wait_for_response
 
@@ -21,14 +26,17 @@ class SendDirectionBehaviour(OneShotBehaviour):
     agent: ControllerAgent
     maze: Maze
 
-    def __init__(self):
+    def __init__(self, pos_offset: tuple[int, int], rot_offset: int):
         super().__init__()
         self.logger = logging.getLogger("SendDirectionBehaviour")
+        self.pos_offset: tuple[int, int] = pos_offset
+        self.rot_offset: int = rot_offset
 
     async def on_start(self):
         self.maze = self.agent.maze
         self.path = self.agent.current_path
         self.photo_dir = Path("photos")
+        self.agent.memory.apply_delta(self.pos_offset, self.rot_offset)
 
     async def run(self):
         # check for photo directory or create it
@@ -39,36 +47,7 @@ class SendDirectionBehaviour(OneShotBehaviour):
             self.agent.error("Cannot send direction: maze is not initialized")
             return
 
-        # request new image
-        img: Optional[np.ndarray] = await self.agent.camera.get_img()
-        if img is None:
-            self.logger.error("Timed out waiting for camera image")
-            return
-
-        # detect aruco marker and update bot cell in maze
-        corners, ids, _ = self.maze.detect_aruco_markers(img)
-        if ids is None or len(ids) == 0:
-            self.logger.error("No markers detected in camera image")
-            self.agent.error("No markers detected in camera image")
-            return
-
-        self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
-        # update bot cell in maze
-        self.maze.set_bot_cell(corners, ids, self.agent.config.bot_aruco_id)
-        self.logger.info(self.maze)
-        self.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
-
-        # infer bot orientation based on marker corners
-        orientation = self.get_bot_orientation(
-            corners,
-            ids,
-            self.agent.config.bot_aruco_id,
-            self.agent.config.bot_aruco_rot,
-        )
-        if orientation is None:
-            self.logger.error("Bot marker not found, cannot infer orientation")
-            self.agent.error("Bot marker not found, cannot infer orientation")
-        self.logger.info(f"Bot orientation: {orientation}")
+        orientation: Orientation = await self.detect_bot()
 
         # request new path based on updated bot cell
         await self.req_path()
@@ -107,6 +86,54 @@ class SendDirectionBehaviour(OneShotBehaviour):
 
         await self.send_turn_message(turn)
 
+    async def detect_bot(self) -> Orientation:
+        (row, col), orientation = self.agent.memory.get()
+
+        detected = await self.detect_from_img()
+        if detected is not None:
+            (row, col), orientation = detected
+
+        self.logger.info(f"Old bot cell: {self.maze.bot_cell}")
+        # update bot cell in maze
+        self.maze.set_bot_cell(row, col)
+        self.logger.info(self.maze)
+        self.logger.info(f"Updated bot cell: {self.maze.bot_cell}")
+
+        self.agent.memory.set((row, col), orientation)
+
+        return orientation
+
+    async def detect_from_img(self) -> Optional[tuple[tuple[int, int], Orientation]]:
+        # request new image
+        img: Optional[np.ndarray] = await self.agent.camera.get_img()
+        if img is None:
+            self.logger.error("Timed out waiting for camera image")
+            return None
+
+        # detect aruco marker and update bot cell in maze
+        corners, ids, _ = self.maze.detect_aruco_markers(img)
+        if ids is None or len(ids) == 0:
+            self.logger.error("No markers detected in camera image")
+            self.agent.error("No markers detected in camera image")
+            return None
+
+        pos = self.maze.get_aruco_cell(corners, ids, self.agent.config.bot_aruco_id)
+        if pos is None:
+            return None
+
+        # infer bot orientation based on marker corners
+        orientation = self.get_bot_orientation(
+            corners,
+            ids,
+            self.agent.config.bot_aruco_id,
+            self.agent.config.bot_aruco_rot,
+        )
+
+        if orientation is None:
+            return None
+
+        return pos, orientation
+
     # send turn instruction to requester
     async def send_turn_message(self, turn: str):
         res = DirectionResponse(direction=turn)
@@ -131,7 +158,9 @@ class SendDirectionBehaviour(OneShotBehaviour):
         return res.path
 
     # infer bot orientation based on position of bot marker corners
-    def get_bot_orientation(self, corners, ids, bot_id, aruco_rot):
+    def get_bot_orientation(
+        self, corners, ids, bot_id, aruco_rot
+    ) -> Optional[Orientation]:
         if ids is None:
             return None
 

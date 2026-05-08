@@ -7,6 +7,7 @@ from spade.agent import Agent
 from agents.controller.camera_manager import CameraManager
 from agents.controller.maze.grid import Maze
 from agents.controller.meetup import MeetupBehaviour
+from agents.controller.memory import Memory
 from agents.controller.receiver import ReceiverBehaviour
 from common.config import Config
 from common.log_mixin import LogMixin
@@ -23,6 +24,7 @@ class ControllerAgent(Agent, LogMixin):
         self.set_sender(str(self.jid))
 
         self.config: Config = Config.load()
+        self.memory: Memory = Memory()
 
         self.maze: Optional[Maze] = None
         self.grid_img = None
