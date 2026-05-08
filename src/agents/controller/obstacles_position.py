@@ -39,6 +39,7 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
             "[Measure] Start calculating pixel distance and real distance on maze border"
         )
         scale = self.compute_scale(img)
+        self.agent.info(f"[Scale] {scale[0], scale[1]}")
         self.logger.info(f"[Measure] L :{scale[0]}, l : {scale[1]}")
         result = find_obstacles(img, self.agent.maze)
         blocks = result["blocks_by_color"]
@@ -54,13 +55,12 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
                     ],  # Need to invert the x axis, the x axis of the picture and the x axis of the robot arm are not the same
                     (center[1] - self.robot_arm_position[1]) * scale[1],
                 )
-                self.logger.info(
+                self.agent.info(
                     f"Obstacle {color} founded at {center}, x: {distance_robot[0]}, y: {distance_robot[1]}"
                 )
                 blocks_pos[color].append(
                     {"x": distance_robot[0], "y": distance_robot[1]}
                 )
-
         self.save_obstacle_position(blocks_pos)
 
     def compute_scale(self, img: np.ndarray) -> tuple[float, float]:
@@ -68,9 +68,9 @@ class ObstacleRelativePositionBehaviour(OneShotBehaviour):
         sizes = find_outer_rectangle(mask)
         width = sizes[2]  # The longest side
         height = sizes[3]  # The shortest side
-
         scaleW = self.maze_size[0] / width
         scaleH = self.maze_size[1] / height
+        self.agent.info(f"[Obstacle] Scale x:{scaleW}, y:{scaleH}")
         return (scaleW, scaleH)
 
     def save_obstacle_position(self, block_pos: dict):
