@@ -62,8 +62,8 @@ class MeetupBehaviour(PeriodicBehaviour):
         too_close: list[tuple[float, float]] = []
         for bot_id, next_pos in bot_next_pos.items():
             if self.debug:
-                p1 = np.array(bot_pos[bot_id]).astype(np.uint8)
-                p2 = np.array(next_pos).astype(np.uint8)
+                p1 = np.array(bot_pos[bot_id]).astype(np.uint32)
+                p2 = np.array(next_pos).astype(np.uint32)
                 cv2.line(debug_img, p1, p2, (0, 0, 0), 2)
                 cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)
                 cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)

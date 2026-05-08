@@ -48,7 +48,7 @@ class FindPathBehaviour(OneShotBehaviour):
 
         grid_img = self.agent.grid_img.copy()  # type: ignore
         grid_img_with_path = draw_path(
-            grid_img, path, cell_size=140, margin=40, color=(0, 0, 0)
+            grid_img, path, self.maze, cell_size=140, margin=40, color=(0, 0, 0)
         )
         grid_img_path = self.output_dir / path_filename
         cv2.imwrite(str(grid_img_path), grid_img_with_path)
