@@ -2,7 +2,7 @@ from common.models.controller import Orientation
 
 
 class Memory:
-    ORIENTATION_ORDER: list[Orientation] = ["right", "down", "left", "right"]
+    ORIENTATION_ORDER: list[Orientation] = ["right", "down", "left", "up"]
 
     def __init__(self):
         self.last_pos: tuple[int, int] = (0, 0)
