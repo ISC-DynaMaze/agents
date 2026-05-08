@@ -29,7 +29,7 @@ class BotDetector:
     def detect(self):
         corners, ids, rejected = self.detector.detectMarkers(self.img)
         self.detected_corners = list(corners)
-        self.detected_ids = list(map(int, ids.flatten()))
+        self.detected_ids = list(map(int, ids.flatten())) if ids is not None else []
 
     def get_angles(self) -> dict[int, float]:
         # TODO: consider aruco marker rotation offset

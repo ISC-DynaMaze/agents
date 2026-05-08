@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import cv2 as cv
 import numpy as np
@@ -214,7 +215,7 @@ class Maze:
         for row in range(self.n_rows):
             for col in range(self.n_cols):
                 self.grid[row][col].walls = [False, False, False, False]
-    
+
     def mark_occupied(self, row: int, col: int):
         if self.is_valid_cell(row, col):
             self.grid[row][col].occupied = True
@@ -291,11 +292,10 @@ class Maze:
 
         print(f"Aruco marker ID {target_id} not found, cannot set target cell")
 
-    # set bot marker (can move; we can call this multiple times to update target position in find_path)
-    def set_bot_cell(self, corners, ids, bot_id):
+    def get_aruco_cell(self, corners, ids, bot_id) -> Optional[tuple[int, int]]:
         if ids is None:
-            print("No Aruco markers detected, cannot set bot cell")
-            return
+            print("No Aruco markers detected, cannot compute bot cell")
+            return None
 
         for i, marker_id in enumerate(ids.flatten()):
             if marker_id == bot_id:
@@ -306,17 +306,19 @@ class Maze:
 
                 # convert pixel coordinates to cell coordinates
                 row, col = self.pixel_to_cell(center_x, center_y)
+                return (row, col)
 
-                if self.is_valid_cell(row, col):
-                    self.bot_cell = self.grid[row][col]
-                    print(
-                        f"Set bot cell to {self.bot_cell} based on Aruco marker ID {bot_id}"
-                    )
-                else:
-                    print(f"Aruco marker ID {bot_id} is out of maze bounds")
-                return
+        print(f"Aruco marker ID {bot_id} not found, cannot compute bot cell")
+        return None
 
-        print(f"Aruco marker ID {bot_id} not found, cannot set bot cell")
+    # set bot marker (can move; we can call this multiple times to update target position in find_path)
+    def set_bot_cell(self, row: int, col: int):
+        if self.is_valid_cell(row, col):
+            self.bot_cell = self.grid[row][col]
+            print(f"Set bot cell to {self.bot_cell} based on Aruco marker")
+        else:
+            print("Aruco marker is out of maze bounds")
+        return
 
     def clear_pathfinding_info(self):
         for row in self.grid:

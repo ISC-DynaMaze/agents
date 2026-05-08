@@ -56,6 +56,9 @@ class AngleResponse(ControllerResponseBase):
     angles: dict[int, float]
 
 
+Orientation = Literal["left", "right", "up", "down"]
+
+
 class DirectionResponse(ControllerResponseBase):
     type: Literal["ctrl-direction-res"] = "ctrl-direction-res"  # type: ignore
     direction: str
@@ -63,6 +66,8 @@ class DirectionResponse(ControllerResponseBase):
 
 class DirectionRequest(ControllerRequestBase):
     type: Literal["ctrl-direction-req"] = "ctrl-direction-req"  # type: ignore
+    pos_offset: tuple[int, int]
+    rot_offset: int
 
 
 class ObstaclePositionRequest(ControllerRequestBase):

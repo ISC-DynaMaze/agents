@@ -103,7 +103,6 @@ class LookAroundResponse(RobotResponseBase):
     left: SideType = field(default=SideType.UNKNOWN)
     right: SideType = field(default=SideType.UNKNOWN)
     front: SideType = field(default=SideType.UNKNOWN)
-    cubes: CubesResult = field(default_factory=CubesResult)
 
 
 class PenaltyRequest(RequestBase):
