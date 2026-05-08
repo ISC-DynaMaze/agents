@@ -20,7 +20,9 @@ class MeetupBehaviour(PeriodicBehaviour):
     MIN_DISTANCE: float = 100
     NEXT_DISTANCE: float = 32
 
-    def __init__(self, period: float, start_at: datetime | None = None, debug: bool = False):
+    def __init__(
+        self, period: float, start_at: datetime | None = None, debug: bool = False
+    ):
         super().__init__(period, start_at)
         self.logger = logging.getLogger("MeetupBehaviour")
         self.debug: bool = debug
@@ -60,14 +62,15 @@ class MeetupBehaviour(PeriodicBehaviour):
 
         debug_img: np.ndarray = img.copy()
         too_close: list[tuple[float, float]] = []
+        opp_id: int = self.agent.config.opponent_aruco_id
         for bot_id, next_pos in bot_next_pos.items():
             if self.debug:
                 p1 = np.array(bot_pos[bot_id]).astype(np.uint32)
                 p2 = np.array(next_pos).astype(np.uint32)
-                cv2.line(debug_img, p1, p2, (0, 0, 0), 2)
-                cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)
-                cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)
-            if bot_id == self_id:
+                cv2.line(debug_img, p1, p2, (0, 0, 0), 2)  # type: ignore
+                cv2.circle(debug_img, p1, 5, (0, 0, 255), -1)  # type: ignore
+                cv2.circle(debug_img, p2, 5, (0, 255, 0), -1)  # type: ignore
+            if bot_id == opp_id:
                 continue
             dist: float = self._compute_distance(self_next_pos, next_pos)
             if dist <= self.MIN_DISTANCE:
@@ -79,9 +82,14 @@ class MeetupBehaviour(PeriodicBehaviour):
     def _compute_next_pos(
         self, positions: dict[int, tuple[float, float]], angles: dict[int, float]
     ) -> dict[int, np.ndarray]:
+        rotations: dict[int, int] = {
+            self.agent.config.bot_aruco_id: self.agent.config.bot_aruco_rot,
+            self.agent.config.opponent_aruco_id: self.agent.config.opponent_aruco_rot,
+        }
         next_positions: dict[int, np.ndarray] = {}
         for bot_id, pos in positions.items():
-            angle = np.radians(angles[bot_id])
+            angle = angles[bot_id] + rotations.get(bot_id, 0)
+            angle = np.radians(angle)
             direction: np.ndarray = np.array([np.cos(angle), np.sin(angle)])
             next_pos: np.ndarray = np.array(pos) + self.NEXT_DISTANCE * direction
             next_positions[bot_id] = next_pos
