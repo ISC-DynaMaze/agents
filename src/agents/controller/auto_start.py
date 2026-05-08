@@ -21,6 +21,7 @@ class AutoStartBehaviour(OneShotBehaviour):
         self.logger = logging.getLogger("AutoStartBehaviour")
 
     async def run(self):
+        self.ctrl.info("[Auto Start] Start...")
         maze_req = MazeRequest()
         path_req = PathRequest()
         move = RobotMoveRequest()

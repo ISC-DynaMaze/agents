@@ -86,6 +86,7 @@ ControllerRequest = Annotated[
         ObstaclePositionRequest,
         ObstacleRemoveRequest,
         CubesRequest,
+        AutoStartRequest
     ],
     Field(discriminator="type"),
 ]
